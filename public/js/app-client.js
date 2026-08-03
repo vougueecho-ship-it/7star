@@ -50,6 +50,25 @@ function injectModalContainer() {
   }
 }
 
+// Helper for Button Loading State & Double Click Prevention
+function setButtonLoading(btn, isLoading, loadingText = 'Processing...') {
+  if (!btn) return;
+  if (isLoading) {
+    btn.dataset.originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.style.opacity = '0.75';
+    btn.style.pointerEvents = 'none';
+    btn.innerHTML = `<span class="spinner-icon">🔄</span> ${loadingText}`;
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    if (btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+    }
+  }
+}
+
 // Show Toast Notification
 function showToast(message, type = 'success') {
   injectToastContainer();
@@ -355,10 +374,13 @@ async function claimDailyProfit(userPlanId) {
 // User Register Form Handler
 async function handleRegister(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const username = document.getElementById('reg-username').value;
   const phone = document.getElementById('reg-phone').value;
   const password = document.getElementById('reg-password').value;
   const ref = document.getElementById('reg-ref').value;
+
+  setButtonLoading(submitBtn, true, 'Creating Account...');
 
   try {
     const res = await fetch(`${API}/register`, {
@@ -378,9 +400,11 @@ async function handleRegister(e) {
         window.location.href = '/dashboard.html';
       }, 1000);
     } else {
+      setButtonLoading(submitBtn, false);
       showCustomModal('Registration Failed', data.message, 'error');
     }
   } catch (err) {
+    setButtonLoading(submitBtn, false);
     showToast('Server connection error', 'error');
   }
 }
@@ -388,8 +412,11 @@ async function handleRegister(e) {
 // User Login Form Handler
 async function handleLogin(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const username = document.getElementById('login-username').value;
   const password = document.getElementById('login-password').value;
+
+  setButtonLoading(submitBtn, true, 'Signing In...');
 
   try {
     const res = await fetch(`${API}/login`, {
@@ -409,9 +436,11 @@ async function handleLogin(e) {
         window.location.href = '/dashboard.html';
       }, 1000);
     } else {
+      setButtonLoading(submitBtn, false);
       showCustomModal('Login Failed', data.message, 'error');
     }
   } catch (err) {
+    setButtonLoading(submitBtn, false);
     showToast('Login error. Please try again.', 'error');
   }
 }
@@ -445,10 +474,13 @@ async function handleDepositSubmit(e) {
   e.preventDefault();
   if (!AppState.user) return showToast('Please login first', 'error');
 
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const amount = document.getElementById('dep-amount').value;
   const gateway = document.getElementById('dep-gateway').value;
   const tid = document.getElementById('dep-tid').value;
   const fileInput = document.getElementById('dep-screenshot-file');
+
+  setButtonLoading(submitBtn, true, 'Submitting Deposit...');
 
   let screenshotData = null;
   if (fileInput && fileInput.files[0]) {
@@ -478,9 +510,11 @@ async function handleDepositSubmit(e) {
         window.location.href = '/dashboard.html';
       });
     } else {
+      setButtonLoading(submitBtn, false);
       showCustomModal('Deposit Failed', data.message, 'error');
     }
   } catch (err) {
+    setButtonLoading(submitBtn, false);
     showToast('Failed to submit deposit.', 'error');
   }
 }
@@ -490,11 +524,14 @@ async function handleWithdrawSubmit(e) {
   e.preventDefault();
   if (!AppState.user) return showToast('Please login first', 'error');
 
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const amount = document.getElementById('wit-amount').value;
   const gateway = document.getElementById('wit-gateway').value;
   const accountTitle = document.getElementById('wit-title').value;
   const accountNumber = document.getElementById('wit-number').value;
   const bankName = document.getElementById('wit-bank-name') ? document.getElementById('wit-bank-name').value : null;
+
+  setButtonLoading(submitBtn, true, 'Submitting Withdrawal...');
 
   try {
     const res = await fetch(`${API}/withdraw`, {
@@ -516,10 +553,12 @@ async function handleWithdrawSubmit(e) {
         window.location.href = '/dashboard.html';
       });
     } else {
+      setButtonLoading(submitBtn, false);
       showCustomModal('Withdrawal Failed', data.message, 'error');
     }
   } catch (err) {
-    showToast('Withdrawal error.', 'error');
+    setButtonLoading(submitBtn, false);
+    showToast('Failed to submit withdrawal.', 'error');
   }
 }
 

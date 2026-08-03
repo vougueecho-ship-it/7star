@@ -854,3 +854,32 @@ body {
   display: flex;
   gap: 0.75rem;
 }
+
+/* Button Active Press & Loading Feedback System */
+button, .btn-activate-gold, .quick-act-btn, .admin-nav-btn, .referral-copy-btn, .icon-action-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active, .btn-activate-gold:active, .quick-act-btn:active, .referral-copy-btn:active, .icon-action-btn:active {
+  transform: scale(0.96) !important;
+  opacity: 0.88;
+}
+
+button:disabled, .btn-activate-gold:disabled, .admin-nav-btn:disabled, [disabled] {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  filter: grayscale(20%);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner-icon {
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}

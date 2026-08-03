@@ -10,6 +10,24 @@ let AdminState = {
   settings: {}
 };
 
+function setAdminButtonLoading(btn, isLoading, loadingText = 'Processing...') {
+  if (!btn) return;
+  if (isLoading) {
+    btn.dataset.originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.style.opacity = '0.75';
+    btn.style.pointerEvents = 'none';
+    btn.innerHTML = `<span class="spinner-icon">🔄</span> ${loadingText}`;
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    if (btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+    }
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const isLoginPage = window.location.pathname.includes('/xpro-admin/login.html');
   
@@ -26,8 +44,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Admin Login Handler
 async function handleAdminLogin(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const username = document.getElementById('adm-username').value;
   const password = document.getElementById('adm-password').value;
+
+  setAdminButtonLoading(submitBtn, true, 'Authenticating Admin...');
 
   try {
     const res = await fetch(`${API}/login`, {
@@ -42,10 +63,12 @@ async function handleAdminLogin(e) {
       alert('Admin authenticated successfully!');
       window.location.href = '/xpro-admin/dashboard.html';
     } else {
+      setAdminButtonLoading(submitBtn, false);
       alert(data.message);
     }
   } catch (err) {
-    alert('Server error during admin login.');
+    setAdminButtonLoading(submitBtn, false);
+    alert('Login error. Please check backend server.');
   }
 }
 
@@ -305,6 +328,7 @@ function closePlanModal() {
 // Save VIP Plan (Create / Edit)
 async function saveAdminPlan(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const planId = document.getElementById('modal-plan-id').value;
   const name = document.getElementById('modal-plan-name').value;
   const price = document.getElementById('modal-plan-price').value;
@@ -313,6 +337,8 @@ async function saveAdminPlan(e) {
   const validityDays = document.getElementById('modal-plan-validity').value;
   const level1Bonus = document.getElementById('modal-plan-l1').value;
   const level2Bonus = document.getElementById('modal-plan-l2').value;
+
+  setAdminButtonLoading(submitBtn, true, 'Saving VIP Plan...');
 
   try {
     const res = await fetch(`${API}/plans`, {
@@ -336,11 +362,14 @@ async function saveAdminPlan(e) {
     if (data.success) {
       alert(data.message);
       closePlanModal();
+      setAdminButtonLoading(submitBtn, false);
       await fetchAdminData();
     } else {
+      setAdminButtonLoading(submitBtn, false);
       alert(data.message || 'Failed to save plan');
     }
   } catch (err) {
+    setAdminButtonLoading(submitBtn, false);
     alert('Error saving VIP plan.');
   }
 }
@@ -389,6 +418,7 @@ function renderSettingsForm() {
 // Save Admin Settings
 async function saveAdminSettings(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const settings = {
     easypaisa_title: document.getElementById('sett-ep-title').value,
     easypaisa_number: document.getElementById('sett-ep-num').value,
@@ -396,6 +426,8 @@ async function saveAdminSettings(e) {
     jazzcash_number: document.getElementById('sett-jc-num').value,
     notice_text: document.getElementById('sett-notice').value
   };
+
+  setAdminButtonLoading(submitBtn, true, 'Saving Settings...');
 
   try {
     const res = await fetch(`${API}/settings-save`, {
@@ -409,9 +441,11 @@ async function saveAdminSettings(e) {
     const data = await res.json();
     if (data.success) {
       alert(data.message);
+      setAdminButtonLoading(submitBtn, false);
       await fetchAdminData();
     }
   } catch (err) {
+    setAdminButtonLoading(submitBtn, false);
     alert('Error saving settings.');
   }
 }
