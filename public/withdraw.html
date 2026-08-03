@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Withdraw — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+</head>
+<body>
+
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="drawer-menu" class="drawer-menu">
+    <div class="drawer-header">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <img src="/images/logo.png" style="height:32px; width:auto;" alt="7 Star Logo">
+        <div>
+          <div style="font-weight:800; color:var(--primary-gold);">7 STAR INVEST</div>
+          <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
+        </div>
+      </div>
+      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+    </div>
+    <ul class="drawer-list">
+      <li class="drawer-item"><a href="/dashboard.html">⏱️ Dashboard</a></li>
+      <li class="drawer-item"><a href="/deposit.html">➕ Deposit</a></li>
+      <li class="drawer-item"><a href="/mining.html">⚡ Mining</a></li>
+      <li class="drawer-item"><a href="/withdraw.html" class="active">👛 Withdraw</a></li>
+    </ul>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <div class="app-header">
+      <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
+      <div class="header-title-box">
+        <div class="header-subtitle">7 STAR INVEST</div>
+        <div class="header-title">Withdraw</div>
+      </div>
+      <div class="avatar-btn user-avatar-initials">7S</div>
+    </div>
+
+    <h2 style="text-align:center; font-size:1.4rem; font-weight:800; color:var(--cyan-neon); margin-bottom:0.2rem;">WITHDRAW</h2>
+    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Select gateway & enter amount</p>
+
+    <!-- Available Balance Banner -->
+    <div style="background:linear-gradient(135deg, #fffbeb 0%, #e0f2fe 100%); border:1px solid #fde68a; border-radius:18px; padding:1.25rem; color:var(--text-dark); display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+      <span style="font-size:0.8rem; font-weight:800; color:#b45309; letter-spacing:1px;">AVAILABLE BALANCE</span>
+      <div class="user-dyn-balance" style="font-size:1.4rem; font-weight:800; color:var(--text-dark);">0.00 PKR</div>
+    </div>
+
+    <!-- Payout Gateway Cards -->
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1.25rem;">
+      <div style="background:var(--card-bg); border:var(--card-border-light); border-radius:16px; padding:1rem 0.5rem; text-align:center; box-shadow:var(--card-shadow);">
+        <div style="width:40px; height:40px; border-radius:12px; background:#fef3c7; color:var(--primary-gold); font-size:1.4rem; display:flex; align-items:center; justify-content:center; margin:0 auto 0.4rem;">🏦</div>
+        <span style="font-size:0.75rem; font-weight:800; color:var(--text-dark);">Other Bank</span>
+      </div>
+      <div style="background:var(--card-bg); border:var(--card-border-light); border-radius:16px; padding:1rem 0.5rem; text-align:center; box-shadow:var(--card-shadow);">
+        <div style="width:40px; height:40px; border-radius:12px; background:#fee2e2; color:#ef4444; font-size:1.4rem; display:flex; align-items:center; justify-content:center; margin:0 auto 0.4rem;">🔴</div>
+        <span style="font-size:0.75rem; font-weight:800; color:var(--text-dark);">Jazzcash</span>
+      </div>
+      <div style="background:var(--card-bg); border:var(--card-border-light); border-radius:16px; padding:1rem 0.5rem; text-align:center; box-shadow:var(--card-shadow);">
+        <div style="width:40px; height:40px; border-radius:12px; background:#d1fae5; color:var(--emerald-green); font-size:1.4rem; display:flex; align-items:center; justify-content:center; margin:0 auto 0.4rem;">🟢</div>
+        <span style="font-size:0.75rem; font-weight:800; color:var(--text-dark);">Easypaisa</span>
+      </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="auth-card">
+      <form onsubmit="handleWithdrawSubmit(event)">
+        
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">SELECT GATEWAY</label>
+          <select id="wit-gateway" class="auth-input-field" style="padding-left:1rem;" required>
+            <option value="Easypaisa">Easypaisa</option>
+            <option value="JazzCash">JazzCash</option>
+            <option value="Other Bank">Other Bank (HBL / Meezan / UBL)</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">ENTER AMOUNT</label>
+          <input type="number" id="wit-amount" class="auth-input-field" style="padding-left:1rem;" placeholder="PKR 0.00" min="100" max="500000" required>
+          <span style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem; display:block;">Min: PKR 100 — Max: PKR 500,000</span>
+        </div>
+
+        <!-- Account Details Card -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem; margin-bottom:1.5rem;">
+          <div style="font-size:0.8rem; font-weight:800; color:var(--cyan-neon); margin-bottom:1rem;">👤 ACCOUNT DETAILS</div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.3rem;">ACCOUNT HOLDER NAME</label>
+            <input type="text" id="wit-title" class="auth-input-field" style="padding-left:1rem;" placeholder="Account holder name" required>
+          </div>
+
+          <div style="margin-bottom:1rem;">
+            <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.3rem;">ACCOUNT NUMBER</label>
+            <input type="text" id="wit-number" class="auth-input-field" style="padding-left:1rem;" placeholder="Enter account number / mobile number" required>
+          </div>
+
+          <div>
+            <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.3rem;">BANK NAME (IF BANK SELECTED)</label>
+            <input type="text" id="wit-bank-name" class="auth-input-field" style="padding-left:1rem;" placeholder="e.g. HBL, Meezan Bank, UBL">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-activate-gold">
+          🚀 Submit Withdraw Request
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="bottom-nav-bar">
+    <a href="/dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏠</div>
+      <span>DASHBOARD</span>
+    </a>
+    <a href="/deposit.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏪</div>
+      <span>DEPOSIT</span>
+    </a>
+    <a href="/mining.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">⚡</div>
+      <span>MINING</span>
+    </a>
+    <a href="/withdraw.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon-box">👛</div>
+      <span>WITHDRAW</span>
+    </a>
+  </div>
+
+  <script src="/js/app-client.js"></script>
+</body>
+</html>

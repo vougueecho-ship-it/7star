@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Mining — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+</head>
+<body>
+
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="drawer-menu" class="drawer-menu">
+    <div class="drawer-header">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <img src="/images/logo.png" style="height:32px; width:auto;" alt="7 Star Logo">
+        <div>
+          <div style="font-weight:800; color:var(--primary-gold);">7 STAR INVEST</div>
+          <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
+        </div>
+      </div>
+      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+    </div>
+    <ul class="drawer-list">
+      <li class="drawer-item"><a href="/dashboard.html">⏱️ Dashboard</a></li>
+      <li class="drawer-item"><a href="/deposit.html">➕ Deposit</a></li>
+      <li class="drawer-item"><a href="/mining.html" class="active">⚡ Mining</a></li>
+      <li class="drawer-item"><a href="/plans.html">⭐ VIP Investment Plans</a></li>
+      <li class="drawer-item"><a href="/withdraw.html">👛 Withdraw</a></li>
+    </ul>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <div class="app-header">
+      <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
+      <div class="header-title-box">
+        <div class="header-subtitle">7 STAR INVEST</div>
+        <div class="header-title">Mining</div>
+      </div>
+      <div class="avatar-btn user-avatar-initials">7S</div>
+    </div>
+
+    <h2 style="text-align:center; font-size:1.4rem; font-weight:800; background:var(--teal-gold-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.2rem;">DAILY MINING</h2>
+    <div style="width:50px; height:4px; border-radius:4px; background:var(--teal-gold-gradient); margin:0.3rem auto 0.75rem;"></div>
+    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">One mining card per active VIP plan — collect when timer ends</p>
+
+    <!-- Empty or Active Mining Box -->
+    <div id="mining-cards-container" class="auth-card" style="text-align:center; padding:3rem 1.5rem; border-radius:28px;">
+      <div style="width:64px; height:64px; border-radius:18px; background:#e0f2fe; color:var(--primary-teal); font-size:2rem; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
+        📦
+      </div>
+      <div style="font-size:1.05rem; font-weight:800; color:var(--text-dark);">No active valid plan found.</div>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; margin-bottom:1.5rem;">Purchase a VIP package to activate daily profit mining.</p>
+      <a href="/plans.html" class="btn-activate-gold" style="text-decoration:none; display:inline-flex; width:auto; padding:0.75rem 1.5rem;">
+        ⭐ View VIP Plans
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="bottom-nav-bar">
+    <a href="/dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏠</div>
+      <span>DASHBOARD</span>
+    </a>
+    <a href="/deposit.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏪</div>
+      <span>DEPOSIT</span>
+    </a>
+    <a href="/mining.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon-box">⚡</div>
+      <span>MINING</span>
+    </a>
+    <a href="/withdraw.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">👛</div>
+      <span>WITHDRAW</span>
+    </a>
+  </div>
+
+  <script src="/js/app-client.js"></script>
+</body>
+</html>

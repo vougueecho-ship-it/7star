@@ -1,0 +1,182 @@
+{
+  "settings": {
+    "siteName": "7 STAR INVEST",
+    "noticeText": "🌟 Welcome to 7 STAR INVEST - Halal & Trusted Earning Platform 💯 | Daily Returns Credited Automatically! | Easypaisa & JazzCash Instant Deposits & Withdrawals!",
+    "easypaisaTitle": "7 Star Financial Service",
+    "easypaisaNumber": "03451234567",
+    "jazzcashTitle": "7 Star Official",
+    "jazzcashNumber": "03007654321",
+    "whatsappNumber": "+923000000000",
+    "minDeposit": 100,
+    "minWithdraw": 100,
+    "level1Commission": 5,
+    "level2Commission": 2
+  },
+  "plans": [
+    {
+      "id": 1,
+      "name": "VIP Level 1",
+      "price": 200,
+      "dailyProfit": 10,
+      "level1Bonus": 10,
+      "level2Bonus": 4,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "VIP Level 2",
+      "price": 350,
+      "dailyProfit": 18,
+      "level1Bonus": 18,
+      "level2Bonus": 7,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "VIP Level 3",
+      "price": 1150,
+      "dailyProfit": 58,
+      "level1Bonus": 58,
+      "level2Bonus": 23,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 4,
+      "name": "VIP Level 4",
+      "price": 1800,
+      "dailyProfit": 90,
+      "level1Bonus": 90,
+      "level2Bonus": 36,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 5,
+      "name": "VIP Level 5",
+      "price": 3750,
+      "dailyProfit": 188,
+      "level1Bonus": 188,
+      "level2Bonus": 75,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 6,
+      "name": "VIP Level 6",
+      "price": 14000,
+      "dailyProfit": 700,
+      "level1Bonus": 700,
+      "level2Bonus": 280,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 7,
+      "name": "VIP Level 7",
+      "price": 31000,
+      "dailyProfit": 1550,
+      "level1Bonus": 1550,
+      "level2Bonus": 620,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 8,
+      "name": "VIP Level 8",
+      "price": 36000,
+      "dailyProfit": 1800,
+      "level1Bonus": 1800,
+      "level2Bonus": 720,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 9,
+      "name": "VIP Level 9",
+      "price": 53000,
+      "dailyProfit": 2650,
+      "level1Bonus": 2650,
+      "level2Bonus": 1060,
+      "durationDays": 30,
+      "active": true
+    },
+    {
+      "id": 10,
+      "name": "VIP Level 10",
+      "price": 236000,
+      "dailyProfit": 11800,
+      "level1Bonus": 11800,
+      "level2Bonus": 4720,
+      "durationDays": 30,
+      "active": true
+    }
+  ],
+  "users": [
+    {
+      "id": "usr_101",
+      "name": "Demo Investor",
+      "phone": "03001234567",
+      "password": "password123",
+      "balance": 1500,
+      "totalDeposit": 2000,
+      "totalWithdraw": 500,
+      "totalProfit": 450,
+      "referralCode": "7STAR101",
+      "referredBy": null,
+      "joinedAt": "2026-08-01",
+      "activePlans": [
+        {
+          "planId": 3,
+          "planName": "VIP Level 3",
+          "price": 1150,
+          "dailyProfit": 58,
+          "startDate": "2026-08-01"
+        }
+      ]
+    },
+    {
+      "id": "usr_837477",
+      "name": "Ahmad",
+      "phone": "aneesr867@gmail.com",
+      "password": "0761071Na@",
+      "balance": 0,
+      "totalDeposit": 0,
+      "totalWithdraw": 0,
+      "totalProfit": 0,
+      "referralCode": "7STAR1367",
+      "referredBy": null,
+      "joinedAt": "2026-08-02",
+      "activePlans": []
+    }
+  ],
+  "deposits": [
+    {
+      "id": "DEP-9812",
+      "userId": "usr_101",
+      "userName": "Demo Investor",
+      "userPhone": "03001234567",
+      "amount": 2000,
+      "gateway": "Easypaisa",
+      "tid": "98234710293",
+      "status": "Approved",
+      "date": "2026-08-01 14:30"
+    }
+  ],
+  "withdrawals": [
+    {
+      "id": "WIT-4410",
+      "userId": "usr_101",
+      "userName": "Demo Investor",
+      "userPhone": "03001234567",
+      "accountTitle": "Demo Account",
+      "accountNumber": "03001234567",
+      "amount": 500,
+      "gateway": "JazzCash",
+      "status": "Approved",
+      "date": "2026-08-02 11:15"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Top Header Brand Card -->
+    <div class="app-header">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <div style="width:44px; height:44px; border-radius:16px; background:#f4f8f6; border:1px solid #e2e8f0; color:var(--primary-teal); font-weight:800; font-size:1.2rem; display:flex; align-items:center; justify-content:center;">
+          ⭐
+        </div>
+        <div>
+          <div style="font-weight:800; font-size:1.05rem; color:var(--primary-gold);">7 STAR</div>
+          <div style="font-size:0.7rem; color:var(--primary-teal); font-weight:700;">7 STAR</div>
+        </div>
+      </div>
+      <a href="/login.html" style="background:#ffffff; color:var(--primary-teal); border:1px solid #e2e8f0; padding:0.45rem 1rem; border-radius:20px; text-decoration:none; font-size:0.8rem; font-weight:800; display:flex; align-items:center; gap:0.4rem; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+        ➜] Login
+      </a>
+    </div>
+
+    <!-- Register Card -->
+    <div class="auth-card" style="border-radius:28px; padding:2.25rem 1.5rem;">
+      <h1 class="auth-title">CREATE ACCOUNT</h1>
+      <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:2rem;">Join 7 STAR INVEST today</p>
+
+      <form onsubmit="handleRegister(event)">
+        
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">USERNAME</label>
+          <div class="auth-input-group">
+            <span class="auth-input-icon">👤</span>
+            <input type="text" id="reg-username" class="auth-input-field" placeholder="Name, number or with spaces" required>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PHONE</label>
+          <div class="auth-input-group">
+            <span class="auth-input-icon">📞</span>
+            <input type="text" id="reg-phone" class="auth-input-field" placeholder="Enter phone number" required>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PASSWORD</label>
+          <div class="auth-input-group">
+            <span class="auth-input-icon">🔒</span>
+            <input type="password" id="reg-password" class="auth-input-field" placeholder="Create password" required>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">REFERRAL CODE (OPTIONAL)</label>
+          <div class="auth-input-group">
+            <span class="auth-input-icon">🎁</span>
+            <input type="text" id="reg-ref" class="auth-input-field" placeholder="Enter referral code">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-activate-gold">
+          👤+ Create Account
+        </button>
+
+      </form>
+
+      <p style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-top:1.75rem;">
+        Already have an account? <a href="/login.html" style="color:var(--primary-teal); font-weight:800; text-decoration:none;">Sign In</a>
+      </p>
+    </div>
+
+  </div>
+
+  <script src="/js/app-client.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) document.getElementById('reg-ref').value = ref;
+  </script>
+</body>
+</html>

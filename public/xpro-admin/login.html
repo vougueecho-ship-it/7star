@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal Login — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+  <style>
+    body { background: var(--bg-gradient); color: var(--text-dark); }
+    .admin-login-box {
+      max-width: 420px;
+      margin: 5rem auto;
+      background: #ffffff;
+      border: 1px solid var(--primary-gold);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 10px 35px rgba(15, 23, 42, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="admin-login-box">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="width: 54px; height: 54px; border-radius: 16px; background: var(--gold-gradient); color: #ffffff; font-weight: 800; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+        🔐
+      </div>
+      <h2 style="color: var(--primary-gold); font-size: 1.6rem; font-weight: 800;">ADMIN PORTAL</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">Authorized System Administration Only</p>
+    </div>
+
+    <form onsubmit="handleAdminLogin(event)">
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.4rem;">ADMIN USERNAME</label>
+        <input type="text" id="adm-username" class="auth-input-field" style="padding-left: 1rem; background: #f8fafc; color: var(--text-dark); border-color: #cbd5e1;" placeholder="Enter admin username" required>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.4rem;">ADMIN PASSWORD</label>
+        <input type="password" id="adm-password" class="auth-input-field" style="padding-left: 1rem; background: #f8fafc; color: var(--text-dark); border-color: #cbd5e1;" placeholder="Enter admin password" required>
+      </div>
+
+      <button type="submit" class="btn-activate-gold" style="font-size: 1rem;">
+        🔓 Sign In to Admin Panel
+      </button>
+    </form>
+  </div>
+
+  <script src="/js/admin-portal.js"></script>
+</body>
+</html>

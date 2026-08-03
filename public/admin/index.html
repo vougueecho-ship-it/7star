@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Control Panel — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="navbar" style="border-bottom-color: var(--primary-gold);">
+    <div class="container nav-container">
+      <a href="/" class="brand-logo">
+        <img src="/images/logo.png" alt="7 Star Logo">
+        <span style="color: var(--primary-gold);">ADMIN PANEL</span>
+      </a>
+      <a href="/dashboard.html" class="btn btn-outline btn-sm">User View</a>
+    </div>
+  </header>
+
+  <div class="container" style="padding: 2rem 1.25rem;">
+    
+    <!-- Admin Navigation Links -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; background: var(--bg-card); padding: 0.85rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+      <a href="/admin/index.html" class="btn btn-gold btn-sm">📊 Overview</a>
+      <a href="/admin/deposits.html" class="btn btn-outline btn-sm">💳 Deposits</a>
+      <a href="/admin/withdrawals.html" class="btn btn-outline btn-sm">💸 Withdrawals</a>
+      <a href="/admin/settings.html" class="btn btn-outline btn-sm">⚙️ Account Settings</a>
+      <a href="/admin/users.html" class="btn btn-outline btn-sm">👥 User Manager</a>
+    </div>
+
+    <!-- Admin Overview Stats -->
+    <div class="stat-box-grid">
+      <div class="stat-box">
+        <div class="stat-icon gold">👥</div>
+        <div class="stat-info">
+          <h4>Total Registered Users</h4>
+          <div id="adm-total-users" class="amount">0</div>
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-icon">📥</div>
+        <div class="stat-info">
+          <h4>Total Deposits Approved</h4>
+          <div id="adm-total-deposits" class="amount">PKR 0</div>
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-icon gold">📤</div>
+        <div class="stat-info">
+          <h4>Total Withdrawals Paid</h4>
+          <div id="adm-total-withdrawals" class="amount">PKR 0</div>
+        </div>
+      </div>
+
+      <div class="stat-box" style="border-color: var(--primary-gold);">
+        <div class="stat-icon gold">⚠️</div>
+        <div class="stat-info">
+          <h4>Pending Requests</h4>
+          <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary-gold);">
+            Deposits: <span id="adm-pending-deposits">0</span> | Payouts: <span id="adm-pending-withdrawals">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action Cards -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+      <div class="glass-card">
+        <h3 style="color: var(--primary-gold); margin-bottom: 0.5rem;">💳 Manage Deposits</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Review pending user Easypaisa/JazzCash TID receipts and approve wallet topups.</p>
+        <a href="/admin/deposits.html" class="btn btn-gold btn-sm">View Pending Deposits</a>
+      </div>
+
+      <div class="glass-card">
+        <h3 style="color: var(--cyan-neon); margin-bottom: 0.5rem;">⚙️ Gateways & Site Notice</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Update your official Easypaisa/JazzCash title/numbers and marquee announcement.</p>
+        <a href="/admin/settings.html" class="btn btn-cyan btn-sm">Edit Gateway Settings</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

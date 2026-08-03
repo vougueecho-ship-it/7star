@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Settings — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+</head>
+<body>
+
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="drawer-menu" class="drawer-menu">
+    <div class="drawer-header">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <img src="/images/logo.png" style="height:32px; width:auto;" alt="7 Star Logo">
+        <div>
+          <div style="font-weight:800; color:var(--primary-gold);">7 STAR INVEST</div>
+          <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
+        </div>
+      </div>
+      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+    </div>
+    <ul class="drawer-list">
+      <li class="drawer-item"><a href="/dashboard.html">⏱️ Dashboard</a></li>
+      <li class="drawer-item"><a href="/deposit.html">➕ Deposit</a></li>
+      <li class="drawer-item"><a href="/mining.html">⚡ Mining</a></li>
+      <li class="drawer-item"><a href="/profile.html" class="active">👤 Profile Settings</a></li>
+    </ul>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <div class="app-header">
+      <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
+      <div class="header-title-box">
+        <div class="header-subtitle">7 STAR INVEST</div>
+        <div class="header-title">Profile</div>
+      </div>
+      <div class="avatar-btn user-avatar-initials">7S</div>
+    </div>
+
+    <h2 style="text-align:center; font-size:1.4rem; font-weight:800; background:var(--teal-gold-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.2rem;">PROFILE SETTINGS</h2>
+    <div style="width:50px; height:4px; border-radius:4px; background:var(--teal-gold-gradient); margin:0.3rem auto 0.75rem;"></div>
+    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Manage your account information</p>
+
+    <!-- Profile Info Card -->
+    <div class="auth-card" style="border-radius:28px;">
+      <div style="display:flex; align-items:center; gap:1rem; padding-bottom:1.25rem; border-bottom:1px solid #f1f5f9; margin-bottom:1.25rem;">
+        <div style="width:56px; height:56px; border-radius:20px; background:#f4f8f6; border:1px solid #e2e8f0; color:var(--primary-teal); font-size:1.6rem; display:flex; align-items:center; justify-content:center;">
+          👤
+        </div>
+        <div>
+          <div class="user-dyn-username" style="font-size:1.15rem; font-weight:800; color:var(--text-dark);">Loading user...</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.1rem;">Member since August 2026</div>
+        </div>
+      </div>
+
+      <form onsubmit="event.preventDefault(); showToast('Profile changes saved!', 'success');">
+        
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-teal); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">ACCOUNT USERNAME</label>
+          <div class="auth-input-group">
+            <span class="auth-input-icon">@</span>
+            <input type="text" class="auth-input-field user-dyn-username" readonly style="border-radius:16px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-teal); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">MOBILE NUMBER</label>
+          <div class="auth-input-group">
+            <span class="auth-input-icon">📞</span>
+            <input type="text" class="auth-input-field" placeholder="+923000000000" style="border-radius:16px;">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-activate-gold">
+          💾 Save Changes
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Verification Card -->
+    <div style="background:#f4f8f6; border:1px solid #e2e8f0; border-radius:24px; padding:1.25rem; margin-top:1.25rem;">
+      <div style="display:flex; align-items:center; gap:0.5rem; color:var(--primary-teal); font-weight:800; font-size:0.9rem; margin-bottom:0.4rem;">
+        🛡️ Profile Verification
+      </div>
+      <p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
+        Username is permanent for account security. Contact support if you need to change it.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="bottom-nav-bar">
+    <a href="/dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏠</div>
+      <span>DASHBOARD</span>
+    </a>
+    <a href="/deposit.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏪</div>
+      <span>DEPOSIT</span>
+    </a>
+    <a href="/mining.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">⚡</div>
+      <span>MINING</span>
+    </a>
+    <a href="/withdraw.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">👛</div>
+      <span>WITHDRAW</span>
+    </a>
+  </div>
+
+  <script src="/js/app-client.js"></script>
+</body>
+</html>

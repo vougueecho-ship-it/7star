@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+  <style>
+    body { background: var(--bg-gradient); color: var(--text-dark); padding-bottom: 2rem; }
+    .admin-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+    .admin-nav-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: var(--text-dark);
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .admin-nav-btn.active {
+      background: var(--gold-gradient);
+      color: #ffffff;
+      border-color: var(--primary-gold);
+    }
+    .table-dark {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .table-dark th, .table-dark td {
+      padding: 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.85rem;
+    }
+    .table-dark th { color: var(--text-muted); background: #f8fafc; font-weight: 700; }
+    .status-badge {
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+    .status-Pending { background: #fef3c7; color: var(--primary-gold); border: 1px solid #fde68a; }
+    .status-Approved { background: #d1fae5; color: var(--emerald-green); border: 1px solid #a7f3d0; }
+    .status-Rejected { background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; }
+  </style>
+</head>
+<body>
+
+  <div style="max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem;">
+    
+    <!-- Top Admin Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--gold-gradient); color: #ffffff; font-weight: 800; font-size: 1.4rem; display: flex; align-items: center; justify-content: center;">
+          ⚙️
+        </div>
+        <div>
+          <h2 style="color: var(--primary-gold); font-size: 1.3rem; font-weight: 800;">ADMIN CONTROL CENTER</h2>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">7 STAR Real-time Management Portal</span>
+        </div>
+      </div>
+
+      <button onclick="adminLogout()" class="admin-nav-btn" style="border-color: #ef4444; color: #ef4444; background:#fee2e2;">🚪 Admin Logout</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+      <button onclick="switchTab('deposits')" id="tab-deposits" class="admin-nav-btn active">💳 Deposits Requests</button>
+      <button onclick="switchTab('withdrawals')" id="tab-withdrawals" class="admin-nav-btn">💸 Payout Requests</button>
+      <button onclick="switchTab('plans')" id="tab-plans" class="admin-nav-btn">⭐ VIP Plan Builder</button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="admin-nav-btn">⚙️ Gateways & Notice</button>
+      <button onclick="switchTab('users')" id="tab-users" class="admin-nav-btn">👥 User Manager</button>
+    </div>
+
+    <!-- Stats Overview Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+      <div class="admin-card">
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL USERS</span>
+        <div id="adm-stat-users" style="font-size: 1.8rem; font-weight: 800; color: var(--text-dark);">0</div>
+      </div>
+      <div class="admin-card">
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL APPROVED DEPOSITS</span>
+        <div id="adm-stat-deposits" style="font-size: 1.8rem; font-weight: 800; color: var(--emerald-green);">PKR 0</div>
+      </div>
+      <div class="admin-card">
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL PAID PAYOUTS</span>
+        <div id="adm-stat-withdrawals" style="font-size: 1.8rem; font-weight: 800; color: var(--primary-gold);">PKR 0</div>
+      </div>
+      <div class="admin-card" style="border-color: var(--primary-gold);">
+        <span style="font-size: 0.75rem; color: var(--primary-gold); font-weight: 700;">PENDING ACTION</span>
+        <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-dark); margin-top: 0.4rem;">
+          Dep: <span id="adm-stat-pending-dep">0</span> | Payout: <span id="adm-stat-pending-wit">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: DEPOSITS -->
+    <div id="view-deposits" class="admin-card">
+      <h3 style="color: var(--primary-gold); margin-bottom: 1rem;">User Deposit Requests (Easypaisa / JazzCash / Bank)</h3>
+      <div style="overflow-x: auto;">
+        <table class="table-dark">
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>User Name & Phone</th>
+              <th>Amount</th>
+              <th>Gateway</th>
+              <th>Trx ID (TID)</th>
+              <th>Screenshot</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="adm-table-deposits"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: WITHDRAWALS -->
+    <div id="view-withdrawals" class="admin-card" style="display: none;">
+      <h3 style="color: var(--emerald-green); margin-bottom: 1rem;">User Withdrawal Payout Requests</h3>
+      <div style="overflow-x: auto;">
+        <table class="table-dark">
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>User Name & Phone</th>
+              <th>Amount</th>
+              <th>Gateway</th>
+              <th>Account Details</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="adm-table-withdrawals"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: PLAN BUILDER -->
+    <div id="view-plans" class="admin-card" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--primary-gold);">VIP Investment Plans Management</h3>
+        <button onclick="openPlanModal()" class="admin-nav-btn active" style="background: var(--gold-gradient); color: #ffffff; border: none; cursor: pointer;">
+          ➕ Add New VIP Plan
+        </button>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="table-dark">
+          <thead>
+            <tr>
+              <th>Plan Name</th>
+              <th>Price</th>
+              <th>Daily Return</th>
+              <th>Total Profit</th>
+              <th>Level 1 (5%)</th>
+              <th>Level 2 (2%)</th>
+              <th>Validity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adm-table-plans"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Plan Editor Modal Dialog -->
+    <div id="plan-modal-overlay" class="custom-modal-overlay">
+      <div class="custom-modal-box" style="max-width: 480px; text-align: left;">
+        <h3 id="plan-modal-title" style="color: var(--primary-gold); font-size: 1.3rem; margin-bottom: 1rem; text-align: center;">Add New VIP Plan</h3>
+        <form onsubmit="saveAdminPlan(event)">
+          <input type="hidden" id="modal-plan-id">
+          
+          <div style="margin-bottom: 0.85rem;">
+            <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">PLAN NAME</label>
+            <input type="text" id="modal-plan-name" class="auth-input-field" style="padding-left: 1rem;" placeholder="e.g. VIP 1" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">PRICE (PKR)</label>
+              <input type="number" id="modal-plan-price" class="auth-input-field" style="padding-left: 1rem;" placeholder="750" required>
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">DAILY RETURN (PKR)</label>
+              <input type="number" id="modal-plan-daily" class="auth-input-field" style="padding-left: 1rem;" placeholder="200" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">TOTAL PROFIT (PKR)</label>
+              <input type="number" id="modal-plan-total" class="auth-input-field" style="padding-left: 1rem;" placeholder="8000" required>
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">VALIDITY (DAYS)</label>
+              <input type="number" id="modal-plan-validity" class="auth-input-field" style="padding-left: 1rem;" placeholder="40" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">LEVEL 1 BONUS (PKR)</label>
+              <input type="number" id="modal-plan-l1" class="auth-input-field" style="padding-left: 1rem;" placeholder="10">
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 800; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">LEVEL 2 BONUS (PKR)</label>
+              <input type="number" id="modal-plan-l2" class="auth-input-field" style="padding-left: 1rem;" placeholder="4">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem;">
+            <button type="button" onclick="closePlanModal()" style="flex: 1; padding: 0.75rem; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: var(--text-dark); font-weight: 700; cursor: pointer;">Cancel</button>
+            <button type="submit" class="btn-activate-gold" style="flex: 1; padding: 0.75rem;">💾 Save Plan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 4: SETTINGS -->
+    <div id="view-settings" class="admin-card" style="display: none; max-width: 650px;">
+      <h3 style="color: var(--primary-gold); margin-bottom: 1.5rem;">Official Gateways & Site Announcement</h3>
+      <form onsubmit="saveAdminSettings(event)">
+        
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Easypaisa Account Title</label>
+          <input type="text" id="sett-ep-title" class="auth-input-field" style="padding-left:1rem; background:#f8fafc; color:var(--text-dark); border-color:#cbd5e1;" required>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Easypaisa Account Number</label>
+          <input type="text" id="sett-ep-num" class="auth-input-field" style="padding-left:1rem; background:#f8fafc; color:var(--text-dark); border-color:#cbd5e1;" required>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">JazzCash Account Title</label>
+          <input type="text" id="sett-jc-title" class="auth-input-field" style="padding-left:1rem; background:#f8fafc; color:var(--text-dark); border-color:#cbd5e1;" required>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">JazzCash Account Number</label>
+          <input type="text" id="sett-jc-num" class="auth-input-field" style="padding-left:1rem; background:#f8fafc; color:var(--text-dark); border-color:#cbd5e1;" required>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Live Announcement Notice Marquee</label>
+          <textarea id="sett-notice" class="auth-input-field" style="padding-left:1rem; background:#f8fafc; color:var(--text-dark); border-color:#cbd5e1;" rows="3" required></textarea>
+        </div>
+
+        <button type="submit" class="btn-activate-gold">
+          💾 Save Settings
+        </button>
+      </form>
+    </div>
+
+    <!-- TAB 5: USERS MANAGER -->
+    <div id="view-users" class="admin-card" style="display: none;">
+      <h3 style="color: var(--primary-gold); margin-bottom: 1rem;">Registered Users & Wallet Balances</h3>
+      <div style="overflow-x: auto;">
+        <table class="table-dark">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Phone</th>
+              <th>Wallet Balance</th>
+              <th>Total Deposit</th>
+              <th>Total Withdraw</th>
+              <th>Ref Code</th>
+              <th>Referred By</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="adm-table-users"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/admin-portal.js"></script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deposit — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+</head>
+<body>
+
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="drawer-menu" class="drawer-menu">
+    <div class="drawer-header">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <img src="/images/logo.png" style="height:32px; width:auto;" alt="7 Star Logo">
+        <div>
+          <div style="font-weight:800; color:var(--primary-gold);">7 STAR INVEST</div>
+          <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
+        </div>
+      </div>
+      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+    </div>
+    <ul class="drawer-list">
+      <li class="drawer-item"><a href="/dashboard.html">⏱️ Dashboard</a></li>
+      <li class="drawer-item"><a href="/deposit.html" class="active">➕ Deposit</a></li>
+      <li class="drawer-item"><a href="/mining.html">⚡ Mining</a></li>
+      <li class="drawer-item"><a href="/withdraw.html">👛 Withdraw</a></li>
+    </ul>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <div class="app-header">
+      <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
+      <div class="header-title-box">
+        <div class="header-subtitle">7 STAR INVEST</div>
+        <div class="header-title">Deposit</div>
+      </div>
+      <div class="avatar-btn user-avatar-initials">7S</div>
+    </div>
+
+    <h2 style="text-align:center; font-size:1.4rem; font-weight:800; background:var(--teal-gold-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.2rem;">DEPOSIT FUNDS</h2>
+    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">Select gateway & submit payment proof</p>
+    <div style="width:50px; height:4px; border-radius:4px; background:var(--teal-gold-gradient); margin:0 auto 1.5rem;"></div>
+
+    <!-- Selected Plan Banner -->
+    <div style="background:var(--teal-gold-gradient); border-radius:24px; padding:1.25rem 1.5rem; color:#ffffff; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--card-shadow); margin-bottom:1.25rem;">
+      <div>
+        <span style="font-size:0.7rem; font-weight:800; color:rgba(255,255,255,0.85); letter-spacing:1px;">SELECTED PLAN</span>
+        <div style="font-size:1.25rem; font-weight:800; color:#ffffff;">VIP 1</div>
+      </div>
+      <div style="font-size:1.5rem; font-weight:800; color:#ffffff;">PKR 750</div>
+    </div>
+
+    <!-- Active Gateway Box -->
+    <div style="background:var(--card-bg); border:var(--card-border-light); border-radius:28px; padding:1.25rem; box-shadow:var(--card-shadow); margin-bottom:1.25rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div style="width:48px; height:48px; border-radius:16px; background:#e0f2fe; color:var(--primary-teal); font-size:1.4rem; display:flex; align-items:center; justify-content:center;">🟢</div>
+          <div>
+            <span style="font-size:0.65rem; font-weight:800; color:var(--primary-teal); letter-spacing:0.5px;">ACTIVE GATEWAY</span>
+            <div style="font-size:1.05rem; font-weight:800; color:var(--text-dark);">Easypaisa</div>
+          </div>
+        </div>
+        <span style="width:28px; height:28px; border-radius:50%; background:var(--primary-teal); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:bold;">✓</span>
+      </div>
+
+      <!-- Account Details -->
+      <div style="background:#f4f8f6; border-radius:18px; padding:1rem 1.25rem; border:1px solid #e2e8f0;">
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem; color:var(--text-muted);">
+          <span>Currency</span>
+          <strong style="color:var(--text-dark);">PKR</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem; color:var(--text-muted);">
+          <span>Account Name</span>
+          <strong id="gateway-ep-name" style="color:var(--primary-teal); font-weight:800;">Muhammad ikaram</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:var(--text-muted);">
+          <span>Account No.</span>
+          <div>
+            <code id="gateway-ep-num" style="color:var(--primary-teal); font-size:1rem; font-weight:800;">03438275273</code>
+            <button onclick="copyText('03438275273')" style="background:var(--teal-gold-gradient); color:#ffffff; border:none; padding:0.3rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer; margin-left:0.4rem;">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submission Form -->
+    <div class="auth-card">
+      <form onsubmit="handleDepositSubmit(event)">
+        
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">SELECT GATEWAY</label>
+          <select id="dep-gateway" class="auth-input-field" style="padding-left:1rem;" required>
+            <option value="Easypaisa">Easypaisa</option>
+            <option value="JazzCash">JazzCash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">DEPOSIT AMOUNT (PKR)</label>
+          <input type="number" id="dep-amount" class="auth-input-field" style="padding-left:1rem;" placeholder="e.g. 750" required>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">TRANSACTION ID (TID)</label>
+          <input type="text" id="dep-tid" class="auth-input-field" style="padding-left:1rem;" placeholder="Enter your payment transaction ID" required>
+        </div>
+
+        <!-- Payment Screenshot Upload Box -->
+        <div style="margin-bottom:1.5rem;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PAYMENT SCREENSHOT</label>
+          <div style="border:2px dashed var(--cyan-neon); border-radius:16px; padding:1.5rem; text-align:center; background:#f0f9ff; cursor:pointer;" onclick="document.getElementById('dep-screenshot-file').click()">
+            <div style="font-size:2rem; color:var(--cyan-neon);">☁️⬆️</div>
+            <div style="font-size:0.85rem; font-weight:800; color:var(--cyan-neon); margin-top:0.3rem;">Tap to upload screenshot</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem;">PNG, JPG, JPEG — max 5MB</div>
+            <input type="file" id="dep-screenshot-file" accept="image/*" style="display:none;">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-activate-gold">
+          🚀 Submit Deposit Request
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="bottom-nav-bar">
+    <a href="/dashboard.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏠</div>
+      <span>DASHBOARD</span>
+    </a>
+    <a href="/deposit.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon-box">🏪</div>
+      <span>DEPOSIT</span>
+    </a>
+    <a href="/mining.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">⚡</div>
+      <span>MINING</span>
+    </a>
+    <a href="/withdraw.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">👛</div>
+      <span>WITHDRAW</span>
+    </a>
+  </div>
+
+  <script src="/js/app-client.js"></script>
+</body>
+</html>

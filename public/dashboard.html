@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — 7 STAR INVEST</title>
+  <link rel="stylesheet" href="/css/app-theme.css">
+</head>
+<body>
+
+  <!-- Slide-out Navigation Drawer -->
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="drawer-menu" class="drawer-menu">
+    <div class="drawer-header">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <img src="/images/logo.png" style="height:32px; width:auto;" alt="7 Star Logo">
+        <div>
+          <div style="font-weight:800; color:var(--primary-gold);">7 STAR INVEST</div>
+          <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
+        </div>
+      </div>
+      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+    </div>
+
+    <div style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); margin-bottom:0.75rem; letter-spacing:1px;">MAIN MENU</div>
+    <ul class="drawer-list">
+      <li class="drawer-item"><a href="/dashboard.html" class="active">⏱️ Dashboard</a></li>
+      <li class="drawer-item"><a href="/deposit.html">➕ Deposit</a></li>
+      <li class="drawer-item"><a href="/mining.html">⚡ Mining</a></li>
+      <li class="drawer-item"><a href="/plans.html">⭐ VIP Investment Plans</a></li>
+      <li class="drawer-item"><a href="/withdraw.html">👛 Withdraw</a></li>
+      <li class="drawer-item"><a href="/profile.html">👤 Profile Settings</a></li>
+      <li class="drawer-item"><a href="/xpro-admin/login.html" style="color:var(--primary-gold);">⚙️ Admin Secret Portal</a></li>
+    </ul>
+
+    <button onclick="logout()" class="logout-btn-red">
+      ⏻ Logout Account
+    </button>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <div class="app-header">
+      <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
+      <div class="header-title-box">
+        <div class="header-subtitle">7 STAR INVEST</div>
+        <div class="header-title">Dashboard</div>
+      </div>
+      <div class="avatar-btn user-avatar-initials">7S</div>
+    </div>
+
+    <!-- Welcome Back Header Card -->
+    <div class="user-welcome-card">
+      <div>
+        <div style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">WELCOME BACK</div>
+        <div class="user-name-title user-dyn-username">Loading user...</div>
+        <div class="user-verified-badge">
+          🛡️ Verified investor account
+        </div>
+      </div>
+      <div class="user-square-avatar user-avatar-initials">7S</div>
+    </div>
+
+    <!-- Available Balance Card -->
+    <div class="balance-card-dark" style="margin-bottom: 1.25rem;">
+      <div class="balance-card-label">AVAILABLE BALANCE</div>
+      <div class="balance-card-amount">
+        <span id="balance-display-val" class="user-dyn-balance">PKR 0</span>
+        <button onclick="toggleBalanceView()" class="icon-action-btn">👁️</button>
+        <button onclick="fetchUserProfile()" class="icon-action-btn">🔄</button>
+      </div>
+      <div class="live-wallet-indicator">
+        🟢 Live wallet balance
+      </div>
+    </div>
+
+    <!-- Today & Team Summary -->
+    <div class="side-stats-grid">
+      <div class="stat-card-white">
+        <div class="stat-card-label">TODAY PROFIT</div>
+        <div class="stat-card-val user-dyn-profit">PKR 0</div>
+      </div>
+      <div class="stat-card-white">
+        <div class="stat-card-label">TEAM MEMBERS</div>
+        <div class="stat-card-val" id="user-dyn-teamcount">0</div>
+      </div>
+    </div>
+
+    <!-- 4 Quick Action Buttons -->
+    <div class="quick-actions-row">
+      <a href="/deposit.html" class="quick-act-btn">
+        <div class="quick-act-icon teal">🏦</div>
+        <div class="quick-act-label">DEPOSIT</div>
+      </a>
+      <a href="/mining.html" class="quick-act-btn">
+        <div class="quick-act-icon gold">⚡</div>
+        <div class="quick-act-label">MINING</div>
+      </a>
+      <a href="/withdraw.html" class="quick-act-btn">
+        <div class="quick-act-icon orange">💸</div>
+        <div class="quick-act-label">WITHDRAW</div>
+      </a>
+      <a href="/plans.html" class="quick-act-btn">
+        <div class="quick-act-icon teal">📑</div>
+        <div class="quick-act-label">RECORDS</div>
+      </a>
+    </div>
+
+    <!-- Services Grid Card -->
+    <div class="services-card">
+      <div class="services-header">
+        <div class="services-title">Services Hub</div>
+        <span class="badge-pill-gold">MENU</span>
+      </div>
+      
+      <div class="services-grid">
+        <a href="/deposit.html" class="service-item">
+          <div class="service-icon-box">🧾</div>
+          <div class="service-name">Deposit History</div>
+        </a>
+        <a href="/withdraw.html" class="service-item">
+          <div class="service-icon-box yellow">📤</div>
+          <div class="service-name">Withdraw History</div>
+        </a>
+        <a href="/plans.html" class="service-item">
+          <div class="service-icon-box">📚</div>
+          <div class="service-name">My Plan</div>
+        </a>
+        <a href="/profile.html" class="service-item">
+          <div class="service-icon-box">👥</div>
+          <div class="service-name">My Team</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Important Links Section -->
+    <div class="links-card">
+      <div class="services-header">
+        <div class="services-title">Important Links</div>
+        <span class="badge-pill-gold">APP & HELPDESK</span>
+      </div>
+
+      <div class="links-row">
+        <a href="/download-apk" class="link-item">
+          <div class="link-icon-circle">📲</div>
+          <span style="font-size:0.75rem; font-weight:700; color:var(--text-dark);">Download APK</span>
+        </a>
+        <a href="https://wa.me/923000000000" target="_blank" class="link-item">
+          <div class="link-icon-circle">💬</div>
+          <span style="font-size:0.75rem; font-weight:700; color:var(--text-dark);">Admin Support</span>
+        </a>
+        <a href="https://wa.me/923000000000" target="_blank" class="link-item">
+          <div class="link-icon-circle">🟢</div>
+          <span style="font-size:0.75rem; font-weight:700; color:var(--text-dark);">WhatsApp</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Referral Link Banner Card -->
+    <div class="referral-banner-card">
+      <div style="font-size:0.85rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">YOUR REFERRAL LINK</div>
+      <div class="referral-input-group">
+        <input type="text" id="user-dyn-reflink" class="referral-input-field" readonly value="https://7starinvest.online/register.html?ref=STAR101">
+        <button onclick="copyReferralLink()" class="referral-copy-btn">📋 Copy</button>
+      </div>
+    </div>
+
+    <!-- Account Review Card -->
+    <div class="account-review-card">
+      <div class="services-header">
+        <div class="services-title">Account Review</div>
+        <span class="badge-pill-gold">SUMMARY</span>
+      </div>
+
+      <div class="review-item">
+        <div class="review-item-left">
+          <div class="review-icon-circle">⬇️</div>
+          <div class="review-item-title">Total Deposit</div>
+        </div>
+        <div class="review-item-val user-dyn-deposit">PKR 0.00</div>
+      </div>
+
+      <div class="review-item">
+        <div class="review-item-left">
+          <div class="review-icon-circle green">⬆️</div>
+          <div class="review-item-title">Total Withdraw</div>
+        </div>
+        <div class="review-item-val user-dyn-withdraw">PKR 0.00</div>
+      </div>
+
+      <div class="review-item">
+        <div class="review-item-left">
+          <div class="review-icon-circle purple">📚</div>
+          <div class="review-item-title">Total Invest</div>
+        </div>
+        <div class="review-item-val user-dyn-deposit">PKR 0.00</div>
+      </div>
+
+      <div class="review-item">
+        <div class="review-item-left">
+          <div class="review-icon-circle cyan">🪙</div>
+          <div class="review-item-title">Today's Earning</div>
+        </div>
+        <div class="review-item-val user-dyn-profit">PKR 0.00</div>
+      </div>
+
+      <div class="review-item" style="border:none;">
+        <div class="review-item-left">
+          <div class="review-icon-circle yellow">🎁</div>
+          <div class="review-item-title">Referral Bonus</div>
+        </div>
+        <div class="review-item-val user-dyn-profit">PKR 0.00</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="bottom-nav-bar">
+    <a href="/dashboard.html" class="bottom-nav-item active">
+      <div class="bottom-nav-icon-box">🏠</div>
+      <span>DASHBOARD</span>
+    </a>
+    <a href="/deposit.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">🏪</div>
+      <span>DEPOSIT</span>
+    </a>
+    <a href="/mining.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">⚡</div>
+      <span>MINING</span>
+    </a>
+    <a href="/withdraw.html" class="bottom-nav-item">
+      <div class="bottom-nav-icon-box">👛</div>
+      <span>WITHDRAW</span>
+    </a>
+  </div>
+
+  <script src="/js/app-client.js"></script>
+</body>
+</html>
