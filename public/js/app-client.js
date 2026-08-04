@@ -9,6 +9,42 @@ let AppState = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Native Mobile App Integration: Bypass landing page inside installed Capacitor app
+  const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || navigator.userAgent.includes('Capacitor');
+  if (isCapacitor) {
+    const currentPath = window.location.pathname;
+    if (currentPath === '/' || currentPath.endsWith('/index.html')) {
+      const token = localStorage.getItem('star_token');
+      window.location.href = token ? '/dashboard.html' : '/login.html';
+      return;
+    }
+  }
+
+  // Native Mobile Hardware Back Button Support
+  document.addEventListener('backbutton', (e) => {
+    e.preventDefault();
+    const activeModal = document.querySelector('.custom-modal-overlay.active, #plan-modal-overlay.active, #receipt-modal-overlay.active');
+    if (activeModal) {
+      activeModal.classList.remove('active');
+      return;
+    }
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    if (drawerOverlay && drawerOverlay.classList.contains('active')) {
+      drawerOverlay.classList.remove('active');
+      const drawerMenu = document.getElementById('drawer-menu');
+      if (drawerMenu) drawerMenu.classList.remove('active');
+      return;
+    }
+    const path = window.location.pathname;
+    if (path.includes('/login.html') || path.includes('/dashboard.html') || path === '/') {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.exitApp();
+      }
+    } else {
+      window.history.back();
+    }
+  });
+
   setupDrawer();
   injectToastContainer();
   injectModalContainer();
