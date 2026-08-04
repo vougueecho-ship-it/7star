@@ -34,19 +34,24 @@
       <form onsubmit="handleLogin(event)">
         
         <div style="margin-bottom:1.25rem;">
-          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">USERNAME / PHONE</label>
+          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">EMAIL / USERNAME / PHONE</label>
           <div class="auth-input-group">
             <span class="auth-input-icon">👤</span>
-            <input type="text" id="login-username" class="auth-input-field" placeholder="Username, number or with spaces" required>
+            <input type="text" id="login-username" class="auth-input-field" placeholder="Email, username or phone number" required>
           </div>
         </div>
 
-        <div style="margin-bottom:1.5rem;">
+        <div style="margin-bottom:0.75rem;">
           <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PASSWORD</label>
           <div class="auth-input-group">
             <span class="auth-input-icon">🔒</span>
             <input type="password" id="login-password" class="auth-input-field" placeholder="Enter password" required>
+            <span onclick="togglePasswordVisibility('login-password', this)" style="cursor:pointer; padding: 0 10px; font-size: 1.1rem; user-select:none;">👁️</span>
           </div>
+        </div>
+
+        <div style="text-align:right; margin-bottom:1.5rem;">
+          <a href="/forgot-password.html" style="font-size:0.75rem; color:var(--primary-teal); font-weight:700; text-decoration:none;">Forgot Password?</a>
         </div>
 
         <button type="submit" class="btn-activate-gold">

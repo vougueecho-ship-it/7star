@@ -412,8 +412,10 @@ async function handleRegister(e) {
   e.preventDefault();
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const username = document.getElementById('reg-username').value;
+  const email = document.getElementById('reg-email').value;
   const phone = document.getElementById('reg-phone').value;
   const password = document.getElementById('reg-password').value;
+  const otp = document.getElementById('reg-otp').value;
   const ref = document.getElementById('reg-ref').value;
 
   setButtonLoading(submitBtn, true, 'Creating Account...');
@@ -422,7 +424,7 @@ async function handleRegister(e) {
     const res = await fetch(`${API}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, phone, password, ref })
+      body: JSON.stringify({ username, email, phone, password, otp, ref })
     });
     const data = await res.json();
     if (data.success) {
@@ -642,4 +644,134 @@ function copyReferralLink() {
 function copyText(str) {
   navigator.clipboard.writeText(str);
   showToast(`Copied: ${str}`, 'info');
+}
+
+// Send Registration OTP
+async function sendRegisterOtp(e) {
+  if (e) e.preventDefault();
+  const emailElem = document.getElementById('reg-email');
+  if (!emailElem || !emailElem.value) {
+    return showToast('Please enter your email address first', 'error');
+  }
+  
+  const btn = document.getElementById('btn-send-otp');
+  setButtonLoading(btn, true, 'Sending...');
+
+  try {
+    const res = await fetch(`${API}/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailElem.value, type: 'signup' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      let count = 60;
+      btn.disabled = true;
+      const interval = setInterval(() => {
+        if (count <= 0) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.innerHTML = 'Send OTP';
+        } else {
+          btn.innerHTML = `Resend (${count}s)`;
+          count--;
+        }
+      }, 1000);
+    } else {
+      setButtonLoading(btn, false);
+      showCustomModal('OTP Error', data.message, 'error');
+    }
+  } catch (err) {
+    setButtonLoading(btn, false);
+    showToast('Failed to send OTP. Try again.', 'error');
+  }
+}
+
+// Send Forgot Password OTP
+async function sendForgotOtp(e) {
+  if (e) e.preventDefault();
+  const emailElem = document.getElementById('forgot-email');
+  if (!emailElem || !emailElem.value) {
+    return showToast('Please enter your email address first', 'error');
+  }
+  
+  const btn = document.getElementById('btn-send-otp');
+  setButtonLoading(btn, true, 'Sending...');
+
+  try {
+    const res = await fetch(`${API}/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailElem.value, type: 'forgot' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      let count = 60;
+      btn.disabled = true;
+      const interval = setInterval(() => {
+        if (count <= 0) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.innerHTML = 'Send OTP';
+        } else {
+          btn.innerHTML = `Resend (${count}s)`;
+          count--;
+        }
+      }, 1000);
+    } else {
+      setButtonLoading(btn, false);
+      showCustomModal('OTP Error', data.message, 'error');
+    }
+  } catch (err) {
+    setButtonLoading(btn, false);
+    showToast('Failed to send OTP. Try again.', 'error');
+  }
+}
+
+// Reset Password Form Handler
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const email = document.getElementById('forgot-email').value;
+  const otp = document.getElementById('forgot-otp').value;
+  const newPassword = document.getElementById('forgot-new-password').value;
+
+  setButtonLoading(submitBtn, true, 'Resetting Password...');
+
+  try {
+    const res = await fetch(`${API}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp, newPassword })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      setTimeout(() => {
+        window.location.href = '/login.html';
+      }, 1500);
+    } else {
+      setButtonLoading(submitBtn, false);
+      showCustomModal('Reset Failed', data.message, 'error');
+    }
+  } catch (err) {
+    setButtonLoading(submitBtn, false);
+    showToast('Server connection error', 'error');
+  }
+}
+
+// Show/Hide Password Toggle
+function togglePasswordVisibility(inputFieldId, element) {
+  const input = document.getElementById(inputFieldId);
+  if (input) {
+    if (input.type === 'password') {
+      input.type = 'text';
+      element.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      element.textContent = '👁️';
+    }
+  }
 }

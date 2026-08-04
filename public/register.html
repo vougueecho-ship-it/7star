@@ -42,6 +42,25 @@
         </div>
 
         <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">EMAIL ADDRESS</label>
+          <div style="display:flex; gap:0.5rem;">
+            <div class="auth-input-group" style="flex:1; margin-bottom:0;">
+              <span class="auth-input-icon">📧</span>
+              <input type="email" id="reg-email" class="auth-input-field" placeholder="Enter email address" required>
+            </div>
+            <button type="button" onclick="sendRegisterOtp(event)" id="btn-send-otp" class="btn-activate-gold" style="width:auto; padding:0 0.85rem; font-size:0.75rem; margin-top:0; border-radius:12px; white-space:nowrap; flex-shrink:0;">Send OTP</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">EMAIL OTP CODE</label>
+          <div class="auth-input-group">
+            <span class="auth-input-icon">🔑</span>
+            <input type="text" id="reg-otp" class="auth-input-field" placeholder="Enter 6-digit OTP code" required>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
           <label style="font-size:0.75rem; font-weight:800; color:var(--text-muted); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PHONE</label>
           <div class="auth-input-group">
             <span class="auth-input-icon">📞</span>
@@ -54,6 +73,7 @@
           <div class="auth-input-group">
             <span class="auth-input-icon">🔒</span>
             <input type="password" id="reg-password" class="auth-input-field" placeholder="Create password" required>
+            <span onclick="togglePasswordVisibility('reg-password', this)" style="cursor:pointer; padding: 0 10px; font-size: 1.1rem; user-select:none;">👁️</span>
           </div>
         </div>
 

@@ -19,11 +19,11 @@ export async function POST(req: Request) {
     await connectToDatabase();
 
     const user = await User.findOne({
-      $or: [{ username }, { phone: username }]
+      $or: [{ username }, { phone: username }, { email: username }]
     });
 
     if (!user) {
-      return NextResponse.json({ success: false, message: 'Invalid username or password' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'Invalid username, email, or password' }, { status: 401 });
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash);

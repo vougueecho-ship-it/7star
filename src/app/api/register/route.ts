@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
+import Otp from '@/models/Otp';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -10,20 +11,30 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { username, phone, password, ref } = await req.json();
+    const { username, email, phone, password, otp, ref } = await req.json();
 
-    if (!username || !phone || !password) {
-      return NextResponse.json({ success: false, message: 'Please fill all required fields' }, { status: 400 });
+    if (!username || !email || !phone || !password || !otp) {
+      return NextResponse.json({ success: false, message: 'Please fill all required fields including Email OTP' }, { status: 400 });
     }
 
     await connectToDatabase();
 
+    // Verify OTP
+    const validOtp = await Otp.findOne({ email, otp });
+    if (!validOtp) {
+      return NextResponse.json({ success: false, message: 'Invalid or expired OTP verification code' }, { status: 400 });
+    }
+
+    // Delete OTP after verification
+    await Otp.deleteOne({ _id: validOtp._id });
+
+    // Check if username, email, or phone is already registered
     const existing = await User.findOne({
-      $or: [{ username }, { phone }]
+      $or: [{ username }, { email }, { phone }]
     });
 
     if (existing) {
-      return NextResponse.json({ success: false, message: 'Username or phone number already registered' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Username, Email, or Phone number already registered' }, { status: 400 });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -31,6 +42,7 @@ export async function POST(req: Request) {
 
     const newUser = await User.create({
       username,
+      email,
       phone,
       passwordHash,
       referralCode,
@@ -42,6 +54,7 @@ export async function POST(req: Request) {
     const userObject = {
       id: newUser._id,
       username: newUser.username,
+      email: newUser.email,
       phone: newUser.phone,
       balance: newUser.balance,
       totalDeposit: newUser.totalDeposit,

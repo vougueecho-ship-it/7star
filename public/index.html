@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    if (window.Capacitor || navigator.userAgent.includes('Capacitor') || window.location.search.includes('platform=android')) {
+      const token = localStorage.getItem('star_token');
+      window.location.href = token ? '/dashboard.html' : '/login.html';
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>7 STAR INVEST — Official Halal & Trusted Earning Platform</title>
   <link rel="stylesheet" href="/css/main.css">
