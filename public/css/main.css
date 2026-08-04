@@ -605,17 +605,54 @@ a:hover {
   transform: scale(1.1);
 }
 
+/* Enhanced Responsive Layout Rules */
+.hero-action-btns {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.plans-section-padding {
+  padding: 3rem 0;
+}
+
+.commission-section-padding {
+  padding: 2rem 0;
+}
+
+.commission-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
 /* Responsive Media Queries */
-@media (max-width: 900px) {
+@media (max-width: 992px) {
   .hero-section {
     grid-template-columns: 1fr;
     text-align: center;
+    padding: 2.5rem 0 1.5rem;
   }
   .hero-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   .trust-badges {
     justify-content: center;
+  }
+  .hero-action-btns {
+    justify-content: center;
+  }
+  .commission-card-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  .commission-card-grid ul {
+    text-align: left;
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
   }
   .dashboard-grid {
     grid-template-columns: 1fr;
@@ -625,5 +662,72 @@ a:hover {
   }
   .mobile-nav {
     display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .notice-marquee {
+    font-size: 0.8rem;
+    padding: 0.4rem 0;
+  }
+  .marquee-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    margin-left: 0.5rem;
+  }
+  .navbar {
+    padding: 0.75rem 0;
+  }
+  .brand-logo {
+    font-size: 1.1rem;
+    gap: 0.5rem;
+  }
+  .brand-logo img {
+    height: 34px;
+  }
+  .nav-links {
+    gap: 0.5rem;
+  }
+  .btn-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+  }
+  .hero-title {
+    font-size: 1.65rem;
+    line-height: 1.25;
+  }
+  .hero-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+  .badge-item {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.75rem;
+  }
+  .hero-action-btns {
+    flex-direction: column;
+    width: 100%;
+  }
+  .hero-action-btns .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .section-title {
+    font-size: 1.6rem;
+  }
+  .section-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .whatsapp-float {
+    bottom: 75px;
+    right: 15px;
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
   }
 }
