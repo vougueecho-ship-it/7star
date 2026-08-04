@@ -177,6 +177,42 @@ async function fetchUserProfile() {
       AppState.user = data.user;
       AppState.activePlans = data.activePlans;
       localStorage.setItem('star_user', JSON.stringify(data.user));
+      
+      // Update team count UI
+      const teamCountElem = document.getElementById('user-dyn-teamcount');
+      if (teamCountElem) {
+        teamCountElem.textContent = data.teamCount || '0';
+      }
+
+      // Render Referral Team List Table
+      const teamTbody = document.getElementById('user-team-tbody');
+      if (teamTbody) {
+        if (data.teamList && data.teamList.length > 0) {
+          teamTbody.innerHTML = data.teamList.map(member => {
+            const date = new Date(member.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+            return `
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 0.75rem; text-align: left; font-size: 0.85rem; font-weight: 700; color: var(--text-dark);">${member.username}</td>
+                <td style="padding: 0.75rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">${member.phone}</td>
+                <td style="padding: 0.75rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">${date}</td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          teamTbody.innerHTML = `
+            <tr>
+              <td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                No referrals yet. Share your link to start building your team!
+              </td>
+            </tr>
+          `;
+        }
+      }
+
       updateClientUI();
     }
   } catch (err) {
@@ -226,8 +262,8 @@ function renderPlans(plans) {
     const validityDays = p.validity_days || p.validityDays || 40;
     const dailyProfit = p.daily_profit || p.dailyProfit || 0;
     const totalProfit = p.total_profit || p.totalProfit || 0;
-    const level1Bonus = p.level1_bonus || p.level1Bonus || Math.round(dailyProfit * 0.05);
-    const level2Bonus = p.level2_bonus || p.level2Bonus || Math.round(dailyProfit * 0.02);
+    const level1Bonus = Math.round(p.price * 0.10);
+    const level2Bonus = Math.round(p.price * 0.05);
 
     return `
     <div class="vip-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:28px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 30px rgba(15,23,42,0.05);">
@@ -276,7 +312,7 @@ function renderPlans(plans) {
         <div style="background:#ffffff; border-radius:12px; padding:0.6rem 0.85rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
           <span>Level 1</span>
           <div>
-            <span style="color:var(--emerald-green); font-weight:800; margin-right:0.4rem;">5%</span>
+            <span style="color:var(--emerald-green); font-weight:800; margin-right:0.4rem;">10%</span>
             <strong style="color:var(--primary-gold);">PKR ${level1Bonus}</strong>
           </div>
         </div>
@@ -284,7 +320,7 @@ function renderPlans(plans) {
         <div style="background:#ffffff; border-radius:12px; padding:0.6rem 0.85rem; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
           <span>Level 2</span>
           <div>
-            <span style="color:var(--cyan-neon); font-weight:800; margin-right:0.4rem;">2%</span>
+            <span style="color:var(--cyan-neon); font-weight:800; margin-right:0.4rem;">5%</span>
             <strong style="color:var(--primary-gold);">PKR ${level2Bonus}</strong>
           </div>
         </div>

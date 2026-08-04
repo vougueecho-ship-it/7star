@@ -44,19 +44,21 @@ export async function POST(req: Request) {
       status: 'Active'
     });
 
-    // Credit Level 1 & Level 2 Commissions
+    // Credit Level 1 & Level 2 Commissions (10% Direct & 5% Indirect)
     if (user.referredBy) {
       const referrerL1 = await User.findOne({ referralCode: user.referredBy });
       if (referrerL1) {
-        referrerL1.balance += plan.level1Bonus;
-        referrerL1.totalProfit += plan.level1Bonus;
+        const level1Comm = Math.round(plan.price * 0.10);
+        referrerL1.balance += level1Comm;
+        referrerL1.totalProfit += level1Comm;
         await referrerL1.save();
 
         if (referrerL1.referredBy) {
           const referrerL2 = await User.findOne({ referralCode: referrerL1.referredBy });
           if (referrerL2) {
-            referrerL2.balance += plan.level2Bonus;
-            referrerL2.totalProfit += plan.level2Bonus;
+            const level2Comm = Math.round(plan.price * 0.05);
+            referrerL2.balance += level2Comm;
+            referrerL2.totalProfit += level2Comm;
             await referrerL2.save();
           }
         }

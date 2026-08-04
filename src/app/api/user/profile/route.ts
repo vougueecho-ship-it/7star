@@ -27,6 +27,7 @@ export async function GET(req: Request) {
 
     const activePlans = await UserPlan.find({ userId: user._id, status: 'Active' });
     const teamCount = await User.countDocuments({ referredBy: user.referralCode });
+    const teamList = await User.find({ referredBy: user.referralCode }).select('username phone balance createdAt').sort({ createdAt: -1 });
 
     const userObject = {
       id: user._id,
@@ -44,7 +45,8 @@ export async function GET(req: Request) {
       success: true,
       user: userObject,
       activePlans,
-      teamCount
+      teamCount,
+      teamList
     });
   } catch (err: any) {
     console.error('Profile API Error:', err);
