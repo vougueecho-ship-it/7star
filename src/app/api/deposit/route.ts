@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    let screenshotPath: string | null = null;
+    let screenshotPath: string | null = screenshotData || null;
 
     if (screenshotData && screenshotData.startsWith('data:image')) {
       try {
@@ -35,7 +35,8 @@ export async function POST(req: Request) {
         fs.writeFileSync(path.join(uploadsDir, fileName), base64Data, 'base64');
         screenshotPath = `/uploads/${fileName}`;
       } catch (e) {
-        console.error('Failed to save screenshot:', e);
+        // Fallback to storing raw base64 data URL directly for Vercel serverless environment
+        screenshotPath = screenshotData;
       }
     }
 

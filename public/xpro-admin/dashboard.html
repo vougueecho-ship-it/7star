@@ -287,6 +287,17 @@
       </div>
     </div>
 
+    <!-- Deposit Receipt Image Viewer Modal Dialog -->
+    <div id="receipt-modal-overlay" class="custom-modal-overlay">
+      <div class="custom-modal-box" style="max-width: 520px; width: calc(100% - 2rem); max-height: 90vh; text-align: center; padding: 1.5rem; overflow-y: auto;">
+        <h3 style="color: var(--primary-gold); font-size: 1.2rem; font-weight: 800; margin-bottom: 0.75rem;">📷 Payment Receipt Proof</h3>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 0.5rem; margin-bottom: 1rem; text-align: center;">
+          <img id="receipt-modal-img" src="" alt="Payment Receipt" style="max-width: 100%; height: auto; max-height: 60vh; border-radius: 12px; object-fit: contain;">
+        </div>
+        <button type="button" onclick="closeReceiptModal()" class="btn-activate-gold" style="width: 100%; padding: 0.75rem;">Close Receipt</button>
+      </div>
+    </div>
+
     <!-- TAB 4: SETTINGS -->
     <div id="view-settings" class="admin-card" style="display: none; max-width: 650px;">
       <h3 style="color: var(--primary-gold); font-size: 1.1rem; font-weight: 800; margin-bottom: 1.5rem;">Official Gateways & Site Announcement</h3>

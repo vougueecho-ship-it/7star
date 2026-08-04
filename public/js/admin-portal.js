@@ -154,7 +154,7 @@ function renderDepositsTable() {
       <td><span style="color:#d97706; font-weight:700;">${d.gateway}</span></td>
       <td><code>${d.tid}</code></td>
       <td>
-        ${d.screenshot ? `<a href="${d.screenshot}" target="_blank" style="color:#059669; text-decoration:underline;">View Receipt</a>` : '<span style="color:#64748b;">No Image</span>'}
+        ${d.screenshot ? `<button onclick="viewReceiptModal('${d.screenshot}')" class="admin-nav-btn" style="background:#fffbeb; color:#d97706; padding:0.3rem 0.6rem; font-size:0.75rem; border:1px solid #fde68a; cursor:pointer;">📷 View Receipt</button>` : '<span style="color:#94a3b8; font-size:0.75rem;">No Image</span>'}
       </td>
       <td><span class="status-badge status-${d.status}">${d.status}</span></td>
       <td>
@@ -165,6 +165,23 @@ function renderDepositsTable() {
       </td>
     </tr>
   `).join('');
+}
+
+// Receipt Image Viewer Handlers
+function viewReceiptModal(src) {
+  const overlay = document.getElementById('receipt-modal-overlay');
+  const img = document.getElementById('receipt-modal-img');
+  if (overlay && img) {
+    img.src = src;
+    overlay.classList.add('active');
+  }
+}
+
+function closeReceiptModal() {
+  const overlay = document.getElementById('receipt-modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
 }
 
 // Approve / Reject Deposit Action

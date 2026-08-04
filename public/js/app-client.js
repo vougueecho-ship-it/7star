@@ -291,7 +291,7 @@ function updateClientUI() {
     balanceElems.forEach(e => e.textContent = `PKR ${(u.balance || 0).toLocaleString()}`);
     depositElems.forEach(e => e.textContent = `PKR ${(u.total_deposit || 0).toLocaleString()}`);
     withdrawElems.forEach(e => e.textContent = `PKR ${(u.total_withdraw || 0).toLocaleString()}`);
-    profitElems.forEach(e => e.textContent = `PKR ${(u.total_profit || 0).toLocaleString()}`);
+    profitElems.forEach(e => e.textContent = `PKR ${(u.total_profit ?? u.totalProfit ?? 0).toLocaleString()}`);
     
     avatarInitials.forEach(e => {
       e.textContent = (u.username || '7S').slice(0, 2).toUpperCase();

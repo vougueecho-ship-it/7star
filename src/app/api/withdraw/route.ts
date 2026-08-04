@@ -25,7 +25,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Insufficient wallet balance' }, { status: 400 });
     }
 
+    // Bonded Capital Check: Only earned daily mining profits & referral commissions are withdrawable
+    const withdrawableProfit = user.totalProfit || 0;
+    if (withdrawableProfit <= 0 || numAmount > withdrawableProfit) {
+      return NextResponse.json({
+        success: false,
+        message: `Withdrawal limit exceeded! Invested capital is locked in active plans. You can only withdraw your earned daily mining profits & referral bonuses (Available Withdrawable Profit: PKR ${withdrawableProfit.toLocaleString()}).`
+      }, { status: 400 });
+    }
+
     user.balance -= numAmount;
+    user.totalProfit = Math.max(0, user.totalProfit - numAmount);
     await user.save();
 
     const withdrawalRef = 'WIT' + Date.now().toString().slice(-6) + Math.floor(10 + Math.random() * 90);
