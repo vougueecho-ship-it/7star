@@ -896,3 +896,44 @@ button:disabled, .btn-activate-gold:disabled, .admin-nav-btn:disabled, [disabled
   display: inline-block;
   animation: spin 0.8s linear infinite;
 }
+
+/* Mobile Pull-to-Refresh Indicator */
+.ptr-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(254, 243, 199, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--primary-gold);
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.2);
+  z-index: 99999;
+  transition: height 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ptr-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-gold);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.ptr-icon {
+  font-size: 1.2rem;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.ptr-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+

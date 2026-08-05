@@ -20,7 +20,7 @@
       "dailyProfit": 10,
       "level1Bonus": 10,
       "level2Bonus": 4,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -30,7 +30,7 @@
       "dailyProfit": 18,
       "level1Bonus": 18,
       "level2Bonus": 7,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -40,7 +40,7 @@
       "dailyProfit": 58,
       "level1Bonus": 58,
       "level2Bonus": 23,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -50,7 +50,7 @@
       "dailyProfit": 90,
       "level1Bonus": 90,
       "level2Bonus": 36,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -60,7 +60,7 @@
       "dailyProfit": 188,
       "level1Bonus": 188,
       "level2Bonus": 75,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -70,7 +70,7 @@
       "dailyProfit": 700,
       "level1Bonus": 700,
       "level2Bonus": 280,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -80,7 +80,7 @@
       "dailyProfit": 1550,
       "level1Bonus": 1550,
       "level2Bonus": 620,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -90,7 +90,7 @@
       "dailyProfit": 1800,
       "level1Bonus": 1800,
       "level2Bonus": 720,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -100,7 +100,7 @@
       "dailyProfit": 2650,
       "level1Bonus": 2650,
       "level2Bonus": 1060,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     },
     {
@@ -110,7 +110,7 @@
       "dailyProfit": 11800,
       "level1Bonus": 11800,
       "level2Bonus": 4720,
-      "durationDays": 30,
+      "durationDays": 12,
       "active": true
     }
   ],

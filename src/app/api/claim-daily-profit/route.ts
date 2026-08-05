@@ -20,6 +20,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Active investment plan not found' }, { status: 404 });
     }
 
+    const maxClaims = userPlan.validityDays || 12;
+    const currentClaims = userPlan.claimsCount || 0;
+
+    if (currentClaims >= maxClaims) {
+      userPlan.status = 'Completed';
+      await userPlan.save();
+      return NextResponse.json({
+        success: false,
+        message: `This ${maxClaims}-day investment plan cycle has been fully completed and expired!`
+      }, { status: 400 });
+    }
+
     const lastClaim = new Date(userPlan.lastClaim || userPlan.createdAt);
     const now = new Date();
     const diffHours = (now.getTime() - lastClaim.getTime()) / (1000 * 60 * 60);
@@ -42,11 +54,17 @@ export async function POST(req: Request) {
     }
 
     userPlan.lastClaim = new Date();
+    userPlan.claimsCount = currentClaims + 1;
+    if (userPlan.claimsCount >= maxClaims) {
+      userPlan.status = 'Completed';
+    }
     await userPlan.save();
 
     return NextResponse.json({
       success: true,
-      message: `Successfully claimed PKR ${profitAmount} daily mining profit!`,
+      message: userPlan.status === 'Completed'
+        ? `Successfully claimed PKR ${profitAmount}! Final claim reached — plan status is now Completed.`
+        : `Successfully claimed PKR ${profitAmount} daily mining profit! (${userPlan.claimsCount}/${maxClaims} days claimed)`,
       profit: profitAmount
     });
   } catch (err: any) {

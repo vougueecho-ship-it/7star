@@ -16,7 +16,7 @@ const PlanSchema: Schema = new Schema({
   price: { type: Number, required: true },
   dailyProfit: { type: Number, required: true },
   totalProfit: { type: Number, required: true },
-  validityDays: { type: Number, default: 40 },
+  validityDays: { type: Number, default: 12 },
   level1Bonus: { type: Number, required: true },
   level2Bonus: { type: Number, required: true },
   active: { type: Boolean, default: true }

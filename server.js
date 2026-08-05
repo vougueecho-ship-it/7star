@@ -51,7 +51,7 @@ db.exec(`
     price REAL NOT NULL,
     daily_profit REAL NOT NULL,
     total_profit REAL NOT NULL,
-    validity_days INTEGER DEFAULT 40,
+    validity_days INTEGER DEFAULT 12,
     level1_bonus REAL NOT NULL,
     level2_bonus REAL NOT NULL,
     active INTEGER DEFAULT 1
@@ -65,6 +65,8 @@ db.exec(`
     investment REAL NOT NULL,
     daily_profit REAL NOT NULL,
     total_profit REAL NOT NULL,
+    validity_days INTEGER DEFAULT 12,
+    claims_count INTEGER DEFAULT 0,
     last_claim DATETIME,
     status TEXT DEFAULT 'Active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -253,7 +255,7 @@ app.post('/api/withdraw', (req, res) => {
     return res.status(400).json({ success: false, message: 'Please fill all withdrawal details' });
   }
 
-  const user = db.prepare('SELECT id, username, phone, balance FROM users WHERE id = ?').get(userId);
+  const user = db.prepare('SELECT id, username, phone, balance, total_profit FROM users WHERE id = ?').get(userId);
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
   const numAmount = Number(amount);
@@ -261,7 +263,15 @@ app.post('/api/withdraw', (req, res) => {
     return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
   }
 
-  db.prepare('UPDATE users SET balance = balance - ? WHERE id = ?').run(numAmount, user.id);
+  const withdrawableProfit = user.total_profit || 0;
+  if (withdrawableProfit <= 0 || numAmount > withdrawableProfit) {
+    return res.status(400).json({
+      success: false,
+      message: `Withdrawal limit exceeded! Invested capital is locked in active plans. You can only withdraw earned daily mining profits & referral bonuses (Available Withdrawable Profit: PKR ${withdrawableProfit.toLocaleString()}).`
+    });
+  }
+
+  db.prepare('UPDATE users SET balance = balance - ?, total_profit = MAX(0, total_profit - ?) WHERE id = ?').run(numAmount, numAmount, user.id);
 
   const withdrawalRef = 'WIT' + Date.now().toString().slice(-6) + Math.floor(10 + Math.random() * 90);
   db.prepare(`

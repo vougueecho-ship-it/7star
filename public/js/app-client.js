@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupDrawer();
   injectToastContainer();
   injectModalContainer();
+  setupPullToRefresh();
   
   updateClientUI(); // Render immediately from local state
 
@@ -817,4 +818,93 @@ function togglePasswordVisibility(inputFieldId, element) {
       element.textContent = '👁️';
     }
   }
+}
+
+// Native Mobile Pull-to-Refresh System
+function setupPullToRefresh() {
+  if (document.getElementById('pull-to-refresh-indicator')) return;
+
+  const indicator = document.createElement('div');
+  indicator.id = 'pull-to-refresh-indicator';
+  indicator.className = 'ptr-indicator';
+  indicator.innerHTML = `
+    <div class="ptr-content">
+      <span id="ptr-icon" class="ptr-icon">⬇️</span>
+      <span id="ptr-text" class="ptr-text">Pull down to refresh</span>
+    </div>
+  `;
+  document.body.appendChild(indicator);
+
+  const ptrIcon = document.getElementById('ptr-icon');
+  const ptrText = document.getElementById('ptr-text');
+
+  let startY = 0;
+  let currentY = 0;
+  let isPulling = false;
+  let isRefreshing = false;
+  const threshold = 60;
+
+  window.addEventListener('touchstart', (e) => {
+    if (window.scrollY <= 0 && !isRefreshing) {
+      startY = e.touches[0].clientY;
+      isPulling = true;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isPulling || isRefreshing) return;
+    currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+
+    if (diff > 0 && window.scrollY <= 0) {
+      const pullHeight = Math.min(diff * 0.45, 75);
+      indicator.style.height = `${pullHeight}px`;
+      indicator.style.opacity = `${pullHeight / 75}`;
+
+      if (pullHeight >= threshold) {
+        ptrIcon.textContent = '🔄';
+        ptrIcon.classList.remove('spinning');
+        ptrText.textContent = 'Release to refresh';
+      } else {
+        ptrIcon.textContent = '⬇️';
+        ptrIcon.classList.remove('spinning');
+        ptrText.textContent = 'Pull down to refresh';
+      }
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', async () => {
+    if (!isPulling || isRefreshing) return;
+    isPulling = false;
+
+    const currentHeight = parseFloat(indicator.style.height || '0');
+    if (currentHeight >= threshold) {
+      isRefreshing = true;
+      indicator.style.height = '60px';
+      indicator.style.opacity = '1';
+      ptrIcon.textContent = '🔄';
+      ptrIcon.classList.add('spinning');
+      ptrText.textContent = 'Refreshing data...';
+
+      try {
+        await loadConfig();
+        if (AppState.token) {
+          await fetchUserProfile();
+        }
+        showToast('App refreshed successfully!', 'success');
+      } catch (err) {
+        console.error('Pull to refresh error:', err);
+      }
+
+      setTimeout(() => {
+        indicator.style.height = '0px';
+        indicator.style.opacity = '0';
+        ptrIcon.classList.remove('spinning');
+        isRefreshing = false;
+      }, 500);
+    } else {
+      indicator.style.height = '0px';
+      indicator.style.opacity = '0';
+    }
+  });
 }

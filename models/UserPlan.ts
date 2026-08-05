@@ -7,6 +7,8 @@ export interface IUserPlan extends Document {
   investment: number;
   dailyProfit: number;
   totalProfit: number;
+  validityDays: number;
+  claimsCount: number;
   lastClaim: Date;
   status: string;
   createdAt: Date;
@@ -19,6 +21,8 @@ const UserPlanSchema: Schema = new Schema({
   investment: { type: Number, required: true },
   dailyProfit: { type: Number, required: true },
   totalProfit: { type: Number, required: true },
+  validityDays: { type: Number, default: 12 },
+  claimsCount: { type: Number, default: 0 },
   lastClaim: { type: Date, default: Date.now },
   status: { type: String, default: 'Active' },
   createdAt: { type: Date, default: Date.now }

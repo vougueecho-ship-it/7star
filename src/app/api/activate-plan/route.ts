@@ -33,13 +33,18 @@ export async function POST(req: Request) {
     user.balance -= plan.price;
     await user.save();
 
+    const planValidity = plan.validityDays || 12;
+    const planTotalProfit = plan.dailyProfit * planValidity;
+
     await UserPlan.create({
       userId: user._id,
       planId: plan._id,
       planName: plan.name,
       investment: plan.price,
       dailyProfit: plan.dailyProfit,
-      totalProfit: plan.totalProfit,
+      totalProfit: planTotalProfit,
+      validityDays: planValidity,
+      claimsCount: 0,
       lastClaim: new Date(),
       status: 'Active'
     });

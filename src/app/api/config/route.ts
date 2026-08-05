@@ -6,14 +6,14 @@ import Plan from '@/models/Plan';
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_PLANS = [
-  { name: 'VIP 1', price: 750, dailyProfit: 200, totalProfit: 8000, validityDays: 40, level1Bonus: 10, level2Bonus: 4, active: true },
-  { name: 'VIP 2', price: 1850, dailyProfit: 500, totalProfit: 20000, validityDays: 40, level1Bonus: 25, level2Bonus: 10, active: true },
-  { name: 'VIP 3', price: 3500, dailyProfit: 950, totalProfit: 38000, validityDays: 40, level1Bonus: 48, level2Bonus: 19, active: true },
-  { name: 'VIP 4', price: 7000, dailyProfit: 1900, totalProfit: 76000, validityDays: 40, level1Bonus: 95, level2Bonus: 38, active: true },
-  { name: 'VIP 5', price: 15050, dailyProfit: 3750, totalProfit: 150000, validityDays: 40, level1Bonus: 188, level2Bonus: 75, active: true },
-  { name: 'VIP 6', price: 32990, dailyProfit: 14000, totalProfit: 340000, validityDays: 40, level1Bonus: 700, level2Bonus: 280, active: true },
-  { name: 'VIP 7', price: 53790, dailyProfit: 31000, totalProfit: 600000, validityDays: 40, level1Bonus: 1550, level2Bonus: 620, active: true },
-  { name: 'VIP 8', price: 80000, dailyProfit: 50000, totalProfit: 1000000, validityDays: 40, level1Bonus: 2500, level2Bonus: 1000, active: true }
+  { name: 'VIP 1', price: 750, dailyProfit: 200, totalProfit: 2400, validityDays: 12, level1Bonus: 10, level2Bonus: 4, active: true },
+  { name: 'VIP 2', price: 1850, dailyProfit: 500, totalProfit: 6000, validityDays: 12, level1Bonus: 25, level2Bonus: 10, active: true },
+  { name: 'VIP 3', price: 3500, dailyProfit: 950, totalProfit: 11400, validityDays: 12, level1Bonus: 48, level2Bonus: 19, active: true },
+  { name: 'VIP 4', price: 7000, dailyProfit: 1900, totalProfit: 22800, validityDays: 12, level1Bonus: 95, level2Bonus: 38, active: true },
+  { name: 'VIP 5', price: 15050, dailyProfit: 3750, totalProfit: 45000, validityDays: 12, level1Bonus: 188, level2Bonus: 75, active: true },
+  { name: 'VIP 6', price: 32990, dailyProfit: 14000, totalProfit: 168000, validityDays: 12, level1Bonus: 700, level2Bonus: 280, active: true },
+  { name: 'VIP 7', price: 53790, dailyProfit: 31000, totalProfit: 372000, validityDays: 12, level1Bonus: 1550, level2Bonus: 620, active: true },
+  { name: 'VIP 8', price: 80000, dailyProfit: 50000, totalProfit: 600000, validityDays: 12, level1Bonus: 2500, level2Bonus: 1000, active: true }
 ];
 
 export async function GET() {
@@ -24,6 +24,10 @@ export async function GET() {
     let plans = await Plan.find({ active: true }).sort({ price: 1 });
     if (plans.length === 0) {
       await Plan.create(DEFAULT_PLANS);
+      plans = await Plan.find({ active: true }).sort({ price: 1 });
+    } else {
+      // Update any plans with validityDays != 12
+      await Plan.updateMany({ validityDays: { $ne: 12 } }, { $set: { validityDays: 12 } });
       plans = await Plan.find({ active: true }).sort({ price: 1 });
     }
 
