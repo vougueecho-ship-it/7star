@@ -421,14 +421,12 @@ function renderSettingsForm() {
 
   const epTitle = document.getElementById('sett-ep-title');
   const epNum = document.getElementById('sett-ep-num');
-  const jcTitle = document.getElementById('sett-jc-title');
-  const jcNum = document.getElementById('sett-jc-num');
+  const waNum = document.getElementById('sett-wa-num');
   const notice = document.getElementById('sett-notice');
 
   if (epTitle) epTitle.value = s.easypaisa_title || '';
   if (epNum) epNum.value = s.easypaisa_number || '';
-  if (jcTitle) jcTitle.value = s.jazzcash_title || '';
-  if (jcNum) jcNum.value = s.jazzcash_number || '';
+  if (waNum) waNum.value = s.whatsapp_number || s.whatsappNumber || '';
   if (notice) notice.value = s.notice_text || '';
 }
 
@@ -439,8 +437,7 @@ async function saveAdminSettings(e) {
   const settings = {
     easypaisa_title: document.getElementById('sett-ep-title').value,
     easypaisa_number: document.getElementById('sett-ep-num').value,
-    jazzcash_title: document.getElementById('sett-jc-title').value,
-    jazzcash_number: document.getElementById('sett-jc-num').value,
+    whatsapp_number: document.getElementById('sett-wa-num').value,
     notice_text: document.getElementById('sett-notice').value
   };
 

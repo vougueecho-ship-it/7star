@@ -116,11 +116,7 @@ insertSetting.run('site_name', '7 STAR INVEST');
 insertSetting.run('notice_text', '🌟 Welcome to 7 STAR INVEST - Halal & Trusted Earning Platform 💯 | Daily Returns Credited Automatically!');
 insertSetting.run('easypaisa_title', 'Muhammad ikaram');
 insertSetting.run('easypaisa_number', '03438275273');
-insertSetting.run('jazzcash_title', 'Muhammad ikaram');
-insertSetting.run('jazzcash_number', '03001234567');
-insertSetting.run('bank_title', 'Muhammad ikaram');
-insertSetting.run('bank_number', 'PK36MEEZ00010203040506');
-insertSetting.run('bank_name', 'Meezan Bank');
+insertSetting.run('whatsapp_number', '03438275273');
 insertSetting.run('min_withdraw', '100');
 insertSetting.run('max_withdraw', '500000');
 

@@ -352,6 +352,21 @@ function renderGatewayDetails(s) {
     const parentCopyBtn = epNum.nextElementSibling;
     if (parentCopyBtn) parentCopyBtn.setAttribute('onclick', `copyText('${s.easypaisa_number}')`);
   }
+
+  // Render Dynamic WhatsApp Support Links across entire app
+  if (s) {
+    const rawNum = s.whatsapp_number || s.whatsappNumber || '03438275273';
+    let cleanNum = String(rawNum).replace(/[^0-9]/g, '');
+    if (cleanNum.startsWith('0')) {
+      cleanNum = '92' + cleanNum.slice(1);
+    }
+    const waUrl = `https://wa.me/${cleanNum}`;
+
+    const waLinks = document.querySelectorAll('a.whatsapp-link, a.whatsapp-float, a[href*="wa.me"]');
+    waLinks.forEach(link => {
+      link.href = waUrl;
+    });
+  }
 }
 
 // Update UI

@@ -37,11 +37,7 @@ export async function GET() {
       notice_text: '🌟 Welcome to 7 STAR INVEST - Halal & Trusted Earning Platform 💯 | Daily Returns Credited Automatically!',
       easypaisa_title: 'Muhammad ikaram',
       easypaisa_number: '03438275273',
-      jazzcash_title: 'Muhammad ikaram',
-      jazzcash_number: '03001234567',
-      bank_title: 'Muhammad ikaram',
-      bank_number: 'PK36MEEZ00010203040506',
-      bank_name: 'Meezan Bank',
+      whatsapp_number: '03438275273',
       min_withdraw: '100',
       max_withdraw: '500000'
     };
