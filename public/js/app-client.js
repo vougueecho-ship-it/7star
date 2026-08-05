@@ -13,10 +13,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || navigator.userAgent.includes('Capacitor');
   if (isCapacitor) {
     const currentPath = window.location.pathname;
-    if (currentPath === '/' || currentPath.endsWith('/index.html')) {
-      const token = localStorage.getItem('star_token');
-      window.location.href = token ? '/dashboard.html' : '/login.html';
-      return;
+    const token = localStorage.getItem('star_token');
+    if (token) {
+      if (currentPath === '/' || currentPath.endsWith('/index.html') || currentPath.endsWith('/login.html')) {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+    } else {
+      if (currentPath === '/' || currentPath.endsWith('/index.html')) {
+        window.location.href = '/login.html';
+        return;
+      }
     }
   }
 

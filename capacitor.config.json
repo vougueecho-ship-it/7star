@@ -3,7 +3,7 @@
   "appName": "7 STAR INVEST",
   "webDir": "public",
   "server": {
-    "url": "https://7starinvest.vercel.app",
+    "url": "https://7starinvest.vercel.app/login.html",
     "cleartext": true
   }
 }
