@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret7starjwtkey987654321';
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin@7starinvest';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '7starsecretadmin2026';
 
 app.use(cors());
