@@ -114,69 +114,7 @@
       "active": true
     }
   ],
-  "users": [
-    {
-      "id": "usr_101",
-      "name": "Demo Investor",
-      "phone": "03001234567",
-      "password": "password123",
-      "balance": 1500,
-      "totalDeposit": 2000,
-      "totalWithdraw": 500,
-      "totalProfit": 450,
-      "referralCode": "7STAR101",
-      "referredBy": null,
-      "joinedAt": "2026-08-01",
-      "activePlans": [
-        {
-          "planId": 3,
-          "planName": "VIP Level 3",
-          "price": 1150,
-          "dailyProfit": 58,
-          "startDate": "2026-08-01"
-        }
-      ]
-    },
-    {
-      "id": "usr_837477",
-      "name": "Ahmad",
-      "phone": "aneesr867@gmail.com",
-      "password": "0761071Na@",
-      "balance": 0,
-      "totalDeposit": 0,
-      "totalWithdraw": 0,
-      "totalProfit": 0,
-      "referralCode": "7STAR1367",
-      "referredBy": null,
-      "joinedAt": "2026-08-02",
-      "activePlans": []
-    }
-  ],
-  "deposits": [
-    {
-      "id": "DEP-9812",
-      "userId": "usr_101",
-      "userName": "Demo Investor",
-      "userPhone": "03001234567",
-      "amount": 2000,
-      "gateway": "Easypaisa",
-      "tid": "98234710293",
-      "status": "Approved",
-      "date": "2026-08-01 14:30"
-    }
-  ],
-  "withdrawals": [
-    {
-      "id": "WIT-4410",
-      "userId": "usr_101",
-      "userName": "Demo Investor",
-      "userPhone": "03001234567",
-      "accountTitle": "Demo Account",
-      "accountNumber": "03001234567",
-      "amount": 500,
-      "gateway": "JazzCash",
-      "status": "Approved",
-      "date": "2026-08-02 11:15"
-    }
-  ]
+  "users": [],
+  "deposits": [],
+  "withdrawals": []
 }
