@@ -5,6 +5,7 @@ import Deposit from '@/models/Deposit';
 import Withdrawal from '@/models/Withdrawal';
 import Plan from '@/models/Plan';
 import Setting from '@/models/Setting';
+import UserPlan from '@/models/UserPlan';
 import { verifyAdminHeader } from '@/lib/authAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +22,7 @@ export async function GET(req: Request) {
     const deposits = await Deposit.find({}).sort({ createdAt: -1 });
     const withdrawals = await Withdrawal.find({}).sort({ createdAt: -1 });
     const plans = await Plan.find({}).sort({ price: 1 });
+    const userPlans = await UserPlan.find({}).sort({ createdAt: -1 });
     const settingsRows = await Setting.find({});
 
     const settings: Record<string, string> = {};
@@ -87,6 +89,7 @@ export async function GET(req: Request) {
       deposits: formattedDeposits,
       withdrawals: formattedWithdrawals,
       plans: formattedPlans,
+      activeUserPlans: userPlans,
       settings
     });
   } catch (err: any) {

@@ -95,12 +95,14 @@ async function fetchAdminData() {
       deposits: data.deposits || [],
       withdrawals: data.withdrawals || [],
       plans: data.plans || [],
+      activeUserPlans: data.activeUserPlans || [],
       settings: data.settings || {}
     };
     renderOverviewStats();
     renderDepositsTable();
     renderWithdrawalsTable();
     renderPlansTable();
+    renderUserPlansTable();
     renderSettingsForm();
     renderUsersTable();
   } catch (err) {
@@ -110,7 +112,7 @@ async function fetchAdminData() {
 
 // Tab Switcher
 function switchTab(tabName) {
-  const tabs = ['deposits', 'withdrawals', 'plans', 'settings', 'users'];
+  const tabs = ['deposits', 'withdrawals', 'plans', 'user-plans', 'settings', 'users'];
   tabs.forEach(t => {
     const btn = document.getElementById(`tab-${t}`);
     const view = document.getElementById(`view-${t}`);
@@ -169,10 +171,13 @@ function renderDepositsTable() {
       </td>
       <td><span class="status-badge status-${d.status}">${d.status}</span></td>
       <td>
-        ${d.status === 'Pending' ? `
-          <button onclick="changeDepositStatus('${d.id}', 'Approved')" class="admin-nav-btn" style="background:#059669; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Approve</button>
-          <button onclick="changeDepositStatus('${d.id}', 'Rejected')" class="admin-nav-btn" style="background:#ef4444; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Reject</button>
-        ` : `<span style="color:#64748b;">Done</span>`}
+        <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
+          ${d.status === 'Pending' ? `
+            <button onclick="changeDepositStatus('${d.id}', 'Approved')" class="admin-nav-btn" style="background:#059669; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Approve</button>
+            <button onclick="changeDepositStatus('${d.id}', 'Rejected')" class="admin-nav-btn" style="background:#ef4444; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Reject</button>
+          ` : `<span style="color:#64748b; font-size:0.75rem;">Done</span>`}
+          <button onclick="deleteRecord('deposit', '${d.id}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:0.3rem 0.5rem; border-radius:6px; font-weight:700; font-size:0.75rem; cursor:pointer;">🗑️ Delete</button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -241,10 +246,13 @@ function renderWithdrawalsTable() {
       </td>
       <td><span class="status-badge status-${w.status}">${w.status}</span></td>
       <td>
-        ${w.status === 'Pending' ? `
-          <button onclick="changeWithdrawalStatus('${w.id}', 'Approved')" class="admin-nav-btn" style="background:#059669; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Approve & Pay</button>
-          <button onclick="changeWithdrawalStatus('${w.id}', 'Rejected')" class="admin-nav-btn" style="background:#ef4444; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Reject & Refund</button>
-        ` : `<span style="color:#64748b;">Done</span>`}
+        <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
+          ${w.status === 'Pending' ? `
+            <button onclick="changeWithdrawalStatus('${w.id}', 'Approved')" class="admin-nav-btn" style="background:#059669; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Approve & Pay</button>
+            <button onclick="changeWithdrawalStatus('${w.id}', 'Rejected')" class="admin-nav-btn" style="background:#ef4444; color:#fff; padding:0.3rem 0.6rem; border:none; border-radius:6px; cursor:pointer;">Reject & Refund</button>
+          ` : `<span style="color:#64748b; font-size:0.75rem;">Done</span>`}
+          <button onclick="deleteRecord('withdrawal', '${w.id}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:0.3rem 0.5rem; border-radius:6px; font-weight:700; font-size:0.75rem; cursor:pointer;">🗑️ Delete</button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -475,14 +483,75 @@ async function saveAdminSettings(e) {
   }
 }
 
+// Render Active User Mining Packages Table
+function renderUserPlansTable() {
+  const tbody = document.getElementById('adm-table-user-plans');
+  if (!tbody) return;
+
+  const plans = AdminState.activeUserPlans || [];
+  if (plans.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No active user mining packages found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = plans.map(up => {
+    const id = up._id || up.id;
+    const planName = up.planName || up.plan_name || 'VIP Package';
+    const userId = up.userId || up.user_id || 'User';
+    const investment = Number(up.investment || 0);
+    const dailyProfit = Number(up.dailyProfit || up.daily_profit || 0);
+    const claimsCount = Number(up.claimsCount || up.claims_count || 0);
+    const validityDays = Number(up.validityDays || up.validity_days || 12);
+    const status = up.status || 'Active';
+
+    return `
+      <tr>
+        <td><strong>${planName}</strong></td>
+        <td><code>${userId}</code></td>
+        <td>PKR ${investment.toLocaleString()}</td>
+        <td><strong style="color:var(--emerald-green);">PKR ${dailyProfit.toLocaleString()}</strong></td>
+        <td>${claimsCount}/${validityDays} Days</td>
+        <td><span class="status-badge status-${status}">${status}</span></td>
+        <td>
+          <button onclick="deleteRecord('userPlan', '${id}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:0.3rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🗑️ Cancel Plan</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Filter Users Table by Search Query
+function filterUsersTable() {
+  const searchVal = (document.getElementById('adm-user-search')?.value || '').toLowerCase().trim();
+  if (!searchVal) {
+    renderUsersTable();
+    return;
+  }
+
+  const filtered = AdminState.users.filter(u => 
+    (u.username || '').toLowerCase().includes(searchVal) ||
+    (u.phone || '').toLowerCase().includes(searchVal) ||
+    (u.id || '').toString().toLowerCase().includes(searchVal)
+  );
+
+  renderUsersTable(filtered);
+}
+
 // Render Registered Users Table
-function renderUsersTable() {
+function renderUsersTable(usersToRender = null) {
   const tbody = document.getElementById('adm-table-users');
   if (!tbody) return;
 
-  tbody.innerHTML = AdminState.users.map(u => `
+  const usersList = usersToRender || AdminState.users;
+
+  if (usersList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No users found matching search query.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = usersList.map(u => `
     <tr>
-      <td>${u.id}</td>
+      <td><small><code>${u.id}</code></small></td>
       <td><strong>${u.username}</strong></td>
       <td>${u.phone}</td>
       <td><strong style="color:#059669;">PKR ${u.balance.toLocaleString()}</strong></td>
@@ -491,7 +560,11 @@ function renderUsersTable() {
       <td><code>${u.referral_code}</code></td>
       <td>${u.referred_by || '-'}</td>
       <td>
-        <button onclick="editUserWalletBalance('${u.id}', ${u.balance})" class="admin-nav-btn" style="padding:0.35rem 0.75rem; background:var(--gold-gradient); color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer;">✏️ Edit Balance</button>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <button onclick="editUserWalletBalance('${u.id}', ${u.balance})" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">✏️ Balance</button>
+          <button onclick="openUserEditModal('${u.id}')" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔐 Edit / Reset</button>
+          <button onclick="deleteUserAccount('${u.id}', '${u.username}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🗑️ Delete</button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -518,5 +591,107 @@ async function editUserWalletBalance(userId, currentBal) {
     } catch (err) {
       alert('Error updating user balance.');
     }
+  }
+}
+
+// Open Edit User Account Modal
+function openUserEditModal(userId) {
+  const user = AdminState.users.find(u => u.id === userId);
+  if (!user) return;
+
+  document.getElementById('edit-user-id').value = userId;
+  document.getElementById('edit-user-username').value = user.username || '';
+  document.getElementById('edit-user-phone').value = user.phone || '';
+  document.getElementById('edit-user-balance').value = user.balance || 0;
+  document.getElementById('edit-user-password').value = '';
+
+  const overlay = document.getElementById('user-edit-modal-overlay');
+  if (overlay) overlay.classList.add('active');
+}
+
+// Close Edit User Modal
+function closeUserEditModal() {
+  const overlay = document.getElementById('user-edit-modal-overlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+// Save Edit User Details & Reset Password
+async function saveEditedUserDetails(e) {
+  e.preventDefault();
+  const userId = document.getElementById('edit-user-id').value;
+  const username = document.getElementById('edit-user-username').value;
+  const phone = document.getElementById('edit-user-phone').value;
+  const balance = document.getElementById('edit-user-balance').value;
+  const newPassword = document.getElementById('edit-user-password').value;
+
+  try {
+    const res = await fetch(`${API}/edit-user-details`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AdminToken}`
+      },
+      body: JSON.stringify({ userId, username, phone, balance, newPassword })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+      closeUserEditModal();
+      await fetchAdminData();
+    } else {
+      alert(data.message || 'Failed to update user.');
+    }
+  } catch (err) {
+    alert('Error updating user account.');
+  }
+}
+
+// Delete User Account (Cascade Deletion)
+async function deleteUserAccount(userId, username) {
+  if (!confirm(`⚠️ DANGER: Are you sure you want to PERMANENTLY DELETE user "${username}"?\n\nThis will delete their user account, all deposits, withdrawals, and active mining plans!`)) return;
+
+  try {
+    const res = await fetch(`${API}/delete-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AdminToken}`
+      },
+      body: JSON.stringify({ userId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+      await fetchAdminData();
+    } else {
+      alert(data.message || 'Failed to delete user.');
+    }
+  } catch (err) {
+    alert('Error deleting user account.');
+  }
+}
+
+// Delete Specific Record (Deposit / Withdrawal / User Plan)
+async function deleteRecord(type, id) {
+  if (!confirm(`Are you sure you want to delete this ${type} record?`)) return;
+
+  try {
+    const res = await fetch(`${API}/delete-record`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AdminToken}`
+      },
+      body: JSON.stringify({ type, id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+      await fetchAdminData();
+    } else {
+      alert(data.message || 'Failed to delete record.');
+    }
+  } catch (err) {
+    alert('Error deleting record.');
   }
 }
