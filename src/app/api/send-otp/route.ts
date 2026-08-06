@@ -11,10 +11,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER || 'amjadrana6881@gmail.com',
     pass: process.env.EMAIL_PASS || 'kscxqlxosezjjlrt'
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000
+  }
 });
 
 export async function POST(req: Request) {
