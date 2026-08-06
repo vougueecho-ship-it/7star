@@ -76,11 +76,22 @@ export async function POST(req: Request) {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailErr: any) {
+      console.error('Nodemailer send error:', emailErr);
+      if (emailErr.message && emailErr.message.includes('550')) {
+        return NextResponse.json({
+          success: false,
+          message: 'Gmail daily email limit exceeded. Please update EMAIL_USER & EMAIL_PASS in settings or try again tomorrow.'
+        }, { status: 429 });
+      }
+      return NextResponse.json({ success: false, message: 'Failed to send OTP email: ' + emailErr.message }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true, message: 'Verification OTP sent to your email successfully!' });
   } catch (err: any) {
     console.error('Send OTP error:', err);
-    return NextResponse.json({ success: false, message: 'Failed to send OTP email: ' + err.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Server error sending OTP' }, { status: 500 });
   }
 }
