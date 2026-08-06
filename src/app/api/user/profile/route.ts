@@ -26,8 +26,18 @@ export async function GET(req: Request) {
     }
 
     const activePlans = await UserPlan.find({ userId: user._id, status: 'Active' });
-    const teamCount = await User.countDocuments({ referredBy: user.referralCode });
-    const teamList = await User.find({ referredBy: user.referralCode }).select('username phone balance createdAt').sort({ createdAt: -1 });
+    const allPlans = await UserPlan.find({ userId: user._id }).sort({ createdAt: -1 });
+
+    const DepositModel = (await import('@/models/Deposit')).default;
+    const WithdrawalModel = (await import('@/models/Withdrawal')).default;
+
+    const deposits = await DepositModel.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50);
+    const withdrawals = await WithdrawalModel.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50);
+
+    // Case-insensitive team referral search
+    const refRegex = new RegExp('^' + (user.referralCode || '').trim() + '$', 'i');
+    const teamCount = await User.countDocuments({ referredBy: { $regex: refRegex } });
+    const teamList = await User.find({ referredBy: { $regex: refRegex } }).select('username phone balance createdAt').sort({ createdAt: -1 });
 
     const userObject = {
       id: user._id,
@@ -45,6 +55,9 @@ export async function GET(req: Request) {
       success: true,
       user: userObject,
       activePlans,
+      allPlans,
+      deposits,
+      withdrawals,
       teamCount,
       teamList
     });

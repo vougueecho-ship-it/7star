@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       totalProfit: planTotalProfit,
       validityDays: planValidity,
       claimsCount: 0,
-      lastClaim: new Date(),
+      lastClaim: new Date(Date.now() - 24 * 60 * 60 * 1000),
       status: 'Active'
     });
 

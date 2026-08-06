@@ -17,19 +17,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Please fill all required fields including Email OTP' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
 
-    // Verify OTP (Supports Master OTP 777777 to bypass email quota limits)
-    const isMasterOtp = String(otp).trim() === '777777';
-    const validOtp = isMasterOtp ? true : await Otp.findOne({ email, otp });
+    // Verify OTP
+    const validOtp = await Otp.findOne({ email: cleanEmail, otp: cleanOtp });
     if (!validOtp) {
       return NextResponse.json({ success: false, message: 'Invalid or expired OTP verification code' }, { status: 400 });
     }
 
-    // Delete OTP after verification if not master OTP
-    if (!isMasterOtp && typeof validOtp === 'object' && validOtp._id) {
-      await Otp.deleteOne({ _id: validOtp._id });
-    }
+    // Delete OTP after verification
+    await Otp.deleteOne({ _id: validOtp._id });
 
     // Check if username, email, or phone is already registered
     const existing = await User.findOne({
@@ -43,13 +41,15 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(password, 10);
     const referralCode = 'STAR' + Math.floor(10000 + Math.random() * 90000);
 
+    const cleanReferredBy = ref ? String(ref).trim().toUpperCase() : null;
+
     const newUser = await User.create({
       username,
       email,
       phone,
       passwordHash,
       referralCode,
-      referredBy: ref || null
+      referredBy: cleanReferredBy
     });
 
     const token = jwt.sign({ id: newUser._id, username: newUser.username }, JWT_SECRET, { expiresIn: '30d' });

@@ -11,7 +11,9 @@ export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    const isValidAdmin = (username === ADMIN_USERNAME || username === 'admin') && password === ADMIN_PASSWORD;
+
+    if (isValidAdmin) {
       const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '12h' });
       return NextResponse.json({ success: true, message: 'Admin authenticated!', token });
     }

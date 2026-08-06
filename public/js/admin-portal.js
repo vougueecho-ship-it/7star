@@ -85,7 +85,18 @@ async function fetchAdminData() {
       headers: { 'Authorization': `Bearer ${AdminToken}` }
     });
     const data = await res.json();
-    AdminState = data;
+    if (res.status === 401 || (data && data.success === false)) {
+      localStorage.removeItem('star_admin_token');
+      window.location.href = '/xpro-admin/login.html';
+      return;
+    }
+    AdminState = {
+      users: data.users || [],
+      deposits: data.deposits || [],
+      withdrawals: data.withdrawals || [],
+      plans: data.plans || [],
+      settings: data.settings || {}
+    };
     renderOverviewStats();
     renderDepositsTable();
     renderWithdrawalsTable();

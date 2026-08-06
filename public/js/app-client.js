@@ -63,6 +63,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (AppState.token) {
     await fetchUserProfile();
   }
+
+  // Pre-fill deposit amount if redirected from plan activation
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramAmount = urlParams.get('amount');
+  if (paramAmount) {
+    const depAmountElem = document.getElementById('dep-amount');
+    if (depAmountElem) {
+      depAmountElem.value = paramAmount;
+      setTimeout(() => {
+        depAmountElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        depAmountElem.focus();
+      }, 300);
+    }
+  }
 });
 
 // Toast & Modal Helper Injection
@@ -86,7 +100,7 @@ function injectModalContainer() {
         <p id="modal-text" class="modal-text">Message</p>
         <div id="modal-actions" class="modal-actions">
           <button id="modal-btn-confirm" class="btn-activate-gold" style="flex:1;">OK</button>
-          <button id="modal-btn-cancel" class="btn-activate-gold" style="flex:1; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); display:none;">Cancel</button>
+          <button id="modal-btn-cancel" class="btn-activate-gold" style="flex:1; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:800; font-size:0.95rem; border-radius:16px; display:none;">Cancel</button>
         </div>
       </div>
     `;
@@ -166,9 +180,14 @@ async function loadConfig() {
     const res = await fetch(`${API}/config`);
     const data = await res.json();
     AppState.config = data;
-    renderNotice(data.settings.notice_text);
-    renderPlans(data.plans);
-    renderGatewayDetails(data.settings);
+    if (data.plans && Array.isArray(data.plans)) {
+      localStorage.setItem('star_plans', JSON.stringify(data.plans));
+      renderPlans(data.plans);
+    }
+    if (data.settings) {
+      renderNotice(data.settings.notice_text);
+      renderGatewayDetails(data.settings);
+    }
   } catch (err) {
     console.error("Config load error:", err);
   }
@@ -185,6 +204,7 @@ async function fetchUserProfile() {
       AppState.user = data.user;
       AppState.activePlans = data.activePlans;
       localStorage.setItem('star_user', JSON.stringify(data.user));
+      localStorage.setItem('star_active_plans', JSON.stringify(data.activePlans || []));
       
       // Update team count UI
       const teamCountElem = document.getElementById('user-dyn-teamcount');
@@ -221,10 +241,88 @@ async function fetchUserProfile() {
         }
       }
 
+      // Render User Records Tables on records.html
+      renderUserRecords(data);
+
       updateClientUI();
     }
   } catch (err) {
     console.error("Profile sync error:", err);
+  }
+}
+
+// Render User Transaction Records on records.html
+function renderUserRecords(data) {
+  const depTbody = document.getElementById('user-rec-deposits');
+  if (depTbody) {
+    const deposits = data.deposits || [];
+    if (deposits.length > 0) {
+      depTbody.innerHTML = deposits.map(d => {
+        const date = new Date(d.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const ref = d.depositRef || d.deposit_ref || 'DEP';
+        return `
+          <tr>
+            <td><strong>${ref}</strong></td>
+            <td><strong style="color:var(--emerald-green);">PKR ${Number(d.amount).toLocaleString()}</strong></td>
+            <td>${d.gateway}</td>
+            <td><span class="status-badge status-${d.status}">${d.status}</span></td>
+            <td style="color:var(--text-muted);">${date}</td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      depTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No deposit history found.</td></tr>';
+    }
+  }
+
+  const witTbody = document.getElementById('user-rec-withdrawals');
+  if (witTbody) {
+    const withdrawals = data.withdrawals || [];
+    if (withdrawals.length > 0) {
+      witTbody.innerHTML = withdrawals.map(w => {
+        const date = new Date(w.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const ref = w.withdrawalRef || w.withdrawal_ref || 'WIT';
+        const title = w.accountTitle || w.account_title || '';
+        const num = w.accountNumber || w.account_number || '';
+        return `
+          <tr>
+            <td><strong>${ref}</strong></td>
+            <td><strong style="color:var(--primary-gold);">PKR ${Number(w.amount).toLocaleString()}</strong></td>
+            <td>${title}<br><code>${num}</code></td>
+            <td><span class="status-badge status-${w.status}">${w.status}</span></td>
+            <td style="color:var(--text-muted);">${date}</td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      witTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No withdrawal history found.</td></tr>';
+    }
+  }
+
+  const minTbody = document.getElementById('user-rec-mining');
+  if (minTbody) {
+    const allPlans = data.allPlans || data.activePlans || [];
+    if (allPlans.length > 0) {
+      minTbody.innerHTML = allPlans.map(p => {
+        const name = p.planName || p.plan_name || 'VIP Plan';
+        const price = Number(p.investment || p.price || 0);
+        const dailyProfit = Number(p.dailyProfit || p.daily_profit || 0);
+        const claimsCount = Number(p.claimsCount || p.claims_count || 0);
+        const validityDays = Number(p.validityDays || p.validity_days || 12);
+        const status = p.status || 'Active';
+        return `
+          <tr>
+            <td><strong>${name}</strong></td>
+            <td>PKR ${price.toLocaleString()}</td>
+            <td><strong style="color:var(--emerald-green);">PKR ${dailyProfit.toLocaleString()}</strong></td>
+            <td>${claimsCount}/${validityDays} Days</td>
+            <td><span class="status-badge status-${status}">${status}</span></td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      minTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No mining plans found.</td></tr>';
+    }
   }
 }
 
@@ -262,16 +360,16 @@ function renderNotice(text) {
 
 // Render Plans Grid
 function renderPlans(plans) {
-  const container = document.getElementById('vip-plans-list') || document.getElementById('plans-container');
-  if (!container || !plans) return;
+  const containers = document.querySelectorAll('#vip-plans-list, #plans-container, .plans-container, .plans-grid');
+  if (!containers || containers.length === 0 || !plans || plans.length === 0) return;
 
-  container.innerHTML = plans.map(p => {
+  const html = plans.map(p => {
     const planId = p._id || p.id;
-    const validityDays = p.validity_days || p.validityDays || 40;
+    const validityDays = p.validity_days || p.validityDays || 12;
     const dailyProfit = p.daily_profit || p.dailyProfit || 0;
-    const totalProfit = p.total_profit || p.totalProfit || 0;
-    const level1Bonus = Math.round(p.price * 0.10);
-    const level2Bonus = Math.round(p.price * 0.05);
+    const totalProfit = p.total_profit || p.totalProfit || (dailyProfit * validityDays);
+    const level1Bonus = p.level1_bonus || p.level1Bonus || Math.round(p.price * 0.10);
+    const level2Bonus = p.level2_bonus || p.level2Bonus || Math.round(p.price * 0.05);
 
     return `
     <div class="vip-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:28px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 30px rgba(15,23,42,0.05);">
@@ -305,11 +403,11 @@ function renderPlans(plans) {
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
         <div style="background:#f4f8f6; border:1px solid #e2e8f0; border-radius:16px; padding:0.85rem 1rem;">
           <span style="font-size:0.7rem; font-weight:800; color:var(--emerald-green); display:flex; align-items:center; gap:0.3rem;">📈 DAILY</span>
-          <div style="font-size:1.25rem; font-weight:800; color:var(--text-dark); margin-top:0.2rem;">${dailyProfit.toFixed(2)}</div>
+          <div style="font-size:1.25rem; font-weight:800; color:var(--text-dark); margin-top:0.2rem;">PKR ${dailyProfit.toLocaleString()}</div>
         </div>
         <div style="background:#f4f8f6; border:1px solid #e2e8f0; border-radius:16px; padding:0.85rem 1rem;">
           <span style="font-size:0.7rem; font-weight:800; color:var(--cyan-neon); display:flex; align-items:center; gap:0.3rem;">👛 TOTAL</span>
-          <div style="font-size:1.25rem; font-weight:800; color:var(--text-dark); margin-top:0.2rem;">${totalProfit.toFixed(2)}</div>
+          <div style="font-size:1.25rem; font-weight:800; color:var(--text-dark); margin-top:0.2rem;">PKR ${totalProfit.toLocaleString()}</div>
         </div>
       </div>
 
@@ -334,13 +432,18 @@ function renderPlans(plans) {
         </div>
       </div>
 
-      <!-- Activate Button -->
+      <!-- Action Button -->
       <button onclick="activatePlan('${planId}', '${p.name}', ${p.price})" class="btn-activate-gold">
         👑 Activate Plan
       </button>
 
     </div>
-  `}).join('');
+    `;
+  }).join('');
+
+  containers.forEach(container => {
+    container.innerHTML = html;
+  });
 }
 
 function renderGatewayDetails(s) {
@@ -373,6 +476,14 @@ function renderGatewayDetails(s) {
 function updateClientUI() {
   const u = AppState.user;
 
+  // Render cached plans if available
+  const cachedPlans = localStorage.getItem('star_plans');
+  if (cachedPlans) {
+    try {
+      renderPlans(JSON.parse(cachedPlans));
+    } catch(e) {}
+  }
+
   const usernameElems = document.querySelectorAll('.user-dyn-username');
   const balanceElems = document.querySelectorAll('.user-dyn-balance');
   const depositElems = document.querySelectorAll('.user-dyn-deposit');
@@ -399,12 +510,26 @@ function updateClientUI() {
   renderMiningCards();
 }
 
-// Render Active Mining Cards
+let miningTimerInterval = null;
+
+// Render Active Mining Cards with Live 24h Countdown & Disabled State
 function renderMiningCards() {
   const container = document.getElementById('mining-cards-container');
   if (!container) return;
 
-  if (!AppState.activePlans || AppState.activePlans.length === 0) {
+  const cachedActivePlans = localStorage.getItem('star_active_plans');
+  let activePlans = AppState.activePlans;
+  if ((!activePlans || activePlans.length === 0) && cachedActivePlans) {
+    try {
+      activePlans = JSON.parse(cachedActivePlans);
+    } catch(e) {}
+  }
+
+  if (!activePlans || activePlans.length === 0) {
+    if (miningTimerInterval) {
+      clearInterval(miningTimerInterval);
+      miningTimerInterval = null;
+    }
     container.innerHTML = `
       <div style="width:64px; height:64px; border-radius:18px; background:rgba(217,119,6,0.15); color:var(--primary-gold); font-size:2rem; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
         📦
@@ -418,40 +543,116 @@ function renderMiningCards() {
     return;
   }
 
-  container.innerHTML = AppState.activePlans.map(plan => `
-    <div class="vip-card" style="text-align:left; margin-bottom:1rem;">
+  const now = new Date();
+
+  container.innerHTML = activePlans.map(plan => {
+    const userPlanId = plan._id || plan.id;
+    const planName = plan.planName || plan.plan_name || 'VIP Package';
+    const investment = Number(plan.investment || 0);
+    const dailyProfit = Number(plan.dailyProfit || plan.daily_profit || 0);
+    const claimsCount = Number(plan.claimsCount || plan.claims_count || 0);
+    const validityDays = Number(plan.validityDays || plan.validity_days || 12);
+    const lastClaimStr = plan.lastClaim || plan.last_claim || plan.createdAt;
+
+    const lastClaimDate = lastClaimStr ? new Date(lastClaimStr) : new Date(0);
+    const nextClaimDate = new Date(lastClaimDate.getTime() + 24 * 60 * 60 * 1000);
+    const diffMs = nextClaimDate.getTime() - now.getTime();
+
+    let buttonHtml = '';
+    if (diffMs > 0 && claimsCount > 0) {
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+      buttonHtml = `
+        <button disabled class="btn-activate-gold" style="background:#e2e8f0; color:#64748b; border:1px solid #cbd5e1; width:100%; margin-top:0; cursor:not-allowed; opacity:0.9;" data-claim-target="${nextClaimDate.getTime()}">
+          ⏳ Next Claim in ${hours}h ${minutes}m ${seconds}s
+        </button>
+      `;
+    } else {
+      buttonHtml = `
+        <button onclick="claimDailyProfit('${userPlanId}')" class="btn-activate-gold" style="background:var(--emerald-gradient); color:#ffffff; width:100%; margin-top:0;">
+          ⚡ Claim Daily Output (PKR ${dailyProfit.toLocaleString()})
+        </button>
+      `;
+    }
+
+    return `
+    <div class="vip-card" style="text-align:left; margin-bottom:1.25rem;">
       <div class="vip-card-header">
         <div>
-          <h3 style="font-size:1.1rem; color:var(--text-dark);">${plan.plan_name} Mining Rig ⚡</h3>
-          <span style="font-size:0.75rem; color:var(--emerald-green); font-weight:700;">🟢 Active Mining</span>
+          <h3 style="font-size:1.1rem; color:var(--text-dark); margin:0;">${planName} Mining Rig ⚡</h3>
+          <span style="font-size:0.75rem; color:var(--emerald-green); font-weight:700;">🟢 Active Mining (${claimsCount}/${validityDays} Days Claimed)</span>
         </div>
-        <span class="vip-badge-pill">ACTIVE</span>
+        <span class="vip-badge-pill" style="background:var(--emerald-gradient);">ACTIVE</span>
       </div>
       <div class="vip-stats-grid">
         <div class="vip-stat-box">
           <span style="font-size:0.7rem; font-weight:800; color:var(--primary-gold);">INVESTED</span>
-          <div style="font-size:1.1rem; font-weight:800; color:var(--text-dark);">PKR ${plan.investment.toLocaleString()}</div>
+          <div style="font-size:1.1rem; font-weight:800; color:var(--text-dark);">PKR ${investment.toLocaleString()}</div>
         </div>
         <div class="vip-stat-box">
           <span style="font-size:0.7rem; font-weight:800; color:var(--emerald-green);">DAILY RETURN</span>
-          <div style="font-size:1.1rem; font-weight:800; color:var(--text-dark);">PKR ${plan.daily_profit.toLocaleString()}</div>
+          <div style="font-size:1.1rem; font-weight:800; color:var(--text-dark);">PKR ${dailyProfit.toLocaleString()}</div>
         </div>
       </div>
-      <button onclick="claimDailyProfit(${plan.id})" class="btn-activate-gold" style="background:var(--emerald-gradient); color:#ffffff;">
-        ⚡ Claim Daily Output (PKR ${plan.daily_profit})
-      </button>
+      ${buttonHtml}
     </div>
-  `).join('');
+    `;
+  }).join('');
+
+  startMiningTimers();
+}
+
+// Live 1-Second Countdown Timer Updater for Active Mining Cards
+function startMiningTimers() {
+  if (miningTimerInterval) clearInterval(miningTimerInterval);
+
+  miningTimerInterval = setInterval(() => {
+    const timerBtns = document.querySelectorAll('button[data-claim-target]');
+    if (!timerBtns || timerBtns.length === 0) {
+      clearInterval(miningTimerInterval);
+      miningTimerInterval = null;
+      return;
+    }
+
+    const nowTime = new Date().getTime();
+    let hasExpiredTimer = false;
+
+    timerBtns.forEach(btn => {
+      const targetTime = Number(btn.getAttribute('data-claim-target'));
+      const diffMs = targetTime - nowTime;
+
+      if (diffMs <= 0) {
+        hasExpiredTimer = true;
+      } else {
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+        btn.innerHTML = `⏳ Next Claim in ${hours}h ${minutes}m ${seconds}s`;
+      }
+    });
+
+    if (hasExpiredTimer) {
+      clearInterval(miningTimerInterval);
+      miningTimerInterval = null;
+      if (AppState.token) {
+        fetchUserProfile();
+      }
+    }
+  }, 1000);
 }
 
 // Claim Daily Profit Action
 async function claimDailyProfit(userPlanId) {
   if (!AppState.user) return showToast('Please login first', 'error');
+  const userId = AppState.user.id || AppState.user._id;
+
   try {
     const res = await fetch(`${API}/claim-daily-profit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: AppState.user.id, userPlanId })
+      body: JSON.stringify({ userId, userPlanId })
     });
     const data = await res.json();
     if (data.success) {
@@ -659,9 +860,25 @@ async function handleWithdrawSubmit(e) {
   }
 }
 
-// Activate Plan Action with Modal Confirmation
+// Activate Plan Action with Modal Confirmation / Smooth Deposit Redirect
 function activatePlan(planId, planName, planPrice) {
   if (!AppState.user) return showToast('Please login first', 'error');
+
+  const currentBalance = Number(AppState.user.balance || 0);
+
+  // If insufficient balance, smoothly redirect/scroll to deposit section instead of showing error
+  if (currentBalance < planPrice) {
+    const depAmountElem = document.getElementById('dep-amount');
+    showToast(`Please deposit PKR ${planPrice.toLocaleString()} to activate ${planName}.`, 'info');
+    if (depAmountElem) {
+      depAmountElem.value = planPrice;
+      depAmountElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      depAmountElem.focus();
+    } else {
+      window.location.href = `/deposit.html?amount=${planPrice}`;
+    }
+    return;
+  }
 
   showCustomModal(
     `Confirm Subscription`,
@@ -678,9 +895,22 @@ function activatePlan(planId, planName, planPrice) {
         if (data.success) {
           showToast(data.message, 'success');
           await fetchUserProfile();
-          setTimeout(() => window.location.href = '/dashboard.html', 1000);
+          setTimeout(() => window.location.href = '/mining.html', 1000);
         } else {
-          showCustomModal('Subscription Error', data.message, 'error');
+          // If server responds with insufficient balance, direct to deposit
+          if (data.message && data.message.toLowerCase().includes('balance')) {
+            showToast(data.message, 'info');
+            const depAmountElem = document.getElementById('dep-amount');
+            if (depAmountElem) {
+              depAmountElem.value = planPrice;
+              depAmountElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              depAmountElem.focus();
+            } else {
+              window.location.href = `/deposit.html?amount=${planPrice}`;
+            }
+          } else {
+            showCustomModal('Subscription Error', data.message, 'error');
+          }
         }
       } catch (err) {
         showToast('Activation error.', 'error');
@@ -705,6 +935,34 @@ function copyText(str) {
   showToast(`Copied: ${str}`, 'info');
 }
 
+let otpCountdownTimer = null;
+
+function resetOtpSendButton() {
+  const btn = document.getElementById('btn-send-otp');
+  if (btn) {
+    if (otpCountdownTimer) {
+      clearInterval(otpCountdownTimer);
+      otpCountdownTimer = null;
+    }
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    btn.innerHTML = 'Send OTP';
+  }
+}
+
+// Attach Email Input Listener to enable instant re-sending on email edit/typo fix
+document.addEventListener('DOMContentLoaded', () => {
+  const regEmail = document.getElementById('reg-email');
+  if (regEmail) {
+    regEmail.addEventListener('input', resetOtpSendButton);
+  }
+  const forgotEmail = document.getElementById('forgot-email');
+  if (forgotEmail) {
+    forgotEmail.addEventListener('input', resetOtpSendButton);
+  }
+});
+
 // Send Registration OTP
 async function sendRegisterOtp(e) {
   if (e) e.preventDefault();
@@ -720,16 +978,18 @@ async function sendRegisterOtp(e) {
     const res = await fetch(`${API}/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailElem.value, type: 'signup' })
+      body: JSON.stringify({ email: emailElem.value.trim().toLowerCase(), type: 'signup' })
     });
     const data = await res.json();
     if (data.success) {
       showToast(data.message, 'success');
       let count = 60;
       btn.disabled = true;
-      const interval = setInterval(() => {
+      if (otpCountdownTimer) clearInterval(otpCountdownTimer);
+      otpCountdownTimer = setInterval(() => {
         if (count <= 0) {
-          clearInterval(interval);
+          clearInterval(otpCountdownTimer);
+          otpCountdownTimer = null;
           btn.disabled = false;
           btn.innerHTML = 'Send OTP';
         } else {
@@ -762,16 +1022,18 @@ async function sendForgotOtp(e) {
     const res = await fetch(`${API}/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailElem.value, type: 'forgot' })
+      body: JSON.stringify({ email: emailElem.value.trim().toLowerCase(), type: 'forgot' })
     });
     const data = await res.json();
     if (data.success) {
       showToast(data.message, 'success');
       let count = 60;
       btn.disabled = true;
-      const interval = setInterval(() => {
+      if (otpCountdownTimer) clearInterval(otpCountdownTimer);
+      otpCountdownTimer = setInterval(() => {
         if (count <= 0) {
-          clearInterval(interval);
+          clearInterval(otpCountdownTimer);
+          otpCountdownTimer = null;
           btn.disabled = false;
           btn.innerHTML = 'Send OTP';
         } else {

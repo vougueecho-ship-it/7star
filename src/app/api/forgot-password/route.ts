@@ -14,25 +14,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Please fill all required fields' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
 
-    // Verify OTP (Supports Master OTP 777777 to bypass email quota limits)
-    const isMasterOtp = String(otp).trim() === '777777';
-    const validOtp = isMasterOtp ? true : await Otp.findOne({ email, otp });
+    // Verify OTP
+    const validOtp = await Otp.findOne({ email: cleanEmail, otp: cleanOtp });
     if (!validOtp) {
       return NextResponse.json({ success: false, message: 'Invalid or expired OTP verification code' }, { status: 400 });
     }
 
     // Find the user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return NextResponse.json({ success: false, message: 'User with this email not found' }, { status: 404 });
     }
 
-    // Delete OTP after verification if not master OTP
-    if (!isMasterOtp && typeof validOtp === 'object' && validOtp._id) {
-      await Otp.deleteOne({ _id: validOtp._id });
-    }
+    // Delete OTP after verification
+    await Otp.deleteOne({ _id: validOtp._id });
 
     // Hash and update password
     const passwordHash = await bcrypt.hash(newPassword, 10);

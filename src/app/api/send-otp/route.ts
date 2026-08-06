@@ -34,21 +34,23 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
+    const cleanEmail = String(email).trim().toLowerCase();
+
     // Check email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(cleanEmail)) {
       return NextResponse.json({ success: false, message: 'Invalid email address format' }, { status: 400 });
     }
 
     // Check if user already exists (for signup)
     if (type === 'signup') {
-      const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne({ email: cleanEmail });
       if (existingUser) {
         return NextResponse.json({ success: false, message: 'Email already registered' }, { status: 400 });
       }
     } else if (type === 'forgot') {
       // Check if user exists (for forgot password)
-      const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne({ email: cleanEmail });
       if (!existingUser) {
         return NextResponse.json({ success: false, message: 'Email address not found' }, { status: 404 });
       }
@@ -58,12 +60,12 @@ export async function POST(req: Request) {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Delete any old OTP for this email
-    await Otp.deleteMany({ email });
+    await Otp.deleteMany({ email: cleanEmail });
 
     // Store new OTP
     await Otp.create({
-      email,
-      otp: otpCode
+      email: cleanEmail,
+      otp: otpCode.trim()
     });
 
     // Send Email
@@ -91,12 +93,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'Verification OTP sent to your email successfully!' });
     } catch (emailErr: any) {
       console.error('Nodemailer send error:', emailErr);
-      // Fail-safe: If Gmail limit is reached, return the generated OTP code directly so user is never blocked!
-      return NextResponse.json({
-        success: true,
-        message: `Email quota full. Your OTP verification code is ${otpCode} (or use master code 777777).`,
-        otp: otpCode
-      });
+      return NextResponse.json({ success: false, message: 'Failed to send OTP email: ' + emailErr.message }, { status: 500 });
     }
   } catch (err: any) {
     console.error('Send OTP error:', err);

@@ -937,3 +937,36 @@ button:disabled, .btn-activate-gold:disabled, .admin-nav-btn:disabled, [disabled
   animation: spin 0.8s linear infinite;
 }
 
+/* Mobile Responsiveness & Perfect VIP Card Centering */
+@media (max-width: 480px) {
+  body {
+    overflow-x: hidden;
+  }
+  .app-container {
+    padding: 0.65rem 0.65rem 5.5rem 0.65rem !important;
+    overflow-x: hidden;
+  }
+  .auth-card {
+    padding: 1.25rem 0.75rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .plans-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+  }
+  .vip-card {
+    padding: 1rem 0.85rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+

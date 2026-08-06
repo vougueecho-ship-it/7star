@@ -208,9 +208,10 @@ app.get('/api/user/profile', (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     const activePlans = db.prepare("SELECT * FROM user_plans WHERE user_id = ? AND status = 'Active'").all(user.id);
-    const teamCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE referred_by = ?').get(user.referral_code).count;
+    const teamCount = db.prepare('SELECT COUNT(*) as count FROM users WHERE LOWER(referred_by) = LOWER(?)').get(user.referral_code).count;
+    const teamList = db.prepare('SELECT username, phone, balance, created_at as createdAt FROM users WHERE LOWER(referred_by) = LOWER(?) ORDER BY created_at DESC').all(user.referral_code);
 
-    res.json({ success: true, user, activePlans, teamCount });
+    res.json({ success: true, user, activePlans, teamCount, teamList });
   } catch (err) {
     console.error("Profile API Error:", err);
     res.status(401).json({ success: false, message: 'Session expired' });
