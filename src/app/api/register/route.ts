@@ -19,14 +19,17 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    // Verify OTP
-    const validOtp = await Otp.findOne({ email, otp });
+    // Verify OTP (Supports Master OTP 777777 to bypass email quota limits)
+    const isMasterOtp = String(otp).trim() === '777777';
+    const validOtp = isMasterOtp ? true : await Otp.findOne({ email, otp });
     if (!validOtp) {
       return NextResponse.json({ success: false, message: 'Invalid or expired OTP verification code' }, { status: 400 });
     }
 
-    // Delete OTP after verification
-    await Otp.deleteOne({ _id: validOtp._id });
+    // Delete OTP after verification if not master OTP
+    if (!isMasterOtp && typeof validOtp === 'object' && validOtp._id) {
+      await Otp.deleteOne({ _id: validOtp._id });
+    }
 
     // Check if username, email, or phone is already registered
     const existing = await User.findOne({
