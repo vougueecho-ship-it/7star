@@ -709,28 +709,41 @@ function copyText(str) {
 async function sendRegisterOtp(e) {
   if (e) e.preventDefault();
   const emailElem = document.getElementById('reg-email');
-  if (!emailElem || !emailElem.value) {
+  const emailVal = emailElem ? emailElem.value.trim() : '';
+
+  if (!emailVal) {
     return showToast('Please enter your email address first', 'error');
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(emailVal)) {
+    return showToast('Please enter a valid email address', 'error');
   }
   
   const btn = document.getElementById('btn-send-otp');
+  if (!btn) return;
+  
   setButtonLoading(btn, true, 'Sending...');
 
   try {
     const res = await fetch(`${API}/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailElem.value, type: 'signup' })
+      body: JSON.stringify({ email: emailVal, type: 'signup' })
     });
     const data = await res.json();
     if (data.success) {
       showToast(data.message, 'success');
       let count = 60;
       btn.disabled = true;
-      const interval = setInterval(() => {
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.65';
+
+      if (window.regOtpInterval) clearInterval(window.regOtpInterval);
+      window.regOtpInterval = setInterval(() => {
         if (count <= 0) {
-          clearInterval(interval);
-          btn.disabled = false;
+          clearInterval(window.regOtpInterval);
+          setButtonLoading(btn, false);
           btn.innerHTML = 'Send OTP';
         } else {
           btn.innerHTML = `Resend (${count}s)`;
@@ -739,7 +752,7 @@ async function sendRegisterOtp(e) {
       }, 1000);
     } else {
       setButtonLoading(btn, false);
-      showCustomModal('OTP Error', data.message, 'error');
+      showCustomModal('OTP Error', data.message || 'Failed to send OTP', 'error');
     }
   } catch (err) {
     setButtonLoading(btn, false);
@@ -751,28 +764,41 @@ async function sendRegisterOtp(e) {
 async function sendForgotOtp(e) {
   if (e) e.preventDefault();
   const emailElem = document.getElementById('forgot-email');
-  if (!emailElem || !emailElem.value) {
+  const emailVal = emailElem ? emailElem.value.trim() : '';
+
+  if (!emailVal) {
     return showToast('Please enter your email address first', 'error');
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(emailVal)) {
+    return showToast('Please enter a valid email address', 'error');
   }
   
   const btn = document.getElementById('btn-send-otp');
+  if (!btn) return;
+
   setButtonLoading(btn, true, 'Sending...');
 
   try {
     const res = await fetch(`${API}/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: emailElem.value, type: 'forgot' })
+      body: JSON.stringify({ email: emailVal, type: 'forgot' })
     });
     const data = await res.json();
     if (data.success) {
       showToast(data.message, 'success');
       let count = 60;
       btn.disabled = true;
-      const interval = setInterval(() => {
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.65';
+
+      if (window.forgotOtpInterval) clearInterval(window.forgotOtpInterval);
+      window.forgotOtpInterval = setInterval(() => {
         if (count <= 0) {
-          clearInterval(interval);
-          btn.disabled = false;
+          clearInterval(window.forgotOtpInterval);
+          setButtonLoading(btn, false);
           btn.innerHTML = 'Send OTP';
         } else {
           btn.innerHTML = `Resend (${count}s)`;
@@ -781,7 +807,7 @@ async function sendForgotOtp(e) {
       }, 1000);
     } else {
       setButtonLoading(btn, false);
-      showCustomModal('OTP Error', data.message, 'error');
+      showCustomModal('OTP Error', data.message || 'Failed to send OTP', 'error');
     }
   } catch (err) {
     setButtonLoading(btn, false);
