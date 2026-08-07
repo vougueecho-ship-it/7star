@@ -320,11 +320,26 @@ async function fetchUserProfile(silent = false) {
               month: 'short',
               day: 'numeric'
             });
+            const initial = (member.username || 'U').slice(0, 2).toUpperCase();
             return `
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 0.75rem; text-align: left; font-size: 0.85rem; font-weight: 700; color: var(--text-dark);">${member.username}</td>
-                <td style="padding: 0.75rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">${member.phone}</td>
-                <td style="padding: 0.75rem; text-align: left; font-size: 0.85rem; color: var(--text-muted);">${date}</td>
+              <tr style="border-bottom: 1px solid #fef3c7; transition: background 0.2s ease;">
+                <td style="padding: 0.85rem 0.75rem; text-align: left;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 32px; height: 32px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: var(--primary-gold); font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      ${initial}
+                    </div>
+                    <div>
+                      <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-dark);">${member.username}</div>
+                      <span style="font-size: 0.65rem; font-weight: 800; color: var(--emerald-green); background: #d1fae5; padding: 1px 6px; border-radius: 8px;">Direct Member</span>
+                    </div>
+                  </div>
+                </td>
+                <td style="padding: 0.85rem 0.75rem; text-align: left;">
+                  <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #334155; font-weight: 700;">${member.phone}</code>
+                </td>
+                <td style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+                  📅 ${date}
+                </td>
               </tr>
             `;
           }).join('');
@@ -362,17 +377,17 @@ function renderUserRecords(data) {
         const date = new Date(d.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const ref = d.depositRef || d.deposit_ref || 'DEP';
         return `
-          <tr>
-            <td><strong>${ref}</strong></td>
-            <td><strong style="color:var(--emerald-green);">PKR ${Number(d.amount).toLocaleString()}</strong></td>
-            <td>${d.gateway}</td>
-            <td><span class="status-badge status-${d.status}">${d.status}</span></td>
-            <td style="color:var(--text-muted);">${date}</td>
+          <tr style="border-bottom: 1px solid #fef3c7;">
+            <td style="padding:0.85rem 0.75rem;"><code style="background:#f8fafc; border:1px solid #cbd5e1; padding:0.2rem 0.4rem; border-radius:6px; font-weight:700; color:#334155; font-size:0.75rem;">${ref}</code></td>
+            <td style="padding:0.85rem 0.75rem;"><strong style="color:var(--emerald-green); font-size:0.85rem;">PKR ${Number(d.amount).toLocaleString()}</strong></td>
+            <td style="padding:0.85rem 0.75rem; font-size:0.8rem; font-weight:700; color:#475569;">${d.gateway}</td>
+            <td style="padding:0.85rem 0.75rem;"><span class="status-badge status-${d.status}">${d.status}</span></td>
+            <td style="padding:0.85rem 0.75rem; font-size:0.8rem; color:var(--text-muted);">📅 ${date}</td>
           </tr>
         `;
       }).join('');
     } else {
-      depTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No deposit history found.</td></tr>';
+      depTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted); font-size:0.85rem;">No deposit history found.</td></tr>';
     }
   }
 
@@ -387,17 +402,17 @@ function renderUserRecords(data) {
         const num = w.accountNumber || w.account_number || '';
         const reasonStr = w.reason ? `<br><small style="color:#ef4444; font-size:0.7rem; font-weight:700;">Reason: ${w.reason}</small>` : '';
         return `
-          <tr>
-            <td><strong>${ref}</strong></td>
-            <td><strong style="color:var(--primary-gold);">PKR ${Number(w.amount).toLocaleString()}</strong></td>
-            <td>${title}<br><code>${num}</code></td>
-            <td><span class="status-badge status-${w.status}">${w.status}</span>${reasonStr}</td>
-            <td style="color:var(--text-muted);">${date}</td>
+          <tr style="border-bottom: 1px solid #fef3c7;">
+            <td style="padding:0.85rem 0.75rem;"><code style="background:#f8fafc; border:1px solid #cbd5e1; padding:0.2rem 0.4rem; border-radius:6px; font-weight:700; color:#334155; font-size:0.75rem;">${ref}</code></td>
+            <td style="padding:0.85rem 0.75rem;"><strong style="color:var(--primary-gold); font-size:0.85rem;">PKR ${Number(w.amount).toLocaleString()}</strong></td>
+            <td style="padding:0.85rem 0.75rem; font-size:0.8rem; color:#334155;"><span style="font-weight:700;">${title}</span><br><code style="font-size:0.75rem; background:#f1f5f9; padding:1px 4px; border-radius:4px;">${num}</code></td>
+            <td style="padding:0.85rem 0.75rem;"><span class="status-badge status-${w.status}">${w.status}</span>${reasonStr}</td>
+            <td style="padding:0.85rem 0.75rem; font-size:0.8rem; color:var(--text-muted);">📅 ${date}</td>
           </tr>
         `;
       }).join('');
     } else {
-      witTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No withdrawal history found.</td></tr>';
+      witTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted); font-size:0.85rem;">No withdrawal history found.</td></tr>';
     }
   }
 
@@ -413,17 +428,17 @@ function renderUserRecords(data) {
         const validityDays = Number(p.validityDays || p.validity_days || 12);
         const status = p.status || 'Active';
         return `
-          <tr>
-            <td><strong>${name}</strong></td>
-            <td>PKR ${price.toLocaleString()}</td>
-            <td><strong style="color:var(--emerald-green);">PKR ${dailyProfit.toLocaleString()}</strong></td>
-            <td>${claimsCount}/${validityDays} Days</td>
-            <td><span class="status-badge status-${status}">${status}</span></td>
+          <tr style="border-bottom: 1px solid #fef3c7;">
+            <td style="padding:0.85rem 0.75rem; font-weight:800; color:var(--text-dark); font-size:0.85rem;">⭐ ${name}</td>
+            <td style="padding:0.85rem 0.75rem; font-weight:700; color:var(--primary-gold); font-size:0.85rem;">PKR ${price.toLocaleString()}</td>
+            <td style="padding:0.85rem 0.75rem; font-weight:700; color:var(--emerald-green); font-size:0.85rem;">PKR ${dailyProfit.toLocaleString()}</td>
+            <td style="padding:0.85rem 0.75rem; font-size:0.8rem; font-weight:700; color:#475569;">${claimsCount} / ${validityDays} Days</td>
+            <td style="padding:0.85rem 0.75rem;"><span class="status-badge status-${status}">${status}</span></td>
           </tr>
         `;
       }).join('');
     } else {
-      minTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No mining plans found.</td></tr>';
+      minTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted); font-size:0.85rem;">No mining plans history found.</td></tr>';
     }
   }
 }
@@ -894,12 +909,14 @@ async function handleDepositSubmit(e) {
     });
   }
 
+  const userId = AppState.user.id || AppState.user._id;
+
   try {
     const res = await fetch(`${API}/deposit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: AppState.user.id,
+        userId,
         amount,
         gateway,
         tid,
@@ -907,12 +924,12 @@ async function handleDepositSubmit(e) {
       })
     });
     const data = await res.json();
+    setButtonLoading(submitBtn, false);
     if (data.success) {
       showCustomModal('Deposit Request Submitted', data.message, 'success', () => {
         window.location.href = '/dashboard.html';
       });
     } else {
-      setButtonLoading(submitBtn, false);
       showCustomModal('Deposit Failed', data.message, 'error');
     }
   } catch (err) {
@@ -935,12 +952,14 @@ async function handleWithdrawSubmit(e) {
 
   setButtonLoading(submitBtn, true, 'Submitting Withdrawal...');
 
+  const userId = AppState.user.id || AppState.user._id;
+
   try {
     const res = await fetch(`${API}/withdraw`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: AppState.user.id,
+        userId,
         amount,
         gateway,
         accountTitle,
@@ -949,13 +968,13 @@ async function handleWithdrawSubmit(e) {
       })
     });
     const data = await res.json();
+    setButtonLoading(submitBtn, false);
     if (data.success) {
       showCustomModal('Withdrawal Submitted', data.message, 'success', async () => {
         await fetchUserProfile();
         window.location.href = '/dashboard.html';
       });
     } else {
-      setButtonLoading(submitBtn, false);
       showCustomModal('Withdrawal Failed', data.message, 'error');
     }
   } catch (err) {
