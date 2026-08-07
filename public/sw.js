@@ -1,30 +1,31 @@
-const CACHE_NAME = '7star-invest-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/login.html',
-  '/register.html',
-  '/dashboard.html',
-  '/deposit.html',
-  '/withdraw.html',
-  '/plans.html',
-  '/team.html',
-  '/css/main.css',
-  '/js/app.js',
-  '/images/logo.png',
-  '/images/hero_banner.png',
-  '/images/referral_banner.png',
-  '/manifest.json'
-];
+/* 7 STAR INVEST - Dynamic Network-First Service Worker */
+const CACHE_NAME = '7star-invest-v2';
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => caches.delete(key))
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
+  // Always attempt network fetch first so HTML pages & scripts are 100% fresh
   event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
+    fetch(event.request)
+      .then((networkResponse) => {
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

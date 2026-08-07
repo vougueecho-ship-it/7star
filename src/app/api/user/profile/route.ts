@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import UserPlan from '@/models/UserPlan';
+import Deposit from '@/models/Deposit';
+import Withdrawal from '@/models/Withdrawal';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret7starjwtkey987654321';
@@ -25,19 +27,24 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    const activePlans = await UserPlan.find({ userId: user._id, status: 'Active' });
-    const allPlans = await UserPlan.find({ userId: user._id }).sort({ createdAt: -1 });
+    const refCode = (user.referralCode || '').trim();
 
-    const DepositModel = (await import('@/models/Deposit')).default;
-    const WithdrawalModel = (await import('@/models/Withdrawal')).default;
-
-    const deposits = await DepositModel.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50);
-    const withdrawals = await WithdrawalModel.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50);
-
-    // Case-insensitive team referral search
-    const refRegex = new RegExp('^' + (user.referralCode || '').trim() + '$', 'i');
-    const teamCount = await User.countDocuments({ referredBy: { $regex: refRegex } });
-    const teamList = await User.find({ referredBy: { $regex: refRegex } }).select('username phone balance createdAt').sort({ createdAt: -1 });
+    // Execute sub-queries in parallel via Promise.all for maximum performance
+    const [
+      activePlans,
+      allPlans,
+      deposits,
+      withdrawals,
+      teamCount,
+      teamList
+    ] = await Promise.all([
+      UserPlan.find({ userId: user._id, status: 'Active' }),
+      UserPlan.find({ userId: user._id }).sort({ createdAt: -1 }),
+      Deposit.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50),
+      Withdrawal.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50),
+      refCode ? User.countDocuments({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } }) : 0,
+      refCode ? User.find({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } }).select('username phone balance createdAt').sort({ createdAt: -1 }) : []
+    ]);
 
     const userObject = {
       id: user._id,
@@ -66,3 +73,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ success: false, message: 'Session expired' }, { status: 401 });
   }
 }
+

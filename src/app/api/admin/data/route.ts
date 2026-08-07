@@ -18,12 +18,21 @@ export async function GET(req: Request) {
   try {
     await connectToDatabase();
 
-    const users = await User.find({}).sort({ createdAt: -1 }).select('-passwordHash');
-    const deposits = await Deposit.find({}).sort({ createdAt: -1 });
-    const withdrawals = await Withdrawal.find({}).sort({ createdAt: -1 });
-    const plans = await Plan.find({}).sort({ price: 1 });
-    const userPlans = await UserPlan.find({}).sort({ createdAt: -1 });
-    const settingsRows = await Setting.find({});
+    const [
+      users,
+      deposits,
+      withdrawals,
+      plans,
+      userPlans,
+      settingsRows
+    ] = await Promise.all([
+      User.find({}).sort({ createdAt: -1 }).select('-passwordHash'),
+      Deposit.find({}).sort({ createdAt: -1 }),
+      Withdrawal.find({}).sort({ createdAt: -1 }),
+      Plan.find({}).sort({ price: 1 }),
+      UserPlan.find({}).sort({ createdAt: -1 }),
+      Setting.find({})
+    ]);
 
     const settings: Record<string, string> = {};
     settingsRows.forEach((r) => {
@@ -69,6 +78,7 @@ export async function GET(req: Request) {
       account_number: w.accountNumber,
       bank_name: w.bankName,
       status: w.status,
+      reason: w.reason || null,
       created_at: w.createdAt
     }));
 

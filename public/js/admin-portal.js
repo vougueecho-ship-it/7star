@@ -28,6 +28,8 @@ function setAdminButtonLoading(btn, isLoading, loadingText = 'Processing...') {
   }
 }
 
+let adminPollInterval = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
   const isLoginPage = window.location.pathname.includes('/xpro-admin/login.html');
   
@@ -38,6 +40,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!isLoginPage && AdminToken) {
     await fetchAdminData();
+    
+    // Real-Time 4-Second Auto Polling for Admin Panel
+    if (adminPollInterval) clearInterval(adminPollInterval);
+    adminPollInterval = setInterval(() => {
+      if (!document.hidden && AdminToken) {
+        fetchAdminData(true);
+      }
+    }, 4000);
+  }
+});
+
+// Sync admin data immediately when window comes into focus
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && AdminToken) {
+    fetchAdminData(true);
+  }
+});
+window.addEventListener('focus', () => {
+  if (AdminToken) {
+    fetchAdminData(true);
   }
 });
 
@@ -78,8 +100,8 @@ function adminLogout() {
   window.location.href = '/xpro-admin/login.html';
 }
 
-// Fetch Complete Admin Real-Time Data from SQLite
-async function fetchAdminData() {
+// Fetch Complete Admin Real-Time Data from Backend
+async function fetchAdminData(silent = false) {
   try {
     const res = await fetch(`${API}/data`, {
       headers: { 'Authorization': `Bearer ${AdminToken}` }
@@ -103,10 +125,20 @@ async function fetchAdminData() {
     renderWithdrawalsTable();
     renderPlansTable();
     renderUserPlansTable();
-    renderSettingsForm();
-    renderUsersTable();
+    
+    // Only update settings form if not focused/typing currently
+    const activeElem = document.activeElement;
+    const isFormFocused = activeElem && activeElem.closest('#view-settings');
+    if (!isFormFocused) {
+      renderSettingsForm();
+    }
+
+    const isUserSearchFocused = activeElem && activeElem.id === 'adm-user-search';
+    if (!isUserSearchFocused) {
+      renderUsersTable();
+    }
   } catch (err) {
-    console.error("Failed to load admin data:", err);
+    if (!silent) console.error("Failed to load admin data:", err);
   }
 }
 
@@ -244,7 +276,10 @@ function renderWithdrawalsTable() {
         <code>${w.account_number}</code>
         ${w.bank_name ? `<br><small style="color:#64748b;">${w.bank_name}</small>` : ''}
       </td>
-      <td><span class="status-badge status-${w.status}">${w.status}</span></td>
+      <td>
+        <span class="status-badge status-${w.status}">${w.status}</span>
+        ${w.reason ? `<br><small style="color:#ef4444; font-weight:700;">Reason: ${w.reason}</small>` : ''}
+      </td>
       <td>
         <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
           ${w.status === 'Pending' ? `
@@ -260,24 +295,33 @@ function renderWithdrawalsTable() {
 
 // Approve / Reject Withdrawal Action
 async function changeWithdrawalStatus(withdrawalId, status) {
-  if (confirm(`Are you sure you want to mark payout request as ${status}?`)) {
-    try {
-      const res = await fetch(`${API}/withdrawal-status`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AdminToken}`
-        },
-        body: JSON.stringify({ withdrawalId, status })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(data.message);
-        await fetchAdminData();
-      }
-    } catch (err) {
-      alert('Error updating withdrawal.');
+  let reason = '';
+  if (status === 'Rejected') {
+    const inputReason = prompt('Enter reason for rejecting this withdrawal request (this reason will be displayed to user & balance will be refunded):', 'Invalid Account Title / Number');
+    if (inputReason === null) return; // User cancelled
+    reason = inputReason.trim() || 'Rejected by Admin';
+  } else if (!confirm(`Are you sure you want to approve & mark this payout request as Approved?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/withdrawal-status`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AdminToken}`
+      },
+      body: JSON.stringify({ withdrawalId, status, reason })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+      await fetchAdminData();
+    } else {
+      alert(data.message || 'Failed to update status');
     }
+  } catch (err) {
+    alert('Error updating withdrawal status.');
   }
 }
 

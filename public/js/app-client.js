@@ -57,12 +57,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   injectModalContainer();
   setupPullToRefresh();
   
-  updateClientUI(); // Render immediately from local state
+  // 0. Auto-Purge any legacy Service Worker caches to force fresh HTML load
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (let registration of registrations) {
+        registration.update();
+      }
+    });
+    if (window.caches) {
+      caches.keys().then(keys => {
+        keys.forEach(key => {
+          if (key.includes('7star-invest-v1')) {
+            caches.delete(key);
+          }
+        });
+      });
+    }
+  }
 
+  // 1. Hydrate UI immediately from local storage cache (Zero Dummy Data Flash)
+  hydrateFromCache();
+  updateClientUI();
+
+  // 2. Initial Async Server Sync
   await loadConfig();
   if (AppState.token) {
     await fetchUserProfile();
   }
+
+  // 3. Setup Automatic Background Real-Time Auto-Polling Loops
+  startRealtimeAutoSync();
 
   // Pre-fill deposit amount if redirected from plan activation
   const urlParams = new URLSearchParams(window.location.search);
@@ -77,6 +101,77 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 300);
     }
   }
+});
+
+// Immediate Local Storage Hydration
+function hydrateFromCache() {
+  const cachedConfig = localStorage.getItem('star_config');
+  if (cachedConfig) {
+    try {
+      const configObj = JSON.parse(cachedConfig);
+      AppState.config = configObj;
+      if (configObj.plans) renderPlans(configObj.plans);
+      if (configObj.settings) {
+        renderNotice(configObj.settings.notice_text);
+        renderGatewayDetails(configObj.settings);
+      }
+    } catch (e) {}
+  }
+
+  const cachedProfile = localStorage.getItem('star_profile_cache');
+  if (cachedProfile && AppState.user) {
+    try {
+      const profileObj = JSON.parse(cachedProfile);
+      const currentUserId = AppState.user.id || AppState.user._id;
+      const cachedUserId = profileObj.user ? (profileObj.user.id || profileObj.user._id) : null;
+
+      // Only hydrate profile if user ID matches active session token
+      if (cachedUserId && String(cachedUserId) === String(currentUserId)) {
+        AppState.user = profileObj.user;
+        if (profileObj.activePlans) AppState.activePlans = profileObj.activePlans;
+        renderUserRecords(profileObj);
+        const teamCountElem = document.getElementById('user-dyn-teamcount');
+        if (teamCountElem) teamCountElem.textContent = profileObj.teamCount || '0';
+      } else {
+        localStorage.removeItem('star_profile_cache');
+      }
+    } catch (e) {}
+  }
+}
+
+// Background Real-Time Auto-Polling & Focus Sync
+let userPollInterval = null;
+let configPollInterval = null;
+
+function startRealtimeAutoSync() {
+  if (userPollInterval) clearInterval(userPollInterval);
+  if (configPollInterval) clearInterval(configPollInterval);
+
+  // Poll User Profile every 4 seconds for real-time balance & transaction updates
+  userPollInterval = setInterval(() => {
+    if (AppState.token && !document.hidden) {
+      fetchUserProfile(true);
+    }
+  }, 4000);
+
+  // Poll Public Config every 12 seconds for gateway & notice changes
+  configPollInterval = setInterval(() => {
+    if (!document.hidden) {
+      loadConfig(true);
+    }
+  }, 12000);
+}
+
+// Immediate fetch on tab focus / visibility change
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    loadConfig(true);
+    if (AppState.token) fetchUserProfile(true);
+  }
+});
+window.addEventListener('focus', () => {
+  loadConfig(true);
+  if (AppState.token) fetchUserProfile(true);
 });
 
 // Toast & Modal Helper Injection
@@ -175,11 +270,12 @@ function showCustomModal(title, text, type = 'info', onConfirm = null) {
 }
 
 // Load Public Config
-async function loadConfig() {
+async function loadConfig(silent = false) {
   try {
     const res = await fetch(`${API}/config`);
     const data = await res.json();
     AppState.config = data;
+    localStorage.setItem('star_config', JSON.stringify(data));
     if (data.plans && Array.isArray(data.plans)) {
       localStorage.setItem('star_plans', JSON.stringify(data.plans));
       renderPlans(data.plans);
@@ -189,12 +285,13 @@ async function loadConfig() {
       renderGatewayDetails(data.settings);
     }
   } catch (err) {
-    console.error("Config load error:", err);
+    if (!silent) console.error("Config load error:", err);
   }
 }
 
 // Fetch Profile & Update State
-async function fetchUserProfile() {
+async function fetchUserProfile(silent = false) {
+  if (!AppState.token) return;
   try {
     const res = await fetch(`${API}/user/profile`, {
       headers: { 'Authorization': `Bearer ${AppState.token}` }
@@ -205,6 +302,7 @@ async function fetchUserProfile() {
       AppState.activePlans = data.activePlans;
       localStorage.setItem('star_user', JSON.stringify(data.user));
       localStorage.setItem('star_active_plans', JSON.stringify(data.activePlans || []));
+      localStorage.setItem('star_profile_cache', JSON.stringify(data));
       
       // Update team count UI
       const teamCountElem = document.getElementById('user-dyn-teamcount');
@@ -216,7 +314,7 @@ async function fetchUserProfile() {
       const teamTbody = document.getElementById('user-team-tbody');
       if (teamTbody) {
         if (data.teamList && data.teamList.length > 0) {
-          teamTbody.innerHTML = data.teamList.map(member => {
+          const newTeamHtml = data.teamList.map(member => {
             const date = new Date(member.createdAt).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
@@ -230,6 +328,9 @@ async function fetchUserProfile() {
               </tr>
             `;
           }).join('');
+          if (teamTbody.innerHTML !== newTeamHtml) {
+            teamTbody.innerHTML = newTeamHtml;
+          }
         } else {
           teamTbody.innerHTML = `
             <tr>
@@ -247,7 +348,7 @@ async function fetchUserProfile() {
       updateClientUI();
     }
   } catch (err) {
-    console.error("Profile sync error:", err);
+    if (!silent) console.error("Profile sync error:", err);
   }
 }
 
@@ -284,12 +385,13 @@ function renderUserRecords(data) {
         const ref = w.withdrawalRef || w.withdrawal_ref || 'WIT';
         const title = w.accountTitle || w.account_title || '';
         const num = w.accountNumber || w.account_number || '';
+        const reasonStr = w.reason ? `<br><small style="color:#ef4444; font-size:0.7rem; font-weight:700;">Reason: ${w.reason}</small>` : '';
         return `
           <tr>
             <td><strong>${ref}</strong></td>
             <td><strong style="color:var(--primary-gold);">PKR ${Number(w.amount).toLocaleString()}</strong></td>
             <td>${title}<br><code>${num}</code></td>
-            <td><span class="status-badge status-${w.status}">${w.status}</span></td>
+            <td><span class="status-badge status-${w.status}">${w.status}</span>${reasonStr}</td>
             <td style="color:var(--text-muted);">${date}</td>
           </tr>
         `;
@@ -747,6 +849,8 @@ async function handleLogin(e) {
 function logout() {
   localStorage.removeItem('star_token');
   localStorage.removeItem('star_user');
+  localStorage.removeItem('star_active_plans');
+  localStorage.removeItem('star_profile_cache');
   AppState.token = null;
   AppState.user = null;
   showToast('Logged out successfully', 'info');

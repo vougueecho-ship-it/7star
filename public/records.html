@@ -201,6 +201,14 @@
       if (activeBtn) activeBtn.classList.add('active');
       if (activeView) activeView.style.display = 'block';
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetTab = urlParams.get('tab');
+      if (targetTab && ['deposits', 'withdrawals', 'mining'].includes(targetTab)) {
+        switchRecordTab(targetTab);
+      }
+    });
   </script>
 </body>
 </html>

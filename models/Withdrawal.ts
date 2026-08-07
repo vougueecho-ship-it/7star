@@ -11,6 +11,7 @@ export interface IWithdrawal extends Document {
   accountNumber: string;
   bankName?: string | null;
   status: string;
+  reason?: string | null;
   createdAt: Date;
 }
 
@@ -25,6 +26,7 @@ const WithdrawalSchema: Schema = new Schema({
   accountNumber: { type: String, required: true },
   bankName: { type: String, default: null },
   status: { type: String, default: 'Pending' },
+  reason: { type: String, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 
