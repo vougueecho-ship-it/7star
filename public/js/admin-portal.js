@@ -1,4 +1,4 @@
-/* 7 STAR INVEST - Admin Portal Controller */
+/* 7 STAR INVEST - Admin Portal Controller (Optimized & Paginated) */
 
 const API = '/api/admin';
 let AdminToken = localStorage.getItem('star_admin_token') || null;
@@ -7,7 +7,17 @@ let AdminState = {
   deposits: [],
   withdrawals: [],
   plans: [],
+  activeUserPlans: [],
   settings: {}
+};
+
+// State for Admin Pagination & Search Filters
+let PageState = {
+  deposits: { page: 1, pageSize: 10, search: '' },
+  withdrawals: { page: 1, pageSize: 10, search: '' },
+  plans: { page: 1, pageSize: 10, search: '' },
+  userPlans: { page: 1, pageSize: 10, search: '' },
+  users: { page: 1, pageSize: 10, search: '' }
 };
 
 // Injected Custom Admin Modal & Prompt Container
@@ -210,7 +220,6 @@ async function fetchAdminData(silent = false) {
     renderPlansTable();
     renderUserPlansTable();
     
-    // Only update settings form if not focused/typing currently
     const activeElem = document.activeElement;
     const isFormFocused = activeElem && activeElem.closest('#view-settings');
     if (!isFormFocused) {
@@ -265,17 +274,93 @@ function renderOverviewStats() {
   if (pWit) pWit.textContent = pendingWitCount;
 }
 
-// Render Deposits Table
+// Generic Pagination Bar Renderer
+function renderPaginationBar(containerId, totalCount, currentPage, pageSize, setPageFnName) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (totalCount === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const startRecord = (currentPage - 1) * pageSize + 1;
+  const endRecord = Math.min(totalCount, currentPage * pageSize);
+
+  container.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem;">
+      <span style="color: var(--text-muted); font-weight: 700;">
+        Showing <strong>${startRecord}-${endRecord}</strong> of <strong>${totalCount}</strong> entries
+      </span>
+      <div style="display: flex; gap: 0.4rem; align-items: center;">
+        <button onclick="${setPageFnName}(${currentPage - 1})" ${currentPage <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 0.35rem 0.75rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: var(--text-dark); font-weight: 700; cursor: pointer;">◀ Prev</button>
+        <span style="font-weight: 800; color: var(--primary-gold); padding: 0 0.3rem;">Page ${currentPage} of ${totalPages}</span>
+        <button onclick="${setPageFnName}(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} style="padding: 0.35rem 0.75rem; border-radius: 8px; border: 1px solid #fde68a; background: var(--gold-gradient); color: #ffffff; font-weight: 800; cursor: pointer;">Next ▶</button>
+      </div>
+    </div>
+  `;
+}
+
+// Search Inputs Handlers
+function onDepositSearchInput(e) {
+  PageState.deposits.search = e.target.value;
+  PageState.deposits.page = 1;
+  renderDepositsTable();
+}
+
+function onWithdrawalSearchInput(e) {
+  PageState.withdrawals.search = e.target.value;
+  PageState.withdrawals.page = 1;
+  renderWithdrawalsTable();
+}
+
+function onUserSearchInput(e) {
+  PageState.users.search = e.target.value;
+  PageState.users.page = 1;
+  renderUsersTable();
+}
+
+// Deposits Table Renderer with Pagination & Filter
+function setDepositsPage(newPage) {
+  const filtered = getFilteredDeposits();
+  const maxPage = Math.max(1, Math.ceil(filtered.length / PageState.deposits.pageSize));
+  if (newPage >= 1 && newPage <= maxPage) {
+    PageState.deposits.page = newPage;
+    renderDepositsTable();
+  }
+}
+
+function getFilteredDeposits() {
+  const s = (PageState.deposits.search || '').toLowerCase().trim();
+  if (!s) return AdminState.deposits;
+  return AdminState.deposits.filter(d => 
+    (d.deposit_ref || '').toLowerCase().includes(s) ||
+    (d.username || '').toLowerCase().includes(s) ||
+    (d.phone || '').toLowerCase().includes(s) ||
+    (d.tid || '').toLowerCase().includes(s) ||
+    (d.gateway || '').toLowerCase().includes(s)
+  );
+}
+
 function renderDepositsTable() {
   const tbody = document.getElementById('adm-table-deposits');
   if (!tbody) return;
 
-  if (AdminState.deposits.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No deposit records found.</td></tr>';
+  const filtered = getFilteredDeposits();
+  const pageSize = PageState.deposits.pageSize;
+  const page = PageState.deposits.page;
+  const start = (page - 1) * pageSize;
+  const pageData = filtered.slice(start, start + pageSize);
+
+  renderPaginationBar('adm-pagination-deposits', filtered.length, page, pageSize, 'setDepositsPage');
+
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No deposit records found.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = AdminState.deposits.map(d => `
+  const html = pageData.map(d => `
     <tr>
       <td><strong>${d.deposit_ref}</strong></td>
       <td>${d.username}<br><small style="color:#64748b;">${d.phone}</small></td>
@@ -297,6 +382,10 @@ function renderDepositsTable() {
       </td>
     </tr>
   `).join('');
+
+  if (tbody.innerHTML !== html) {
+    tbody.innerHTML = html;
+  }
 }
 
 // Receipt Image Viewer Handlers
@@ -346,17 +435,46 @@ async function changeDepositStatus(depositId, status) {
   );
 }
 
-// Render Withdrawals Table
+// Withdrawals Table Renderer with Pagination & Filter
+function setWithdrawalsPage(newPage) {
+  const filtered = getFilteredWithdrawals();
+  const maxPage = Math.max(1, Math.ceil(filtered.length / PageState.withdrawals.pageSize));
+  if (newPage >= 1 && newPage <= maxPage) {
+    PageState.withdrawals.page = newPage;
+    renderWithdrawalsTable();
+  }
+}
+
+function getFilteredWithdrawals() {
+  const s = (PageState.withdrawals.search || '').toLowerCase().trim();
+  if (!s) return AdminState.withdrawals;
+  return AdminState.withdrawals.filter(w => 
+    (w.withdrawal_ref || '').toLowerCase().includes(s) ||
+    (w.username || '').toLowerCase().includes(s) ||
+    (w.phone || '').toLowerCase().includes(s) ||
+    (w.account_title || '').toLowerCase().includes(s) ||
+    (w.account_number || '').toLowerCase().includes(s)
+  );
+}
+
 function renderWithdrawalsTable() {
   const tbody = document.getElementById('adm-table-withdrawals');
   if (!tbody) return;
 
-  if (AdminState.withdrawals.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No withdrawal requests found.</td></tr>';
+  const filtered = getFilteredWithdrawals();
+  const pageSize = PageState.withdrawals.pageSize;
+  const page = PageState.withdrawals.page;
+  const start = (page - 1) * pageSize;
+  const pageData = filtered.slice(start, start + pageSize);
+
+  renderPaginationBar('adm-pagination-withdrawals', filtered.length, page, pageSize, 'setWithdrawalsPage');
+
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No withdrawal requests found.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = AdminState.withdrawals.map(w => `
+  const html = pageData.map(w => `
     <tr>
       <td><strong>${w.withdrawal_ref}</strong></td>
       <td>${w.username}<br><small style="color:#64748b;">${w.phone}</small></td>
@@ -382,6 +500,10 @@ function renderWithdrawalsTable() {
       </td>
     </tr>
   `).join('');
+
+  if (tbody.innerHTML !== html) {
+    tbody.innerHTML = html;
+  }
 }
 
 // Approve / Reject Withdrawal Action
@@ -430,33 +552,53 @@ async function executeWithdrawalStatusChange(withdrawalId, status, reason) {
   }
 }
 
-// Render Plans Table
+// Plans Table Renderer with Pagination
+function setPlansPage(newPage) {
+  const maxPage = Math.max(1, Math.ceil(AdminState.plans.length / PageState.plans.pageSize));
+  if (newPage >= 1 && newPage <= maxPage) {
+    PageState.plans.page = newPage;
+    renderPlansTable();
+  }
+}
+
 function renderPlansTable() {
   const tbody = document.getElementById('adm-table-plans');
   if (!tbody) return;
 
-  if (AdminState.plans.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No VIP investment plans found.</td></tr>';
+  const total = AdminState.plans.length;
+  const pageSize = PageState.plans.pageSize;
+  const page = PageState.plans.page;
+  const start = (page - 1) * pageSize;
+  const pageData = AdminState.plans.slice(start, start + pageSize);
+
+  renderPaginationBar('adm-pagination-plans', total, page, pageSize, 'setPlansPage');
+
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No VIP investment plans found.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = AdminState.plans.map(p => `
+  const html = pageData.map(p => `
     <tr>
       <td><strong>${p.name}</strong></td>
-      <td><strong style="color:#d97706;">PKR ${p.price.toLocaleString()}</strong></td>
-      <td><strong style="color:#059669;">PKR ${p.dailyProfit.toLocaleString()}</strong></td>
-      <td>PKR ${p.totalProfit.toLocaleString()}</td>
-      <td>${p.validityDays} Days</td>
-      <td>${p.level1Bonus}%</td>
-      <td>${p.level2Bonus}%</td>
+      <td><strong style="color:#d97706;">PKR ${(p.price || 0).toLocaleString()}</strong></td>
+      <td><strong style="color:#059669;">PKR ${(p.dailyProfit || p.daily_profit || 0).toLocaleString()}</strong></td>
+      <td>PKR ${(p.totalProfit || p.total_profit || 0).toLocaleString()}</td>
+      <td>${p.level1Bonus || p.level1_bonus || 0}%</td>
+      <td>${p.level2Bonus || p.level2_bonus || 0}%</td>
+      <td>${p.validityDays || p.validity_days || 0} Days</td>
       <td>
         <div style="display:flex; gap:0.3rem;">
-          <button onclick="openPlanModal('${p.id}')" class="admin-nav-btn" style="background:#e0f2fe; color:#0369a1; padding:0.3rem 0.5rem; border:none; border-radius:6px; cursor:pointer;">✏️ Edit</button>
-          <button onclick="deletePlan('${p.id}')" class="admin-nav-btn" style="background:#fee2e2; color:#dc2626; padding:0.3rem 0.5rem; border:none; border-radius:6px; cursor:pointer;">🗑️ Delete</button>
+          <button onclick="openPlanModal('${p.id || p._id}')" class="admin-nav-btn" style="background:#e0f2fe; color:#0369a1; padding:0.3rem 0.5rem; border:none; border-radius:6px; cursor:pointer;">✏️ Edit</button>
+          <button onclick="deletePlan('${p.id || p._id}')" class="admin-nav-btn" style="background:#fee2e2; color:#dc2626; padding:0.3rem 0.5rem; border:none; border-radius:6px; cursor:pointer;">🗑️ Delete</button>
         </div>
       </td>
     </tr>
   `).join('');
+
+  if (tbody.innerHTML !== html) {
+    tbody.innerHTML = html;
+  }
 }
 
 // Open Add/Edit VIP Plan Modal
@@ -466,21 +608,21 @@ function openPlanModal(planId = null) {
   const form = document.getElementById('plan-form');
 
   if (planId) {
-    const plan = AdminState.plans.find(p => p.id === planId);
+    const plan = AdminState.plans.find(p => p.id === planId || p._id === planId);
     if (!plan) return;
-    title.textContent = '✏️ Edit VIP Investment Plan';
-    document.getElementById('plan-id').value = plan.id;
-    document.getElementById('plan-name').value = plan.name;
-    document.getElementById('plan-price').value = plan.price;
-    document.getElementById('plan-daily').value = plan.dailyProfit;
-    document.getElementById('plan-total').value = plan.totalProfit;
-    document.getElementById('plan-validity').value = plan.validityDays;
-    document.getElementById('plan-level1').value = plan.level1Bonus;
-    document.getElementById('plan-level2').value = plan.level2Bonus;
+    if (title) title.textContent = '✏️ Edit VIP Investment Plan';
+    if (document.getElementById('modal-plan-id')) document.getElementById('modal-plan-id').value = plan.id || plan._id;
+    if (document.getElementById('modal-plan-name')) document.getElementById('modal-plan-name').value = plan.name || '';
+    if (document.getElementById('modal-plan-price')) document.getElementById('modal-plan-price').value = plan.price || '';
+    if (document.getElementById('modal-plan-daily')) document.getElementById('modal-plan-daily').value = plan.dailyProfit || plan.daily_profit || '';
+    if (document.getElementById('modal-plan-total')) document.getElementById('modal-plan-total').value = plan.totalProfit || plan.total_profit || '';
+    if (document.getElementById('modal-plan-validity')) document.getElementById('modal-plan-validity').value = plan.validityDays || plan.validity_days || '';
+    if (document.getElementById('modal-plan-l1')) document.getElementById('modal-plan-l1').value = plan.level1Bonus || plan.level1_bonus || '';
+    if (document.getElementById('modal-plan-l2')) document.getElementById('modal-plan-l2').value = plan.level2Bonus || plan.level2_bonus || '';
   } else {
-    title.textContent = '➕ Create New VIP Plan';
-    form.reset();
-    document.getElementById('plan-id').value = '';
+    if (title) title.textContent = '➕ Create New VIP Plan';
+    if (form) form.reset();
+    if (document.getElementById('modal-plan-id')) document.getElementById('modal-plan-id').value = '';
   }
 
   if (overlay) overlay.classList.add('active');
@@ -493,17 +635,17 @@ function closePlanModal() {
 }
 
 // Save VIP Plan (Create / Update)
-async function saveVipPlan(e) {
+async function saveAdminPlan(e) {
   e.preventDefault();
   const submitBtn = e.target.querySelector('button[type="submit"]');
-  const planId = document.getElementById('plan-id').value;
-  const name = document.getElementById('plan-name').value;
-  const price = document.getElementById('plan-price').value;
-  const dailyProfit = document.getElementById('plan-daily').value;
-  const totalProfit = document.getElementById('plan-total').value;
-  const validityDays = document.getElementById('plan-validity').value;
-  const level1Bonus = document.getElementById('plan-level1').value;
-  const level2Bonus = document.getElementById('plan-level2').value;
+  const planId = document.getElementById('modal-plan-id') ? document.getElementById('modal-plan-id').value : '';
+  const name = document.getElementById('modal-plan-name').value;
+  const price = document.getElementById('modal-plan-price').value;
+  const dailyProfit = document.getElementById('modal-plan-daily').value;
+  const totalProfit = document.getElementById('modal-plan-total').value;
+  const validityDays = document.getElementById('modal-plan-validity').value;
+  const level1Bonus = document.getElementById('modal-plan-l1').value;
+  const level2Bonus = document.getElementById('modal-plan-l2').value;
 
   setAdminButtonLoading(submitBtn, true, 'Saving Plan...');
 
@@ -539,6 +681,7 @@ async function saveVipPlan(e) {
     showAdminModal('Error', 'Error saving VIP plan.', 'error');
   }
 }
+const saveVipPlan = saveAdminPlan;
 
 // Delete VIP Plan
 async function deletePlan(planId) {
@@ -578,10 +721,10 @@ function renderSettingsForm() {
   const waNum = document.getElementById('sett-wa-num');
   const notice = document.getElementById('sett-notice');
 
-  if (epTitle) epTitle.value = s.easypaisa_title || '';
-  if (epNum) epNum.value = s.easypaisa_number || '';
+  if (epTitle) epTitle.value = s.easypaisa_title || s.easypaisaTitle || '';
+  if (epNum) epNum.value = s.easypaisa_number || s.easypaisaNumber || '';
   if (waNum) waNum.value = s.whatsapp_number || s.whatsappNumber || '';
-  if (notice) notice.value = s.notice_text || '';
+  if (notice) notice.value = s.notice_text || s.noticeText || '';
 }
 
 // Save Admin Settings
@@ -590,9 +733,13 @@ async function saveAdminSettings(e) {
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const settings = {
     easypaisa_title: document.getElementById('sett-ep-title').value,
+    easypaisaTitle: document.getElementById('sett-ep-title').value,
     easypaisa_number: document.getElementById('sett-ep-num').value,
+    easypaisaNumber: document.getElementById('sett-ep-num').value,
     whatsapp_number: document.getElementById('sett-wa-num').value,
-    notice_text: document.getElementById('sett-notice').value
+    whatsappNumber: document.getElementById('sett-wa-num').value,
+    notice_text: document.getElementById('sett-notice').value,
+    noticeText: document.getElementById('sett-notice').value
   };
 
   setAdminButtonLoading(submitBtn, true, 'Saving Settings...');
@@ -618,18 +765,34 @@ async function saveAdminSettings(e) {
   }
 }
 
-// Render Active User Mining Packages Table
+// Active User Mining Packages Table Renderer with Pagination
+function setUserPlansPage(newPage) {
+  const total = AdminState.activeUserPlans.length;
+  const maxPage = Math.max(1, Math.ceil(total / PageState.userPlans.pageSize));
+  if (newPage >= 1 && newPage <= maxPage) {
+    PageState.userPlans.page = newPage;
+    renderUserPlansTable();
+  }
+}
+
 function renderUserPlansTable() {
   const tbody = document.getElementById('adm-table-user-plans');
   if (!tbody) return;
 
   const plans = AdminState.activeUserPlans || [];
-  if (plans.length === 0) {
+  const pageSize = PageState.userPlans.pageSize;
+  const page = PageState.userPlans.page;
+  const start = (page - 1) * pageSize;
+  const pageData = plans.slice(start, start + pageSize);
+
+  renderPaginationBar('adm-pagination-user-plans', plans.length, page, pageSize, 'setUserPlansPage');
+
+  if (pageData.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No active user mining packages found.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = plans.map(up => {
+  const html = pageData.map(up => {
     const id = up._id || up.id;
     const planName = up.planName || up.plan_name || 'VIP Package';
     const userId = up.userId || up.user_id || 'User';
@@ -653,56 +816,73 @@ function renderUserPlansTable() {
       </tr>
     `;
   }).join('');
-}
 
-// Filter Users Table by Search Query
-function filterUsersTable() {
-  const searchVal = (document.getElementById('adm-user-search')?.value || '').toLowerCase().trim();
-  if (!searchVal) {
-    renderUsersTable();
-    return;
+  if (tbody.innerHTML !== html) {
+    tbody.innerHTML = html;
   }
-
-  const filtered = AdminState.users.filter(u => 
-    (u.username || '').toLowerCase().includes(searchVal) ||
-    (u.phone || '').toLowerCase().includes(searchVal) ||
-    (u.id || '').toString().toLowerCase().includes(searchVal)
-  );
-
-  renderUsersTable(filtered);
 }
 
-// Render Registered Users Table
-function renderUsersTable(usersToRender = null) {
+// Users Manager Table Renderer with Pagination & Filter
+function setUsersPage(newPage) {
+  const filtered = getFilteredUsers();
+  const maxPage = Math.max(1, Math.ceil(filtered.length / PageState.users.pageSize));
+  if (newPage >= 1 && newPage <= maxPage) {
+    PageState.users.page = newPage;
+    renderUsersTable();
+  }
+}
+
+function getFilteredUsers() {
+  const s = (PageState.users.search || '').toLowerCase().trim();
+  if (!s) return AdminState.users;
+  return AdminState.users.filter(u => 
+    (u.username || '').toLowerCase().includes(s) ||
+    (u.phone || '').toLowerCase().includes(s) ||
+    (u.id || '').toString().toLowerCase().includes(s) ||
+    (u.referral_code || '').toLowerCase().includes(s)
+  );
+}
+
+function renderUsersTable() {
   const tbody = document.getElementById('adm-table-users');
   if (!tbody) return;
 
-  const usersList = usersToRender || AdminState.users;
+  const filtered = getFilteredUsers();
+  const pageSize = PageState.users.pageSize;
+  const page = PageState.users.page;
+  const start = (page - 1) * pageSize;
+  const pageData = filtered.slice(start, start + pageSize);
 
-  if (usersList.length === 0) {
+  renderPaginationBar('adm-pagination-users', filtered.length, page, pageSize, 'setUsersPage');
+
+  if (pageData.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No users found matching search query.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = usersList.map(u => `
+  const html = pageData.map(u => `
     <tr>
-      <td><small><code>${u.id}</code></small></td>
-      <td><strong>${u.username}</strong></td>
-      <td>${u.phone}</td>
-      <td><strong style="color:#059669;">PKR ${u.balance.toLocaleString()}</strong></td>
-      <td>PKR ${u.total_deposit.toLocaleString()}</td>
-      <td>PKR ${u.total_withdraw.toLocaleString()}</td>
-      <td><code>${u.referral_code}</code></td>
-      <td>${u.referred_by || '-'}</td>
+      <td><small><code>${u.id || u._id}</code></small></td>
+      <td><strong>${u.username || 'User'}</strong></td>
+      <td>${u.phone || '-'}</td>
+      <td><strong style="color:#059669;">PKR ${(u.balance || 0).toLocaleString()}</strong></td>
+      <td>PKR ${(u.total_deposit || u.totalDeposit || 0).toLocaleString()}</td>
+      <td>PKR ${(u.total_withdraw || u.totalWithdraw || 0).toLocaleString()}</td>
+      <td><code>${u.referral_code || u.referralCode || '-'}</code></td>
+      <td>${u.referred_by || u.referredBy || '-'}</td>
       <td>
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-          <button onclick="editUserWalletBalance('${u.id}', ${u.balance})" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">✏️ Balance</button>
-          <button onclick="openUserEditModal('${u.id}')" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔐 Edit / Reset</button>
-          <button onclick="deleteUserAccount('${u.id}', '${u.username}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🗑️ Delete</button>
+          <button onclick="editUserWalletBalance('${u.id || u._id}', ${u.balance || 0})" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">✏️ Balance</button>
+          <button onclick="openUserEditModal('${u.id || u._id}')" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔐 Edit / Reset</button>
+          <button onclick="deleteUserAccount('${u.id || u._id}', '${u.username || 'User'}')" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:0.35rem 0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🗑️ Delete</button>
         </div>
       </td>
     </tr>
   `).join('');
+
+  if (tbody.innerHTML !== html) {
+    tbody.innerHTML = html;
+  }
 }
 
 // Edit User Wallet Balance Action

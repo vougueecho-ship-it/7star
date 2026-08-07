@@ -22,14 +22,14 @@ export async function GET(req: Request) {
 
     await connectToDatabase();
 
-    const user = await User.findById(decoded.id).select('-passwordHash');
+    const user = await User.findById(decoded.id).select('-passwordHash').lean();
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
     const refCode = (user.referralCode || '').trim();
 
-    // Execute sub-queries in parallel via Promise.all for maximum performance
+    // Execute sub-queries in parallel via Promise.all with .lean() for maximum performance
     const [
       activePlans,
       allPlans,
@@ -38,12 +38,12 @@ export async function GET(req: Request) {
       teamCount,
       teamList
     ] = await Promise.all([
-      UserPlan.find({ userId: user._id, status: 'Active' }),
-      UserPlan.find({ userId: user._id }).sort({ createdAt: -1 }),
-      Deposit.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50),
-      Withdrawal.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50),
+      UserPlan.find({ userId: user._id, status: 'Active' }).lean(),
+      UserPlan.find({ userId: user._id }).sort({ createdAt: -1 }).lean(),
+      Deposit.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).lean(),
+      Withdrawal.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).lean(),
       refCode ? User.countDocuments({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } }) : 0,
-      refCode ? User.find({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } }).select('username phone balance createdAt').sort({ createdAt: -1 }) : []
+      refCode ? User.find({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } }).select('username phone balance createdAt').sort({ createdAt: -1 }).lean() : []
     ]);
 
     const userObject = {

@@ -167,7 +167,10 @@
 
     <!-- TAB 1: DEPOSITS -->
     <div id="view-deposits" class="admin-card">
-      <h3 style="color: var(--primary-gold); font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">User Deposit Requests (Easypaisa / JazzCash / Bank)</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+        <h3 style="color: var(--primary-gold); font-size: 1.1rem; font-weight: 800; margin:0;">User Deposit Requests (Easypaisa / JazzCash / Bank)</h3>
+        <input type="text" id="adm-dep-search" oninput="onDepositSearchInput(event)" placeholder="🔍 Search deposits by TID, user, ref..." class="auth-input-field" style="max-width: 320px; padding: 0.45rem 1rem; font-size: 0.85rem;">
+      </div>
       <div class="table-wrapper">
         <table class="table-dark">
           <thead>
@@ -185,11 +188,15 @@
           <tbody id="adm-table-deposits"></tbody>
         </table>
       </div>
+      <div id="adm-pagination-deposits"></div>
     </div>
 
     <!-- TAB 2: WITHDRAWALS -->
     <div id="view-withdrawals" class="admin-card" style="display: none;">
-      <h3 style="color: var(--emerald-green); font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">User Withdrawal Payout Requests</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+        <h3 style="color: var(--emerald-green); font-size: 1.1rem; font-weight: 800; margin:0;">User Withdrawal Payout Requests</h3>
+        <input type="text" id="adm-wit-search" oninput="onWithdrawalSearchInput(event)" placeholder="🔍 Search payouts by account, user, ref..." class="auth-input-field" style="max-width: 320px; padding: 0.45rem 1rem; font-size: 0.85rem;">
+      </div>
       <div class="table-wrapper">
         <table class="table-dark">
           <thead>
@@ -206,6 +213,7 @@
           <tbody id="adm-table-withdrawals"></tbody>
         </table>
       </div>
+      <div id="adm-pagination-withdrawals"></div>
     </div>
 
     <!-- TAB 3: PLAN BUILDER -->
@@ -233,6 +241,7 @@
           <tbody id="adm-table-plans"></tbody>
         </table>
       </div>
+      <div id="adm-pagination-plans"></div>
     </div>
 
     <!-- Plan Editor Modal Dialog -->
@@ -350,13 +359,14 @@
           <tbody id="adm-table-user-plans"></tbody>
         </table>
       </div>
+      <div id="adm-pagination-user-plans"></div>
     </div>
 
     <!-- TAB 6: USERS MANAGER -->
     <div id="view-users" class="admin-card" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
         <h3 style="color: var(--primary-gold); font-size: 1.1rem; font-weight: 800; margin:0;">Registered Users & Wallet Balances</h3>
-        <input type="text" id="adm-user-search" oninput="filterUsersTable()" placeholder="🔍 Search user by name, phone, or ID..." class="auth-input-field" style="max-width: 320px; padding: 0.5rem 1rem; font-size: 0.85rem;">
+        <input type="text" id="adm-user-search" oninput="onUserSearchInput(event)" placeholder="🔍 Search user by name, phone, or ID..." class="auth-input-field" style="max-width: 320px; padding: 0.5rem 1rem; font-size: 0.85rem;">
       </div>
       <div class="table-wrapper">
         <table class="table-dark">
@@ -376,6 +386,7 @@
           <tbody id="adm-table-users"></tbody>
         </table>
       </div>
+      <div id="adm-pagination-users"></div>
     </div>
 
     <!-- User Edit / Reset Password Modal -->
