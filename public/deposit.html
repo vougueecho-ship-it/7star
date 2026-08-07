@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Deposit — 7 STAR INVEST</title>
   <link rel="stylesheet" href="/css/app-theme.css">
 </head>
+
 <body>
 
   <div id="drawer-overlay" class="drawer-overlay"></div>
@@ -18,9 +20,12 @@
           <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
         </div>
       </div>
-      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+      <button id="drawer-close-btn"
+        style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
     </div>
-    <div style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); margin-bottom:0.75rem; letter-spacing:1px;">MAIN MENU</div>
+    <div
+      style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); margin-bottom:0.75rem; letter-spacing:1px;">
+      MAIN MENU</div>
     <ul class="drawer-list">
       <li class="drawer-item"><a href="/dashboard.html">⏱️ Dashboard</a></li>
       <li class="drawer-item"><a href="/deposit.html" class="active">➕ Deposit</a></li>
@@ -30,7 +35,7 @@
       <li class="drawer-item"><a href="/team.html">👥 Referral Team</a></li>
       <li class="drawer-item"><a href="/records.html">📑 Transaction Records</a></li>
       <li class="drawer-item"><a href="/profile.html">👤 Profile Settings</a></li>
-      <li class="drawer-item"><a href="/xpro-admin/login.html" style="color:var(--primary-gold);">⚙️ Admin Secret Portal</a></li>
+      <!-- <li class="drawer-item"><a href="/xpro-admin/login.html" style="color:var(--primary-gold);">⚙️ Admin Secret Portal</a></li> -->
     </ul>
 
     <button onclick="logout()" class="logout-btn-red">
@@ -39,7 +44,7 @@
   </div>
 
   <div class="app-container">
-    
+
     <!-- Top Header Bar -->
     <div class="app-header">
       <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
@@ -50,47 +55,62 @@
       <div class="avatar-btn user-avatar-initials">7S</div>
     </div>
 
-    <h2 style="text-align:center; font-size:1.4rem; font-weight:800; background:var(--teal-gold-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.2rem;">DEPOSIT FUNDS</h2>
-    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">Select gateway & submit payment proof</p>
-    <div style="width:50px; height:4px; border-radius:4px; background:var(--teal-gold-gradient); margin:0 auto 1.5rem;"></div>
+    <h2
+      style="text-align:center; font-size:1.4rem; font-weight:800; background:var(--teal-gold-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.2rem;">
+      DEPOSIT FUNDS</h2>
+    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">Select gateway &
+      submit payment proof</p>
+    <div style="width:50px; height:4px; border-radius:4px; background:var(--teal-gold-gradient); margin:0 auto 1.5rem;">
+    </div>
 
     <!-- Selected Plan Banner -->
-    <div style="background:var(--teal-gold-gradient); border-radius:24px; padding:1.25rem 1.5rem; color:#ffffff; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--card-shadow); margin-bottom:1.25rem;">
+    <div
+      style="background:var(--teal-gold-gradient); border-radius:24px; padding:1.25rem 1.5rem; color:#ffffff; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--card-shadow); margin-bottom:1.25rem;">
       <div>
-        <span style="font-size:0.7rem; font-weight:800; color:rgba(255,255,255,0.85); letter-spacing:1px;">SELECTED PLAN</span>
+        <span style="font-size:0.7rem; font-weight:800; color:rgba(255,255,255,0.85); letter-spacing:1px;">SELECTED
+          PLAN</span>
         <div style="font-size:1.25rem; font-weight:800; color:#ffffff;">VIP 1</div>
       </div>
       <div style="font-size:1.5rem; font-weight:800; color:#ffffff;">PKR 750</div>
     </div>
 
     <!-- Active Gateway Box -->
-    <div style="background:var(--card-bg); border:var(--card-border-light); border-radius:28px; padding:1.25rem; box-shadow:var(--card-shadow); margin-bottom:1.25rem;">
+    <div
+      style="background:var(--card-bg); border:var(--card-border-light); border-radius:28px; padding:1.25rem; box-shadow:var(--card-shadow); margin-bottom:1.25rem;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div style="display:flex; align-items:center; gap:0.75rem;">
-          <div style="width:48px; height:48px; border-radius:16px; background:#e0f2fe; color:var(--primary-teal); font-size:1.4rem; display:flex; align-items:center; justify-content:center;">🟢</div>
+          <div
+            style="width:48px; height:48px; border-radius:16px; background:#e0f2fe; color:var(--primary-teal); font-size:1.4rem; display:flex; align-items:center; justify-content:center;">
+            🟢</div>
           <div>
-            <span style="font-size:0.65rem; font-weight:800; color:var(--primary-teal); letter-spacing:0.5px;">ACTIVE GATEWAY</span>
+            <span style="font-size:0.65rem; font-weight:800; color:var(--primary-teal); letter-spacing:0.5px;">ACTIVE
+              GATEWAY</span>
             <div style="font-size:1.05rem; font-weight:800; color:var(--text-dark);">Easypaisa</div>
           </div>
         </div>
-        <span style="width:28px; height:28px; border-radius:50%; background:var(--primary-teal); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:bold;">✓</span>
+        <span
+          style="width:28px; height:28px; border-radius:50%; background:var(--primary-teal); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:bold;">✓</span>
       </div>
 
       <!-- Account Details -->
       <div style="background:#f4f8f6; border-radius:18px; padding:1rem 1.25rem; border:1px solid #e2e8f0;">
-        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem; color:var(--text-muted);">
+        <div
+          style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem; color:var(--text-muted);">
           <span>Currency</span>
           <strong style="color:var(--text-dark);">PKR</strong>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem; color:var(--text-muted);">
+        <div
+          style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.5rem; color:var(--text-muted);">
           <span>Account Name</span>
           <strong id="gateway-ep-name" style="color:var(--primary-teal); font-weight:800;">Loading...</strong>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:var(--text-muted);">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:var(--text-muted);">
           <span>Account No.</span>
           <div>
             <code id="gateway-ep-num" style="color:var(--primary-teal); font-size:1rem; font-weight:800;">...</code>
-            <button id="gateway-ep-copy-btn" onclick="copyText('')" style="background:var(--teal-gold-gradient); color:#ffffff; border:none; padding:0.3rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer; margin-left:0.4rem;">Copy</button>
+            <button id="gateway-ep-copy-btn" onclick="copyText('')"
+              style="background:var(--teal-gold-gradient); color:#ffffff; border:none; padding:0.3rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer; margin-left:0.4rem;">Copy</button>
           </div>
         </div>
       </div>
@@ -99,46 +119,66 @@
     <!-- Submission Form -->
     <div class="auth-card">
       <form onsubmit="handleDepositSubmit(event)">
-        
+
         <div style="margin-bottom:1.25rem;">
-          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">SELECT GATEWAY</label>
+          <label
+            style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">SELECT
+            GATEWAY</label>
           <select id="dep-gateway" class="auth-input-field" style="padding-left:1rem;" required>
             <option value="Easypaisa">Easypaisa</option>
           </select>
         </div>
 
         <div style="margin-bottom:1.25rem;">
-          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">DEPOSIT AMOUNT (PKR)</label>
-          <input type="number" id="dep-amount" class="auth-input-field" style="padding-left:1rem;" placeholder="e.g. 750" required>
+          <label
+            style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">DEPOSIT
+            AMOUNT (PKR)</label>
+          <input type="number" id="dep-amount" class="auth-input-field" style="padding-left:1rem;"
+            placeholder="e.g. 750" required>
         </div>
 
         <div style="margin-bottom:1.25rem;">
-          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">TRANSACTION ID (TID)</label>
-          <input type="text" id="dep-tid" class="auth-input-field" style="padding-left:1rem;" placeholder="Enter your payment transaction ID" required>
+          <label
+            style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">TRANSACTION
+            ID (TID)</label>
+          <input type="text" id="dep-tid" class="auth-input-field" style="padding-left:1rem;"
+            placeholder="Enter your payment transaction ID" required>
         </div>
 
         <!-- Payment Screenshot Upload Box -->
         <div style="margin-bottom:1.5rem;">
-          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PAYMENT SCREENSHOT PROOF (REQUIRED)</label>
-          <div id="dep-screenshot-dropzone" style="border:2px dashed var(--primary-gold); border-radius:18px; padding:1.25rem; text-align:center; background:#fffbeb; cursor:pointer; transition: all 0.2s ease;" onclick="document.getElementById('dep-screenshot-file').click()">
+          <label
+            style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PAYMENT
+            SCREENSHOT PROOF (REQUIRED)</label>
+          <div id="dep-screenshot-dropzone"
+            style="border:2px dashed var(--primary-gold); border-radius:18px; padding:1.25rem; text-align:center; background:#fffbeb; cursor:pointer; transition: all 0.2s ease;"
+            onclick="document.getElementById('dep-screenshot-file').click()">
             <div id="dep-screenshot-placeholder">
               <div style="font-size:2rem; color:var(--primary-gold);">📷⬆️</div>
-              <div style="font-size:0.85rem; font-weight:800; color:var(--primary-gold); margin-top:0.3rem;">Tap to upload payment screenshot</div>
-              <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem;">PNG, JPG, JPEG — Required for Admin Verification</div>
-            </div>
-            
-            <div id="dep-screenshot-preview-box" style="display:none; text-align:center;">
-              <div style="display:inline-flex; align-items:center; gap:0.4rem; background:#d1fae5; color:#059669; font-weight:800; font-size:0.75rem; padding:0.3rem 0.75rem; border-radius:12px; margin-bottom:0.5rem;">
-                ✅ Screenshot Attached
-              </div>
-              <div id="dep-screenshot-filename" style="font-size:0.8rem; font-weight:700; color:var(--text-dark); word-break:break-all;">filename.png</div>
-              <div style="margin-top:0.5rem;">
-                <img id="dep-screenshot-img-preview" src="" alt="Payment Screenshot Preview" style="max-height:160px; width:auto; max-width:100%; border-radius:14px; border:2px solid #fde68a; box-shadow:0 4px 15px rgba(217, 119, 6, 0.15);" />
-              </div>
-              <div style="font-size:0.7rem; font-weight:700; color:var(--primary-gold); margin-top:0.5rem;">🔄 Tap to change screenshot</div>
+              <div style="font-size:0.85rem; font-weight:800; color:var(--primary-gold); margin-top:0.3rem;">Tap to
+                upload payment screenshot</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem;">PNG, JPG, JPEG — Required for
+                Admin Verification</div>
             </div>
 
-            <input type="file" id="dep-screenshot-file" accept="image/*" required style="display:none;" onchange="handleScreenshotPreview(event)">
+            <div id="dep-screenshot-preview-box" style="display:none; text-align:center;">
+              <div
+                style="display:inline-flex; align-items:center; gap:0.4rem; background:#d1fae5; color:#059669; font-weight:800; font-size:0.75rem; padding:0.3rem 0.75rem; border-radius:12px; margin-bottom:0.5rem;">
+                ✅ Screenshot Attached
+              </div>
+              <div id="dep-screenshot-filename"
+                style="font-size:0.8rem; font-weight:700; color:var(--text-dark); word-break:break-all;">filename.png
+              </div>
+              <div style="margin-top:0.5rem;">
+                <img id="dep-screenshot-img-preview" src="" alt="Payment Screenshot Preview"
+                  style="max-height:160px; width:auto; max-width:100%; border-radius:14px; border:2px solid #fde68a; box-shadow:0 4px 15px rgba(217, 119, 6, 0.15);" />
+              </div>
+              <div style="font-size:0.7rem; font-weight:700; color:var(--primary-gold); margin-top:0.5rem;">🔄 Tap to
+                change screenshot</div>
+            </div>
+
+            <input type="file" id="dep-screenshot-file" accept="image/*" required style="display:none;"
+              onchange="handleScreenshotPreview(event)">
           </div>
         </div>
 
@@ -151,8 +191,11 @@
 
     <!-- VIP Investment Plans Section -->
     <div class="auth-card" style="border-radius:28px; padding:1.5rem; margin-top: 1.5rem; margin-bottom: 5rem;">
-      <h3 style="color:var(--primary-gold); font-size:1.15rem; font-weight:800; text-align:center; margin-bottom:0.25rem;">⭐ VIP INVESTMENT PLANS</h3>
-      <p style="text-align:center; color:var(--text-muted); font-size:0.75rem; margin-bottom:1.25rem;">Choose a VIP package after deposit approval to activate mining</p>
+      <h3
+        style="color:var(--primary-gold); font-size:1.15rem; font-weight:800; text-align:center; margin-bottom:0.25rem;">
+        ⭐ VIP INVESTMENT PLANS</h3>
+      <p style="text-align:center; color:var(--text-muted); font-size:0.75rem; margin-bottom:1.25rem;">Choose a VIP
+        package after deposit approval to activate mining</p>
       <div id="plans-container" class="plans-grid" style="display:grid; gap:1rem; margin-bottom:1rem;">
         <!-- Rendered dynamically by app-client.js -->
       </div>
@@ -182,4 +225,5 @@
 
   <script src="/js/app-client.js"></script>
 </body>
+
 </html>

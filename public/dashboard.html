@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — 7 STAR INVEST</title>
   <link rel="stylesheet" href="/css/app-theme.css">
 </head>
+
 <body>
 
   <!-- Slide-out Navigation Drawer -->
@@ -19,10 +21,13 @@
           <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
         </div>
       </div>
-      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+      <button id="drawer-close-btn"
+        style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
     </div>
 
-    <div style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); margin-bottom:0.75rem; letter-spacing:1px;">MAIN MENU</div>
+    <div
+      style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); margin-bottom:0.75rem; letter-spacing:1px;">
+      MAIN MENU</div>
     <ul class="drawer-list">
       <li class="drawer-item"><a href="/dashboard.html" class="active">⏱️ Dashboard</a></li>
       <li class="drawer-item"><a href="/deposit.html">➕ Deposit</a></li>
@@ -32,7 +37,7 @@
       <li class="drawer-item"><a href="/team.html">👥 Referral Team</a></li>
       <li class="drawer-item"><a href="/records.html">📑 Transaction Records</a></li>
       <li class="drawer-item"><a href="/profile.html">👤 Profile Settings</a></li>
-      <li class="drawer-item"><a href="/xpro-admin/login.html" style="color:var(--primary-gold);">⚙️ Admin Secret Portal</a></li>
+      <!-- <li class="drawer-item"><a href="/xpro-admin/login.html" style="color:var(--primary-gold);">⚙️ Admin Secret Portal</a></li> -->
     </ul>
 
     <button onclick="logout()" class="logout-btn-red">
@@ -41,7 +46,7 @@
   </div>
 
   <div class="app-container">
-    
+
     <!-- Top Header Bar -->
     <div class="app-header">
       <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
@@ -55,7 +60,8 @@
     <!-- Welcome Back Header Card -->
     <div class="user-welcome-card">
       <div>
-        <div style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">WELCOME BACK</div>
+        <div style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">WELCOME BACK
+        </div>
         <div class="user-name-title user-dyn-username">Loading user...</div>
         <div class="user-verified-badge">
           🛡️ Verified investor account
@@ -115,7 +121,7 @@
         <div class="services-title">Services Hub</div>
         <span class="badge-pill-gold">MENU</span>
       </div>
-      
+
       <div class="services-grid">
         <a href="/records.html?tab=deposits" class="service-item">
           <div class="service-icon-box">🧾</div>
@@ -161,7 +167,8 @@
 
     <!-- Referral Link Banner Card -->
     <div class="referral-banner-card">
-      <div style="font-size:0.85rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">YOUR REFERRAL LINK</div>
+      <div style="font-size:0.85rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">YOUR REFERRAL
+        LINK</div>
       <div class="referral-input-group">
         <input type="text" id="user-dyn-reflink" class="referral-input-field" readonly value="Loading referral link...">
         <button onclick="copyReferralLink()" class="referral-copy-btn">📋 Copy</button>
@@ -240,4 +247,5 @@
 
   <script src="/js/app-client.js"></script>
 </body>
+
 </html>

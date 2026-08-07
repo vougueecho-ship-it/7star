@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Withdraw — 7 STAR INVEST</title>
   <link rel="stylesheet" href="/css/app-theme.css">
 </head>
+
 <body>
 
   <div id="drawer-overlay" class="drawer-overlay"></div>
@@ -18,9 +20,12 @@
           <div style="font-size:0.65rem; color:var(--cyan-neon);">OFFICIAL APP</div>
         </div>
       </div>
-      <button id="drawer-close-btn" style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
+      <button id="drawer-close-btn"
+        style="background:none; border:none; color:var(--text-dark); font-size:1.2rem; cursor:pointer;">✕</button>
     </div>
-    <div style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); margin-bottom:0.75rem; letter-spacing:1px;">MAIN MENU</div>
+    <div
+      style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); margin-bottom:0.75rem; letter-spacing:1px;">
+      MAIN MENU</div>
     <ul class="drawer-list">
       <li class="drawer-item"><a href="/dashboard.html">⏱️ Dashboard</a></li>
       <li class="drawer-item"><a href="/deposit.html">➕ Deposit</a></li>
@@ -30,7 +35,7 @@
       <li class="drawer-item"><a href="/team.html">👥 Referral Team</a></li>
       <li class="drawer-item"><a href="/records.html">📑 Transaction Records</a></li>
       <li class="drawer-item"><a href="/profile.html">👤 Profile Settings</a></li>
-      <li class="drawer-item"><a href="/xpro-admin/login.html" style="color:var(--primary-gold);">⚙️ Admin Secret Portal</a></li>
+      <!-- <li class="drawer-item"><a href="/xpro-admin/login.html" style="color:var(--primary-gold);">⚙️ Admin Secret Portal</a></li> -->
     </ul>
 
     <button onclick="logout()" class="logout-btn-red">
@@ -39,7 +44,7 @@
   </div>
 
   <div class="app-container">
-    
+
     <!-- Top Header Bar -->
     <div class="app-header">
       <button id="drawer-toggle-btn" class="menu-toggle-btn">☰</button>
@@ -50,64 +55,93 @@
       <div class="avatar-btn user-avatar-initials">7S</div>
     </div>
 
-    <h2 style="text-align:center; font-size:1.4rem; font-weight:800; color:var(--cyan-neon); margin-bottom:0.2rem;">WITHDRAW</h2>
-    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Select gateway & enter amount</p>
+    <h2 style="text-align:center; font-size:1.4rem; font-weight:800; color:var(--cyan-neon); margin-bottom:0.2rem;">
+      WITHDRAW</h2>
+    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Select gateway &
+      enter amount</p>
 
     <!-- Available & Withdrawable Profit Banners -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.25rem;">
-      <div style="background:var(--card-bg); border:1px solid #fde68a; border-radius:18px; padding:1rem; box-shadow:var(--card-shadow);">
-        <span style="font-size:0.65rem; font-weight:800; color:var(--text-muted); letter-spacing:0.5px; display:block;">WALLET BALANCE</span>
-        <div class="user-dyn-balance" style="font-size:1.15rem; font-weight:800; color:var(--text-dark); margin-top:0.2rem;">0.00 PKR</div>
+      <div
+        style="background:var(--card-bg); border:1px solid #fde68a; border-radius:18px; padding:1rem; box-shadow:var(--card-shadow);">
+        <span
+          style="font-size:0.65rem; font-weight:800; color:var(--text-muted); letter-spacing:0.5px; display:block;">WALLET
+          BALANCE</span>
+        <div class="user-dyn-balance"
+          style="font-size:1.15rem; font-weight:800; color:var(--text-dark); margin-top:0.2rem;">0.00 PKR</div>
       </div>
-      <div style="background:var(--gold-gradient); border-radius:18px; padding:1rem; color:#ffffff; box-shadow:0 4px 15px rgba(217,119,6,0.25);">
-        <span style="font-size:0.65rem; font-weight:800; color:rgba(255,255,255,0.85); letter-spacing:0.5px; display:block;">WITHDRAWABLE PROFIT</span>
-        <div class="user-dyn-profit" style="font-size:1.15rem; font-weight:800; color:#ffffff; margin-top:0.2rem;">0.00 PKR</div>
+      <div
+        style="background:var(--gold-gradient); border-radius:18px; padding:1rem; color:#ffffff; box-shadow:0 4px 15px rgba(217,119,6,0.25);">
+        <span
+          style="font-size:0.65rem; font-weight:800; color:rgba(255,255,255,0.85); letter-spacing:0.5px; display:block;">WITHDRAWABLE
+          PROFIT</span>
+        <div class="user-dyn-profit" style="font-size:1.15rem; font-weight:800; color:#ffffff; margin-top:0.2rem;">0.00
+          PKR</div>
       </div>
     </div>
 
     <!-- Payout Gateway Card -->
     <div style="margin-bottom:1.25rem;">
-      <div style="background:var(--card-bg); border:2px solid var(--primary-gold); border-radius:18px; padding:1.15rem 1.25rem; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--card-shadow);">
+      <div
+        style="background:var(--card-bg); border:2px solid var(--primary-gold); border-radius:18px; padding:1.15rem 1.25rem; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--card-shadow);">
         <div style="display:flex; align-items:center; gap:0.75rem;">
-          <div style="width:44px; height:44px; border-radius:14px; background:#d1fae5; color:var(--emerald-green); font-size:1.5rem; display:flex; align-items:center; justify-content:center;">🟢</div>
+          <div
+            style="width:44px; height:44px; border-radius:14px; background:#d1fae5; color:var(--emerald-green); font-size:1.5rem; display:flex; align-items:center; justify-content:center;">
+            🟢</div>
           <div>
-            <span style="font-size:0.65rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">ACTIVE PAYOUT GATEWAY</span>
+            <span style="font-size:0.65rem; font-weight:800; color:var(--primary-gold); letter-spacing:0.5px;">ACTIVE
+              PAYOUT GATEWAY</span>
             <div style="font-size:1.05rem; font-weight:800; color:var(--text-dark);">Easypaisa Instant Payout</div>
           </div>
         </div>
-        <span style="width:28px; height:28px; border-radius:50%; background:var(--emerald-green); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:bold;">✓</span>
+        <span
+          style="width:28px; height:28px; border-radius:50%; background:var(--emerald-green); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:bold;">✓</span>
       </div>
     </div>
 
     <!-- Form Section -->
     <div class="auth-card">
       <form onsubmit="handleWithdrawSubmit(event)">
-        
+
         <div style="margin-bottom:1.25rem;">
-          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">SELECT GATEWAY</label>
+          <label
+            style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">SELECT
+            GATEWAY</label>
           <select id="wit-gateway" class="auth-input-field" style="padding-left:1rem;" required>
             <option value="Easypaisa">Easypaisa</option>
           </select>
         </div>
 
         <div style="margin-bottom:1.25rem;">
-          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">ENTER AMOUNT</label>
-          <input type="number" id="wit-amount" class="auth-input-field" style="padding-left:1rem;" placeholder="PKR 0.00" min="100" max="500000" required>
-          <span style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem; display:block;">Min: PKR 100 — Max: PKR 500,000</span>
+          <label
+            style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">ENTER
+            AMOUNT</label>
+          <input type="number" id="wit-amount" class="auth-input-field" style="padding-left:1rem;"
+            placeholder="PKR 0.00" min="100" max="500000" required>
+          <span style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem; display:block;">Min: PKR 100 — Max:
+            PKR 500,000</span>
         </div>
 
         <!-- Account Details Card -->
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem; margin-bottom:1.5rem;">
-          <div style="font-size:0.8rem; font-weight:800; color:var(--cyan-neon); margin-bottom:1rem;">👤 EASYPAISA ACCOUNT DETAILS</div>
+        <div
+          style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem; margin-bottom:1.5rem;">
+          <div style="font-size:0.8rem; font-weight:800; color:var(--cyan-neon); margin-bottom:1rem;">👤 EASYPAISA
+            ACCOUNT DETAILS</div>
 
           <div style="margin-bottom:1rem;">
-            <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.3rem;">EASYPAISA ACCOUNT TITLE</label>
-            <input type="text" id="wit-title" class="auth-input-field" style="padding-left:1rem;" placeholder="Easypaisa account holder name" required>
+            <label
+              style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.3rem;">EASYPAISA
+              ACCOUNT TITLE</label>
+            <input type="text" id="wit-title" class="auth-input-field" style="padding-left:1rem;"
+              placeholder="Easypaisa account holder name" required>
           </div>
 
           <div>
-            <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.3rem;">EASYPAISA ACCOUNT / MOBILE NUMBER</label>
-            <input type="text" id="wit-number" class="auth-input-field" style="padding-left:1rem;" placeholder="e.g. 03438275273" required>
+            <label
+              style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:0.3rem;">EASYPAISA
+              ACCOUNT / MOBILE NUMBER</label>
+            <input type="text" id="wit-number" class="auth-input-field" style="padding-left:1rem;"
+              placeholder="e.g. 03438275273" required>
           </div>
         </div>
 
@@ -142,4 +176,5 @@
 
   <script src="/js/app-client.js"></script>
 </body>
+
 </html>
