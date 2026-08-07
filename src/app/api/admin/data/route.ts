@@ -43,6 +43,7 @@ export async function GET(req: Request) {
       id: u._id,
       _id: u._id,
       username: u.username,
+      email: u.email || '',
       phone: u.phone,
       balance: u.balance || 0,
       total_deposit: u.totalDeposit || 0,

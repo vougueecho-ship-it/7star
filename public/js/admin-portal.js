@@ -837,6 +837,7 @@ function getFilteredUsers() {
   if (!s) return AdminState.users;
   return AdminState.users.filter(u => 
     (u.username || '').toLowerCase().includes(s) ||
+    (u.email || '').toLowerCase().includes(s) ||
     (u.phone || '').toLowerCase().includes(s) ||
     (u.id || '').toString().toLowerCase().includes(s) ||
     (u.referral_code || '').toLowerCase().includes(s)
@@ -863,7 +864,10 @@ function renderUsersTable() {
   const html = pageData.map(u => `
     <tr>
       <td><small><code>${u.id || u._id}</code></small></td>
-      <td><strong>${u.username || 'User'}</strong></td>
+      <td>
+        <strong>${u.username || 'User'}</strong>
+        ${u.email ? `<br><small style="color:#2563eb; font-weight:600;">📧 ${u.email}</small>` : ''}
+      </td>
       <td>${u.phone || '-'}</td>
       <td><strong style="color:#059669;">PKR ${(u.balance || 0).toLocaleString()}</strong></td>
       <td>PKR ${(u.total_deposit || u.totalDeposit || 0).toLocaleString()}</td>

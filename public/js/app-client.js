@@ -129,9 +129,9 @@ function hydrateFromCache() {
       if (cachedUserId && String(cachedUserId) === String(currentUserId)) {
         AppState.user = profileObj.user;
         if (profileObj.activePlans) AppState.activePlans = profileObj.activePlans;
+        if (profileObj.teamList) AppState.teamList = profileObj.teamList;
         renderUserRecords(profileObj);
-        const teamCountElem = document.getElementById('user-dyn-teamcount');
-        if (teamCountElem) teamCountElem.textContent = profileObj.teamCount || '0';
+        renderTeamSection(profileObj);
       } else {
         localStorage.removeItem('star_profile_cache');
       }
@@ -300,62 +300,13 @@ async function fetchUserProfile(silent = false) {
     if (data.success) {
       AppState.user = data.user;
       AppState.activePlans = data.activePlans;
+      if (data.teamList) AppState.teamList = data.teamList;
       localStorage.setItem('star_user', JSON.stringify(data.user));
       localStorage.setItem('star_active_plans', JSON.stringify(data.activePlans || []));
       localStorage.setItem('star_profile_cache', JSON.stringify(data));
       
-      // Update team count UI
-      const teamCountElem = document.getElementById('user-dyn-teamcount');
-      if (teamCountElem) {
-        teamCountElem.textContent = data.teamCount || '0';
-      }
-
-      // Render Referral Team List Table
-      const teamTbody = document.getElementById('user-team-tbody');
-      if (teamTbody) {
-        if (data.teamList && data.teamList.length > 0) {
-          const newTeamHtml = data.teamList.map(member => {
-            const date = new Date(member.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
-            });
-            const initial = (member.username || 'U').slice(0, 2).toUpperCase();
-            return `
-              <tr style="border-bottom: 1px solid #fef3c7; transition: background 0.2s ease;">
-                <td style="padding: 0.85rem 0.75rem; text-align: left;">
-                  <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 32px; height: 32px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: var(--primary-gold); font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                      ${initial}
-                    </div>
-                    <div>
-                      <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-dark);">${member.username}</div>
-                      <span style="font-size: 0.65rem; font-weight: 800; color: var(--emerald-green); background: #d1fae5; padding: 1px 6px; border-radius: 8px;">Direct Member</span>
-                    </div>
-                  </div>
-                </td>
-                <td style="padding: 0.85rem 0.75rem; text-align: left;">
-                  <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #334155; font-weight: 700;">${member.phone}</code>
-                </td>
-                <td style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
-                  📅 ${date}
-                </td>
-              </tr>
-            `;
-          }).join('');
-          if (teamTbody.innerHTML !== newTeamHtml) {
-            teamTbody.innerHTML = newTeamHtml;
-          }
-        } else {
-          teamTbody.innerHTML = `
-            <tr>
-              <td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                No referrals yet. Share your link to start building your team!
-              </td>
-            </tr>
-          `;
-        }
-      }
+      // Render Referral Team Section (L1 & L2 with email & commissions)
+      renderTeamSection(data);
 
       // Render User Records Tables on records.html
       renderUserRecords(data);
@@ -967,7 +918,246 @@ async function handleDepositSubmit(e) {
   }
 }
 
-// Withdraw Form Handler
+// Withdraw Gateway Dynamic UI Handler
+function onWithdrawGatewayChange() {
+  const gateway = document.getElementById('wit-gateway').value;
+  const bankNameGroup = document.getElementById('wit-bank-name-group');
+  const bankNameInput = document.getElementById('wit-bank-name');
+  const heading = document.getElementById('wit-details-heading');
+  const titleLabel = document.getElementById('wit-title-label');
+  const numberLabel = document.getElementById('wit-number-label');
+  const titleInput = document.getElementById('wit-title');
+  const numberInput = document.getElementById('wit-number');
+  const gatewayDisplay = document.getElementById('wit-gateway-display');
+
+  if (gateway === 'Bank Account') {
+    if (bankNameGroup) bankNameGroup.style.display = 'block';
+    if (bankNameInput) bankNameInput.required = true;
+    if (heading) heading.textContent = '🏦 BANK ACCOUNT DETAILS';
+    if (titleLabel) titleLabel.textContent = 'ACCOUNT HOLDER NAME';
+    if (numberLabel) numberLabel.textContent = 'BANK ACCOUNT / IBAN NUMBER';
+    if (titleInput) titleInput.placeholder = 'Bank account holder name';
+    if (numberInput) numberInput.placeholder = 'e.g. PK36HABB0012345678901234';
+    if (gatewayDisplay) gatewayDisplay.textContent = 'Bank Account Payout';
+  } else if (gateway === 'JazzCash') {
+    if (bankNameGroup) bankNameGroup.style.display = 'none';
+    if (bankNameInput) { bankNameInput.required = false; bankNameInput.value = ''; }
+    if (heading) heading.textContent = '👤 JAZZCASH ACCOUNT DETAILS';
+    if (titleLabel) titleLabel.textContent = 'JAZZCASH ACCOUNT TITLE';
+    if (numberLabel) numberLabel.textContent = 'JAZZCASH ACCOUNT / MOBILE NUMBER';
+    if (titleInput) titleInput.placeholder = 'JazzCash account holder name';
+    if (numberInput) numberInput.placeholder = 'e.g. 03001234567';
+    if (gatewayDisplay) gatewayDisplay.textContent = 'JazzCash Instant Payout';
+  } else {
+    if (bankNameGroup) bankNameGroup.style.display = 'none';
+    if (bankNameInput) { bankNameInput.required = false; bankNameInput.value = ''; }
+    if (heading) heading.textContent = '👤 EASYPAISA ACCOUNT DETAILS';
+    if (titleLabel) titleLabel.textContent = 'EASYPAISA ACCOUNT TITLE';
+    if (numberLabel) numberLabel.textContent = 'EASYPAISA ACCOUNT / MOBILE NUMBER';
+    if (titleInput) titleInput.placeholder = 'Easypaisa account holder name';
+    if (numberInput) numberInput.placeholder = 'e.g. 03438275273';
+    if (gatewayDisplay) gatewayDisplay.textContent = 'Easypaisa Instant Payout';
+  }
+}
+
+// Switch Team Level Tabs (Level 1 / Level 2)
+function switchTeamTab(level) {
+  const cardL1 = document.getElementById('team-card-l1');
+  const cardL2 = document.getElementById('team-card-l2');
+  const btnL1 = document.getElementById('tab-btn-l1');
+  const btnL2 = document.getElementById('tab-btn-l2');
+
+  if (level === 'l2') {
+    if (cardL1) cardL1.style.display = 'none';
+    if (cardL2) cardL2.style.display = 'block';
+    if (btnL1) {
+      btnL1.style.background = 'transparent';
+      btnL1.style.color = '#64748b';
+      btnL1.style.boxShadow = 'none';
+    }
+    if (btnL2) {
+      btnL2.style.background = 'var(--cyan-neon)';
+      btnL2.style.color = '#ffffff';
+      btnL2.style.boxShadow = '0 2px 8px rgba(2,132,199,0.25)';
+    }
+  } else {
+    if (cardL1) cardL1.style.display = 'block';
+    if (cardL2) cardL2.style.display = 'none';
+    if (btnL1) {
+      btnL1.style.background = 'var(--primary-gold)';
+      btnL1.style.color = '#ffffff';
+      btnL1.style.boxShadow = '0 2px 8px rgba(217,119,6,0.25)';
+    }
+    if (btnL2) {
+      btnL2.style.background = 'transparent';
+      btnL2.style.color = '#64748b';
+      btnL2.style.boxShadow = 'none';
+    }
+  }
+}
+
+// Render Referral Team Section with Level 1 & Level 2 members, email & commissions
+function renderTeamSection(data) {
+  if (!data) return;
+
+  const level1List = data.level1List || data.teamList || [];
+  const level2List = data.level2List || [];
+
+  // Update counts
+  const countL1Elem = document.getElementById('user-dyn-teamcount-l1');
+  if (countL1Elem) countL1Elem.textContent = level1List.length;
+
+  const countL2Elem = document.getElementById('user-dyn-teamcount-l2');
+  if (countL2Elem) countL2Elem.textContent = level2List.length;
+
+  const teamCountElem = document.getElementById('user-dyn-teamcount');
+  if (teamCountElem) teamCountElem.textContent = data.teamCount || (level1List.length + level2List.length);
+
+  // Update Cumulative & Daily Team Commission Stat Cards
+  const totalCommElem = document.getElementById('user-team-total-comm');
+  if (totalCommElem) {
+    const totalComm = data.teamTotalCommission !== undefined 
+      ? data.teamTotalCommission 
+      : level1List.reduce((acc, m) => acc + (m.totalCommission || 0), 0) + level2List.reduce((acc, m) => acc + (m.totalCommission || 0), 0);
+    totalCommElem.textContent = `PKR ${Number(totalComm).toLocaleString()}`;
+  }
+
+  const dailyCommElem = document.getElementById('user-team-daily-comm');
+  if (dailyCommElem) {
+    const dailyComm = data.teamDailyCommission !== undefined 
+      ? data.teamDailyCommission 
+      : level1List.reduce((acc, m) => acc + (m.dailyCommission || 0), 0) + level2List.reduce((acc, m) => acc + (m.dailyCommission || 0), 0);
+    dailyCommElem.textContent = `+PKR ${Number(dailyComm).toLocaleString()}/day`;
+  }
+
+  const l1CommBadge = document.getElementById('user-team-l1-comm-badge');
+  if (l1CommBadge) {
+    const l1Total = data.level1TotalCommission !== undefined ? data.level1TotalCommission : level1List.reduce((acc, m) => acc + (m.totalCommission || 0), 0);
+    l1CommBadge.textContent = `PKR ${Number(l1Total).toLocaleString()}`;
+  }
+
+  const l2CommBadge = document.getElementById('user-team-l2-comm-badge');
+  if (l2CommBadge) {
+    const l2Total = data.level2TotalCommission !== undefined ? data.level2TotalCommission : level2List.reduce((acc, m) => acc + (m.totalCommission || 0), 0);
+    l2CommBadge.textContent = `PKR ${Number(l2Total).toLocaleString()}`;
+  }
+
+  // Render Level 1 Table
+  const teamTbody = document.getElementById('user-team-tbody');
+  if (teamTbody) {
+    if (level1List.length > 0) {
+      const htmlL1 = level1List.map(member => {
+        const date = new Date(member.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        const initial = (member.username || 'U').slice(0, 2).toUpperCase();
+        const totalInvested = member.totalInvested || 0;
+        const activeInvested = member.activeInvested || 0;
+        const totalComm = member.totalCommission || Math.round(totalInvested * 0.10);
+        const dailyComm = member.dailyCommission || Math.round(activeInvested * 0.10);
+        const email = member.email || '';
+
+        return `
+          <tr style="border-bottom: 1px solid #fef3c7; transition: background 0.2s ease;">
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 34px; height: 34px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: var(--primary-gold); font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  ${initial}
+                </div>
+                <div>
+                  <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-dark);">${member.username}</div>
+                  ${email ? `<div style="font-size: 0.7rem; color: #2563eb; font-weight: 600;">📧 ${email}</div>` : ''}
+                  <span style="font-size: 0.65rem; font-weight: 800; color: var(--emerald-green); background: #d1fae5; padding: 1px 6px; border-radius: 8px;">Level 1 Direct</span>
+                </div>
+              </div>
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #334155; font-weight: 700;">${member.phone}</code>
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-dark);">PKR ${totalInvested.toLocaleString()}</div>
+              ${activeInvested > 0 ? `<span style="font-size: 0.65rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 1px 5px; border-radius: 6px;">⚡ Active: PKR ${activeInvested.toLocaleString()}</span>` : `<span style="font-size: 0.65rem; color: #94a3b8;">No active plans</span>`}
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <div style="font-size: 0.8rem; font-weight: 800; color: #b45309;">PKR ${totalComm.toLocaleString()} <small style="font-weight:600; color:#64748b;">(Total)</small></div>
+              <div style="font-size: 0.7rem; font-weight: 700; color: #0284c7;">+PKR ${dailyComm.toLocaleString()}/day</div>
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+              📅 ${date}
+            </td>
+          </tr>
+        `;
+      }).join('');
+      if (teamTbody.innerHTML !== htmlL1) teamTbody.innerHTML = htmlL1;
+    } else {
+      teamTbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+            No Level 1 referrals yet. Share your link to start building your direct team!
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  // Render Level 2 Table
+  const teamL2Tbody = document.getElementById('user-team-l2-tbody');
+  if (teamL2Tbody) {
+    if (level2List.length > 0) {
+      const htmlL2 = level2List.map(member => {
+        const date = new Date(member.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        const initial = (member.username || 'U').slice(0, 2).toUpperCase();
+        const totalInvested = member.totalInvested || 0;
+        const activeInvested = member.activeInvested || 0;
+        const totalComm = member.totalCommission || Math.round(totalInvested * 0.05);
+        const dailyComm = member.dailyCommission || Math.round(activeInvested * 0.05);
+        const email = member.email || '';
+        const referredBy = member.referredBy || 'L1 Leader';
+
+        return `
+          <tr style="border-bottom: 1px solid #e0f2fe; transition: background 0.2s ease;">
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 34px; height: 34px; border-radius: 10px; background: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  ${initial}
+                </div>
+                <div>
+                  <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-dark);">${member.username}</div>
+                  ${email ? `<div style="font-size: 0.7rem; color: #2563eb; font-weight: 600;">📧 ${email}</div>` : ''}
+                  <span style="font-size: 0.65rem; font-weight: 800; color: #0369a1; background: #e0f2fe; padding: 1px 6px; border-radius: 8px;">Level 2 Downline</span>
+                </div>
+              </div>
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.2rem 0.4rem; border-radius: 8px; font-size: 0.75rem; color: #0369a1; font-weight: 700;">${referredBy}</code>
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #334155; font-weight: 700;">${member.phone}</code>
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-dark);">PKR ${totalInvested.toLocaleString()}</div>
+              ${activeInvested > 0 ? `<span style="font-size: 0.65rem; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 1px 5px; border-radius: 6px;">⚡ Active: PKR ${activeInvested.toLocaleString()}</span>` : `<span style="font-size: 0.65rem; color: #94a3b8;">No active plans</span>`}
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left;">
+              <div style="font-size: 0.8rem; font-weight: 800; color: #0369a1;">PKR ${totalComm.toLocaleString()} <small style="font-weight:600; color:#64748b;">(Total)</small></div>
+              <div style="font-size: 0.7rem; font-weight: 700; color: #0284c7;">+PKR ${dailyComm.toLocaleString()}/day</div>
+            </td>
+            <td style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+              📅 ${date}
+            </td>
+          </tr>
+        `;
+      }).join('');
+      if (teamL2Tbody.innerHTML !== htmlL2) teamL2Tbody.innerHTML = htmlL2;
+    } else {
+      teamL2Tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+            No Level 2 team members yet. When your Level 1 members invite friends, they will appear here!
+          </td>
+        </tr>
+      `;
+    }
+  }
+}
 async function handleWithdrawSubmit(e) {
   e.preventDefault();
   if (!AppState.user) return showToast('Please login first', 'error');
@@ -978,6 +1168,12 @@ async function handleWithdrawSubmit(e) {
   const accountTitle = document.getElementById('wit-title').value;
   const accountNumber = document.getElementById('wit-number').value;
   const bankName = document.getElementById('wit-bank-name') ? document.getElementById('wit-bank-name').value : null;
+
+  // Validate bank name is provided for Bank Account gateway
+  if (gateway === 'Bank Account' && (!bankName || !bankName.trim())) {
+    showCustomModal('Missing Bank Name', 'Please enter your bank name (e.g. HBL, Meezan Bank, UBL) when using Bank Account gateway.', 'error');
+    return;
+  }
 
   setButtonLoading(submitBtn, true, 'Submitting Withdrawal...');
 

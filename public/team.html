@@ -66,10 +66,23 @@
     <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-bottom:1.25rem;">Earn 2-tier
       commission by sharing your referral link</p>
 
+    <!-- Team Cumulative Stats Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+      <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; padding: 1rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(217,119,6,0.08);">
+        <div style="font-size: 0.65rem; font-weight: 800; color: var(--primary-gold); letter-spacing: 0.5px; margin-bottom: 0.2rem;">CUMULATIVE COMMISSION</div>
+        <div id="user-team-total-comm" style="font-size: 1.25rem; font-weight: 800; color: #b45309;">PKR 0</div>
+        <div style="font-size: 0.65rem; color: #78350f; margin-top: 0.2rem;">💰 Total Earned Since Team Creation</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border: 1px solid #7dd3fc; padding: 1rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(2,132,199,0.08);">
+        <div style="font-size: 0.65rem; font-weight: 800; color: #0369a1; letter-spacing: 0.5px; margin-bottom: 0.2rem;">DAILY REFERRAL YIELD</div>
+        <div id="user-team-daily-comm" style="font-size: 1.25rem; font-weight: 800; color: #0284c7;">+PKR 0/day</div>
+        <div style="font-size: 0.65rem; color: #0369a1; margin-top: 0.2rem;">⚡ Daily Active Team Commission</div>
+      </div>
+    </div>
+
     <!-- Referral Link Share Card -->
     <div class="auth-card" style="border-radius:24px; margin-bottom: 1.25rem;">
-      <h3 style="color: var(--primary-gold); margin-bottom: 0.4rem; font-weight:800; font-size:1.1rem;">Your Referral
-        Share Link</h3>
+      <h3 style="color: var(--primary-gold); margin-bottom: 0.4rem; font-weight:800; font-size:1.1rem;">Your Referral Share Link</h3>
       <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">
         Copy and send your exclusive referral link to friends on WhatsApp, Facebook, and Telegram.
       </p>
@@ -83,50 +96,95 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
         <div
-          style="background: #fffbeb; border: 1px solid #fde68a; padding: 1rem; border-radius: 16px; text-align: center;">
-          <h4 style="color: var(--primary-gold); font-weight:800; font-size:0.85rem;">Level 1 Commission</h4>
-          <span style="font-size: 1.7rem; font-weight: 800; color: var(--primary-gold);">10%</span>
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top:0.2rem;">Direct Referral Plan Buys</p>
+          style="background: #fffbeb; border: 1px solid #fde68a; padding: 0.85rem; border-radius: 16px; text-align: center;">
+          <h4 style="color: var(--primary-gold); font-weight:800; font-size:0.8rem; margin-bottom:0.2rem;">Level 1 Direct</h4>
+          <span style="font-size: 1.5rem; font-weight: 800; color: var(--primary-gold);">10%</span>
+          <p style="font-size: 0.7rem; color: var(--text-muted); margin-top:0.2rem;">Direct Ref Plan Purchases</p>
         </div>
         <div
-          style="background: #e0f2fe; border: 1px solid #bae6fd; padding: 1rem; border-radius: 16px; text-align: center;">
-          <h4 style="color: var(--cyan-neon); font-weight:800; font-size:0.85rem;">Level 2 Commission</h4>
-          <span style="font-size: 1.7rem; font-weight: 800; color: var(--cyan-neon);">5%</span>
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top:0.2rem;">Downline Team Investments</p>
+          style="background: #e0f2fe; border: 1px solid #bae6fd; padding: 0.85rem; border-radius: 16px; text-align: center;">
+          <h4 style="color: var(--cyan-neon); font-weight:800; font-size:0.8rem; margin-bottom:0.2rem;">Level 2 Indirect</h4>
+          <span style="font-size: 1.5rem; font-weight: 800; color: var(--cyan-neon);">5%</span>
+          <p style="font-size: 0.7rem; color: var(--text-muted); margin-top:0.2rem;">Downline Team Purchases</p>
         </div>
       </div>
     </div>
 
-    <!-- Referred Team Members List Card -->
-    <div class="auth-card" style="border-radius:24px; margin-bottom: 5rem; padding: 1.25rem;">
+    <!-- Team Navigation Tabs -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; background: #f1f5f9; padding: 0.35rem; border-radius: 16px;">
+      <button id="tab-btn-l1" onclick="switchTeamTab('l1')"
+        style="flex: 1; padding: 0.65rem 0.5rem; border: none; border-radius: 12px; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; background: var(--primary-gold); color: #ffffff; box-shadow: 0 2px 8px rgba(217,119,6,0.25);">
+        🥇 Level 1 (<span id="user-dyn-teamcount-l1">0</span>)
+      </button>
+      <button id="tab-btn-l2" onclick="switchTeamTab('l2')"
+        style="flex: 1; padding: 0.65rem 0.5rem; border: none; border-radius: 12px; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; background: transparent; color: #64748b;">
+        🥈 Level 2 (<span id="user-dyn-teamcount-l2">0</span>)
+      </button>
+    </div>
+
+    <!-- LEVEL 1 TEAM CARD -->
+    <div id="team-card-l1" class="auth-card" style="border-radius:24px; margin-bottom: 5rem; padding: 1.25rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3 style="color: var(--primary-gold); margin:0; font-weight:800; font-size:1.05rem;">👥 REFERRED TEAM MEMBERS
-        </h3>
-        <span
-          style="background: var(--gold-gradient); color: #ffffff; padding: 0.2rem 0.65rem; border-radius: 10px; font-size: 0.7rem; font-weight: 800;">ACTIVE
-          TEAM</span>
+        <div>
+          <h3 style="color: var(--primary-gold); margin:0; font-weight:800; font-size:1.05rem;">👥 LEVEL 1 DIRECT TEAM</h3>
+          <span style="font-size:0.7rem; color:var(--text-muted);">10% direct referral commission</span>
+        </div>
+        <span style="background: var(--gold-gradient); color: #ffffff; padding: 0.25rem 0.65rem; border-radius: 10px; font-size: 0.7rem; font-weight: 800;">
+          L1 COMM: <span id="user-team-l1-comm-badge">PKR 0</span>
+        </span>
       </div>
 
-      <div
-        style="overflow-x: auto; border-radius: 16px; border: 1px solid #fde68a; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.05);">
-        <table class="table-dark" style="width:100%; border-collapse:collapse;">
+      <div style="overflow-x: auto; border-radius: 16px; border: 1px solid #fde68a; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.05);">
+        <table class="table-dark" style="width:100%; border-collapse:collapse; min-width: 580px;">
           <thead>
             <tr style="background: #fffbeb; border-bottom: 1px solid #fde68a;">
-              <th
-                style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold); letter-spacing: 0.5px;">
-                MEMBER</th>
-              <th
-                style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold); letter-spacing: 0.5px;">
-                PHONE</th>
-              <th
-                style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold); letter-spacing: 0.5px;">
-                JOIN DATE</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold);">MEMBER & EMAIL</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold);">PHONE</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold);">INVESTMENT</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold);">COMMISSION (DAILY / TOTAL)</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-gold);">JOIN DATE</th>
             </tr>
           </thead>
           <tbody id="user-team-tbody">
             <tr>
-              <td colspan="3" style="padding:2rem; text-align:center; color:var(--text-muted); font-size:0.85rem;">
-                Loading team members...</td>
+              <td colspan="5" style="padding:2rem; text-align:center; color:var(--text-muted); font-size:0.85rem;">
+                Loading Level 1 team members...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LEVEL 2 TEAM CARD -->
+    <div id="team-card-l2" class="auth-card" style="border-radius:24px; margin-bottom: 5rem; padding: 1.25rem; display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h3 style="color: var(--cyan-neon); margin:0; font-weight:800; font-size:1.05rem;">👥 LEVEL 2 DOWNLINE TEAM</h3>
+          <span style="font-size:0.7rem; color:var(--text-muted);">5% downline referral commission</span>
+        </div>
+        <span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 0.25rem 0.65rem; border-radius: 10px; font-size: 0.7rem; font-weight: 800;">
+          L2 COMM: <span id="user-team-l2-comm-badge">PKR 0</span>
+        </span>
+      </div>
+
+      <div style="overflow-x: auto; border-radius: 16px; border: 1px solid #bae6fd; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.05);">
+        <table class="table-dark" style="width:100%; border-collapse:collapse; min-width: 620px;">
+          <thead>
+            <tr style="background: #e0f2fe; border-bottom: 1px solid #bae6fd;">
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: #0369a1;">MEMBER & EMAIL</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: #0369a1;">REFERRED BY (L1)</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: #0369a1;">PHONE</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: #0369a1;">INVESTMENT</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: #0369a1;">COMMISSION (DAILY / TOTAL)</th>
+              <th style="padding: 0.85rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: #0369a1;">JOIN DATE</th>
+            </tr>
+          </thead>
+          <tbody id="user-team-l2-tbody">
+            <tr>
+              <td colspan="6" style="padding:2rem; text-align:center; color:var(--text-muted); font-size:0.85rem;">
+                No Level 2 team members yet.
+              </td>
             </tr>
           </tbody>
         </table>

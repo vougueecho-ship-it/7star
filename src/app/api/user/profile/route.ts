@@ -29,26 +29,124 @@ export async function GET(req: Request) {
 
     const refCode = (user.referralCode || '').trim();
 
-    // Execute sub-queries in parallel via Promise.all with .lean() for maximum performance
+    // 1. Fetch User Active/All Plans, Deposits, Withdrawals
     const [
       activePlans,
       allPlans,
       deposits,
-      withdrawals,
-      teamCount,
-      teamList
+      withdrawals
     ] = await Promise.all([
       UserPlan.find({ userId: user._id, status: 'Active' }).lean(),
       UserPlan.find({ userId: user._id }).sort({ createdAt: -1 }).lean(),
       Deposit.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).lean(),
-      Withdrawal.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).lean(),
-      refCode ? User.countDocuments({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } }) : 0,
-      refCode ? User.find({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } }).select('username phone balance createdAt').sort({ createdAt: -1 }).lean() : []
+      Withdrawal.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).lean()
     ]);
+
+    // 2. Fetch Level 1 Members
+    const level1ListRaw: any[] = refCode
+      ? await User.find({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } })
+          .select('username email phone referralCode createdAt balance')
+          .sort({ createdAt: -1 })
+          .lean()
+      : [];
+
+    // 3. Fetch Level 2 Members
+    const l1RefCodes = level1ListRaw.map((u: any) => u.referralCode).filter(Boolean);
+    const level2ListRaw: any[] = (refCode && l1RefCodes.length > 0)
+      ? await User.find({ referredBy: { $in: l1RefCodes.map((c: string) => new RegExp('^' + c + '$', 'i')) } })
+          .select('username email phone referralCode referredBy createdAt balance')
+          .sort({ createdAt: -1 })
+          .lean()
+      : [];
+
+    // 4. Fetch UserPlan for all L1 & L2 members to compute active & total investment & commissions
+    const allTeamUserIds = [
+      ...level1ListRaw.map((u: any) => u._id),
+      ...level2ListRaw.map((u: any) => u._id)
+    ];
+
+    const teamUserPlans: any[] = allTeamUserIds.length > 0
+      ? await UserPlan.find({ userId: { $in: allTeamUserIds } }).lean()
+      : [];
+
+    // Map plans by userId
+    const plansByUserId: Record<string, { totalInvested: number; activeInvested: number; activeDailyProfit: number }> = {};
+
+    teamUserPlans.forEach((p: any) => {
+      const uId = p.userId.toString();
+      if (!plansByUserId[uId]) {
+        plansByUserId[uId] = { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
+      }
+      const inv = Number(p.investment || 0);
+      plansByUserId[uId].totalInvested += inv;
+      if (p.status === 'Active') {
+        plansByUserId[uId].activeInvested += inv;
+        plansByUserId[uId].activeDailyProfit += Number(p.dailyProfit || 0);
+      }
+    });
+
+    let level1TotalCommission = 0;
+    let level1DailyCommission = 0;
+
+    const level1List = level1ListRaw.map((m: any) => {
+      const uId = m._id.toString();
+      const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
+      const totalComm = Math.round(pStats.totalInvested * 0.10);
+      const dailyComm = Math.round(pStats.activeInvested * 0.10);
+      level1TotalCommission += totalComm;
+      level1DailyCommission += dailyComm;
+
+      return {
+        id: m._id,
+        _id: m._id,
+        username: m.username,
+        email: m.email || '',
+        phone: m.phone,
+        referralCode: m.referralCode,
+        createdAt: m.createdAt,
+        totalInvested: pStats.totalInvested,
+        activeInvested: pStats.activeInvested,
+        totalCommission: totalComm,
+        dailyCommission: dailyComm
+      };
+    });
+
+    let level2TotalCommission = 0;
+    let level2DailyCommission = 0;
+
+    const level2List = level2ListRaw.map((m: any) => {
+      const uId = m._id.toString();
+      const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
+      const totalComm = Math.round(pStats.totalInvested * 0.05);
+      const dailyComm = Math.round(pStats.activeInvested * 0.05);
+      level2TotalCommission += totalComm;
+      level2DailyCommission += dailyComm;
+
+      return {
+        id: m._id,
+        _id: m._id,
+        username: m.username,
+        email: m.email || '',
+        phone: m.phone,
+        referralCode: m.referralCode,
+        referredBy: m.referredBy,
+        createdAt: m.createdAt,
+        totalInvested: pStats.totalInvested,
+        activeInvested: pStats.activeInvested,
+        totalCommission: totalComm,
+        dailyCommission: dailyComm
+      };
+    });
+
+    const level1Count = level1List.length;
+    const level2Count = level2List.length;
+    const teamTotalCommission = level1TotalCommission + level2TotalCommission;
+    const teamDailyCommission = level1DailyCommission + level2DailyCommission;
 
     const userObject = {
       id: user._id,
       username: user.username,
+      email: user.email || '',
       phone: user.phone,
       balance: user.balance,
       total_deposit: user.totalDeposit,
@@ -65,8 +163,18 @@ export async function GET(req: Request) {
       allPlans,
       deposits,
       withdrawals,
-      teamCount,
-      teamList
+      teamCount: level1Count + level2Count,
+      level1Count,
+      level2Count,
+      level1TotalCommission,
+      level1DailyCommission,
+      level2TotalCommission,
+      level2DailyCommission,
+      teamTotalCommission,
+      teamDailyCommission,
+      teamList: level1List, // backwards compatibility
+      level1List,
+      level2List
     });
   } catch (err: any) {
     console.error('Profile API Error:', err);
