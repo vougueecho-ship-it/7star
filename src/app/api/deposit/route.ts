@@ -11,8 +11,8 @@ export async function POST(req: Request) {
   try {
     const { userId, amount, gateway, tid, screenshotData } = await req.json();
 
-    if (!userId || !amount || !gateway || !tid) {
-      return NextResponse.json({ success: false, message: 'Please fill all deposit details' }, { status: 400 });
+    if (!userId || !amount || !gateway || !tid || !screenshotData) {
+      return NextResponse.json({ success: false, message: 'Please enter all details and upload payment receipt screenshot proof.' }, { status: 400 });
     }
 
     await connectToDatabase();

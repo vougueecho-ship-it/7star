@@ -886,6 +886,31 @@ function toggleBalanceView() {
   }
 }
 
+// Live Deposit Screenshot Preview Handler
+function handleScreenshotPreview(event) {
+  const file = event.target.files[0];
+  const placeholder = document.getElementById('dep-screenshot-placeholder');
+  const previewBox = document.getElementById('dep-screenshot-preview-box');
+  const fileNameElem = document.getElementById('dep-screenshot-filename');
+  const imgPreview = document.getElementById('dep-screenshot-img-preview');
+  const dropzone = document.getElementById('dep-screenshot-dropzone');
+
+  if (file && previewBox && placeholder) {
+    fileNameElem.textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      imgPreview.src = e.target.result;
+      placeholder.style.display = 'none';
+      previewBox.style.display = 'block';
+      if (dropzone) {
+        dropzone.style.background = '#f0fdf4';
+        dropzone.style.borderColor = '#10b981';
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
 // Deposit Form Handler
 async function handleDepositSubmit(e) {
   e.preventDefault();
@@ -896,6 +921,10 @@ async function handleDepositSubmit(e) {
   const gateway = document.getElementById('dep-gateway').value;
   const tid = document.getElementById('dep-tid').value;
   const fileInput = document.getElementById('dep-screenshot-file');
+
+  if (!fileInput || !fileInput.files[0]) {
+    return showCustomModal('Screenshot Required', 'Please upload payment receipt screenshot proof before submitting deposit request.', 'error');
+  }
 
   setButtonLoading(submitBtn, true, 'Submitting Deposit...');
 

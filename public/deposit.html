@@ -119,12 +119,26 @@
 
         <!-- Payment Screenshot Upload Box -->
         <div style="margin-bottom:1.5rem;">
-          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PAYMENT SCREENSHOT</label>
-          <div style="border:2px dashed var(--cyan-neon); border-radius:16px; padding:1.5rem; text-align:center; background:#f0f9ff; cursor:pointer;" onclick="document.getElementById('dep-screenshot-file').click()">
-            <div style="font-size:2rem; color:var(--cyan-neon);">☁️⬆️</div>
-            <div style="font-size:0.85rem; font-weight:800; color:var(--cyan-neon); margin-top:0.3rem;">Tap to upload screenshot</div>
-            <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem;">PNG, JPG, JPEG — max 5MB</div>
-            <input type="file" id="dep-screenshot-file" accept="image/*" style="display:none;">
+          <label style="font-size:0.7rem; font-weight:800; color:var(--primary-gold); display:block; margin-bottom:0.4rem; letter-spacing:0.5px;">PAYMENT SCREENSHOT PROOF (REQUIRED)</label>
+          <div id="dep-screenshot-dropzone" style="border:2px dashed var(--primary-gold); border-radius:18px; padding:1.25rem; text-align:center; background:#fffbeb; cursor:pointer; transition: all 0.2s ease;" onclick="document.getElementById('dep-screenshot-file').click()">
+            <div id="dep-screenshot-placeholder">
+              <div style="font-size:2rem; color:var(--primary-gold);">📷⬆️</div>
+              <div style="font-size:0.85rem; font-weight:800; color:var(--primary-gold); margin-top:0.3rem;">Tap to upload payment screenshot</div>
+              <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem;">PNG, JPG, JPEG — Required for Admin Verification</div>
+            </div>
+            
+            <div id="dep-screenshot-preview-box" style="display:none; text-align:center;">
+              <div style="display:inline-flex; align-items:center; gap:0.4rem; background:#d1fae5; color:#059669; font-weight:800; font-size:0.75rem; padding:0.3rem 0.75rem; border-radius:12px; margin-bottom:0.5rem;">
+                ✅ Screenshot Attached
+              </div>
+              <div id="dep-screenshot-filename" style="font-size:0.8rem; font-weight:700; color:var(--text-dark); word-break:break-all;">filename.png</div>
+              <div style="margin-top:0.5rem;">
+                <img id="dep-screenshot-img-preview" src="" alt="Payment Screenshot Preview" style="max-height:160px; width:auto; max-width:100%; border-radius:14px; border:2px solid #fde68a; box-shadow:0 4px 15px rgba(217, 119, 6, 0.15);" />
+              </div>
+              <div style="font-size:0.7rem; font-weight:700; color:var(--primary-gold); margin-top:0.5rem;">🔄 Tap to change screenshot</div>
+            </div>
+
+            <input type="file" id="dep-screenshot-file" accept="image/*" required style="display:none;" onchange="handleScreenshotPreview(event)">
           </div>
         </div>
 
