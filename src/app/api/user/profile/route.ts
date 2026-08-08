@@ -91,8 +91,8 @@ export async function GET(req: Request) {
     const level1List = level1ListRaw.map((m: any) => {
       const uId = m._id.toString();
       const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
-      const totalComm = Math.round(pStats.totalInvested * 0.10);
-      const dailyComm = Math.round(pStats.activeInvested * 0.10);
+      const totalComm = Math.round(pStats.totalInvested * 0.06);
+      const dailyComm = Math.round(pStats.activeDailyProfit * 0.06);
       level1TotalCommission += totalComm;
       level1DailyCommission += dailyComm;
 
@@ -106,6 +106,7 @@ export async function GET(req: Request) {
         createdAt: m.createdAt,
         totalInvested: pStats.totalInvested,
         activeInvested: pStats.activeInvested,
+        activeDailyProfit: pStats.activeDailyProfit,
         totalCommission: totalComm,
         dailyCommission: dailyComm
       };
@@ -117,8 +118,8 @@ export async function GET(req: Request) {
     const level2List = level2ListRaw.map((m: any) => {
       const uId = m._id.toString();
       const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
-      const totalComm = Math.round(pStats.totalInvested * 0.05);
-      const dailyComm = Math.round(pStats.activeInvested * 0.05);
+      const totalComm = Math.round(pStats.totalInvested * 0.03);
+      const dailyComm = Math.round(pStats.activeDailyProfit * 0.03);
       level2TotalCommission += totalComm;
       level2DailyCommission += dailyComm;
 
@@ -133,6 +134,7 @@ export async function GET(req: Request) {
         createdAt: m.createdAt,
         totalInvested: pStats.totalInvested,
         activeInvested: pStats.activeInvested,
+        activeDailyProfit: pStats.activeDailyProfit,
         totalCommission: totalComm,
         dailyCommission: dailyComm
       };

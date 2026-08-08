@@ -31,15 +31,15 @@ export async function POST(req: Request) {
         user.totalDeposit += deposit.amount;
         await user.save();
 
-        // Credit Level 1 & Level 2 Referral Deposit Bonuses (10% Direct & 5% Indirect)
-        if (user.referredBy) {
+        // Credit 1-Time Level 1 (6%) & Level 2 (3%) Referral Deposit Bonuses per player
+        if (!user.hasCreditedReferralBonus && user.referredBy) {
           const cleanRefCode = user.referredBy.trim();
           const referrerL1 = await User.findOne({
             referralCode: { $regex: new RegExp('^' + cleanRefCode + '$', 'i') }
           });
 
           if (referrerL1) {
-            const level1Bonus = Math.round(deposit.amount * 0.10);
+            const level1Bonus = Math.round(deposit.amount * 0.06);
             if (level1Bonus > 0) {
               referrerL1.balance += level1Bonus;
               referrerL1.totalProfit += level1Bonus; // Added to totalProfit so it can be withdrawn
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
               });
 
               if (referrerL2) {
-                const level2Bonus = Math.round(deposit.amount * 0.05);
+                const level2Bonus = Math.round(deposit.amount * 0.03);
                 if (level2Bonus > 0) {
                   referrerL2.balance += level2Bonus;
                   referrerL2.totalProfit += level2Bonus; // Added to totalProfit so it can be withdrawn
@@ -62,6 +62,10 @@ export async function POST(req: Request) {
               }
             }
           }
+
+          // Mark user as having received 1-time referral bonus so subsequent deposits do not trigger bonuses
+          user.hasCreditedReferralBonus = true;
+          await user.save();
         }
       }
     } else if (status === 'Rejected') {

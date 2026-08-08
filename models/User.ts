@@ -11,6 +11,7 @@ export interface IUser extends Document {
   totalProfit: number;
   referralCode: string;
   referredBy?: string | null;
+  hasCreditedReferralBonus?: boolean;
   createdAt: Date;
 }
 
@@ -25,6 +26,7 @@ const UserSchema: Schema = new Schema({
   totalProfit: { type: Number, default: 0 },
   referralCode: { type: String, required: true, unique: true },
   referredBy: { type: String, default: null },
+  hasCreditedReferralBonus: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       user.totalProfit += profitAmount;
       await user.save();
 
-      // Credit Level 1 & Level 2 Referral Daily Bonuses (10% Direct & 5% Indirect)
+      // Credit Level 1 & Level 2 Referral Daily Profit Share Bonuses (6% Direct & 3% Indirect)
       if (user.referredBy) {
         const cleanRefCode = user.referredBy.trim();
         const referrerL1 = await User.findOne({
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
         });
 
         if (referrerL1) {
-          const level1DailyBonus = Math.round(profitAmount * 0.10);
+          const level1DailyBonus = Math.round(profitAmount * 0.06);
           if (level1DailyBonus > 0) {
             referrerL1.balance += level1DailyBonus;
             referrerL1.totalProfit += level1DailyBonus; // Added to totalProfit so it can be withdrawn
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
             });
 
             if (referrerL2) {
-              const level2DailyBonus = Math.round(profitAmount * 0.05);
+              const level2DailyBonus = Math.round(profitAmount * 0.03);
               if (level2DailyBonus > 0) {
                 referrerL2.balance += level2DailyBonus;
                 referrerL2.totalProfit += level2DailyBonus; // Added to totalProfit so it can be withdrawn
