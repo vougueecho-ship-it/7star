@@ -11,7 +11,9 @@
     "cap:sync": "npx cap sync",
     "cap:open": "npx cap open android",
     "cap:admin:sync": "npx cap sync --config capacitor.admin.json",
-    "cap:admin:open": "npx cap open android"
+    "cap:admin:open": "npx cap open android",
+    "build:user-apk": "node scripts/build-user-apk.js",
+    "build:admin-apk": "node scripts/build-admin-apk.js"
   },
   "dependencies": {
     "@capacitor/android": "^6.1.2",
