@@ -123,54 +123,23 @@ function setAdminButtonLoading(btn, isLoading, loadingText = 'Processing...') {
 
 let adminPollInterval = null;
 
-// Audio Chime & Lock Screen Notification System
-let adminAudioCtx = null;
-
-function initAdminAudioContext() {
-  if (!adminAudioCtx) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) adminAudioCtx = new AudioCtx();
-  }
-  if (adminAudioCtx && adminAudioCtx.state === 'suspended') {
-    adminAudioCtx.resume();
-  }
-}
-
-// Unlock audio on first user touch/click/keypress anywhere
-['click', 'touchstart', 'keydown'].forEach(evt => {
-  document.addEventListener(evt, initAdminAudioContext, { once: true });
-});
-
+// Audio Chime & Push Notification System
 function playAdminNotificationSound() {
   try {
-    initAdminAudioContext();
-    if (adminAudioCtx) {
-      const now = adminAudioCtx.currentTime;
-      const osc1 = adminAudioCtx.createOscillator();
-      const osc2 = adminAudioCtx.createOscillator();
-      const gain = adminAudioCtx.createGain();
-
-      osc1.type = 'sine';
-      osc2.type = 'triangle';
-
-      // Loud chime notes (D5 to A5)
-      osc1.frequency.setValueAtTime(587.33, now);
-      osc1.frequency.exponentialRampToValueAtTime(880, now + 0.15);
-
-      osc2.frequency.setValueAtTime(880, now);
-      osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.25);
-
-      gain.gain.setValueAtTime(0.5, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(adminAudioCtx.destination);
-
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 0.5);
-      osc2.stop(now + 0.5);
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 note
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5 note
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
     }
   } catch (e) {
     console.error("Audio notification error:", e);
@@ -178,49 +147,20 @@ function playAdminNotificationSound() {
 }
 
 function requestAdminNotificationPermission() {
-  if ('Notification' in window) {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        playAdminNotificationSound();
-        triggerSystemPushNotification('🔔 Notifications Enabled!', 'You will now receive real-time lock screen alerts for new deposit & payout requests.', 'admin-notif-test', { tab: 'deposits' });
-      }
-    });
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
   }
 }
 
-function triggerSystemPushNotification(title, body, tag = 'admin-request-alert', data = {}) {
+function triggerSystemPushNotification(title, body) {
   if ('Notification' in window && Notification.permission === 'granted') {
-    const targetTab = data.tab || 'deposits';
-    const targetUrl = data.url || `/xpro-admin/dashboard.html#${targetTab}`;
-
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then((reg) => {
-        reg.showNotification(title, {
-          body,
-          icon: '/images/logo.png',
-          badge: '/images/logo.png',
-          vibrate: [200, 100, 200],
-          requireInteraction: true,
-          tag: tag,
-          data: { url: targetUrl, tab: targetTab }
-        });
+    try {
+      new Notification(title, {
+        body,
+        icon: '/images/logo.png',
+        tag: 'admin-request-alert'
       });
-    } else {
-      try {
-        const notif = new Notification(title, {
-          body,
-          icon: '/images/logo.png',
-          tag: tag,
-          requireInteraction: true,
-          data: { url: targetUrl, tab: targetTab }
-        });
-        notif.onclick = function() {
-          window.focus();
-          if (targetTab) switchTab(targetTab);
-          notif.close();
-        };
-      } catch (e) {}
-    }
+    } catch (e) {}
   }
 }
 
@@ -238,38 +178,11 @@ function initCapacitorAdminFCM() {
       });
       PushNotifications.addListener('pushNotificationReceived', (notification) => {
         playAdminNotificationSound();
-        const tab = (notification.data && notification.data.tab) || 'deposits';
-        showAdminModal(notification.title || '🔔 Admin Notification', notification.body || '', 'info', () => switchTab(tab));
-      });
-      PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-        const data = notification.notification.data || {};
-        const tab = data.tab || (data.url && data.url.includes('#') ? data.url.split('#')[1] : 'deposits');
-        switchTab(tab);
+        showAdminModal(notification.title || '🔔 Admin Notification', notification.body || '', 'info');
       });
     } catch(e) {}
   }
 }
-
-// Service Worker Message Listener (for Deep-Linking when Admin taps notification)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data && event.data.action === 'switchTab') {
-      if (event.data.tab) {
-        switchTab(event.data.tab);
-      }
-    }
-  });
-}
-
-// Handle Direct URL Hash Navigation (e.g. #deposits, #withdrawals)
-function handleUrlHashNavigation() {
-  const hash = window.location.hash.replace('#', '');
-  const validTabs = ['deposits', 'withdrawals', 'plans', 'user-plans', 'settings', 'users'];
-  if (hash && validTabs.includes(hash)) {
-    switchTab(hash);
-  }
-}
-window.addEventListener('hashchange', handleUrlHashNavigation);
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Native Admin Mobile App Integration (Auto Redirect inside installed Admin App)
@@ -292,7 +205,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   requestAdminNotificationPermission();
   initCapacitorAdminFCM();
-  handleUrlHashNavigation();
 
   const isLoginPage = window.location.pathname.includes('/xpro-admin/login.html');
   
@@ -440,8 +352,8 @@ function checkNewAdminNotifications(deposits, withdrawals) {
 
       const msg = `New Deposit Request: PKR ${Number(d.amount).toLocaleString()} from ${d.username} (${d.gateway})`;
       playAdminNotificationSound();
-      triggerSystemPushNotification('🔔 New Deposit Request!', msg, 'admin-dep-' + idStr, { tab: 'deposits', url: '/xpro-admin/dashboard.html#deposits' });
-      showAdminModal('🔔 New Deposit Request!', msg, 'info', () => switchTab('deposits'));
+      triggerSystemPushNotification('🔔 New Deposit Request!', msg);
+      showAdminModal('🔔 New Deposit Request!', msg, 'info');
     }
   });
 
@@ -453,8 +365,8 @@ function checkNewAdminNotifications(deposits, withdrawals) {
 
       const msg = `New Payout Request: PKR ${Number(w.amount).toLocaleString()} from ${w.username} (${w.gateway})`;
       playAdminNotificationSound();
-      triggerSystemPushNotification('💸 New Withdrawal Request!', msg, 'admin-wit-' + idStr, { tab: 'withdrawals', url: '/xpro-admin/dashboard.html#withdrawals' });
-      showAdminModal('💸 New Withdrawal Request!', msg, 'info', () => switchTab('withdrawals'));
+      triggerSystemPushNotification('💸 New Withdrawal Request!', msg);
+      showAdminModal('💸 New Withdrawal Request!', msg, 'info');
     }
   });
 }
@@ -473,10 +385,6 @@ function switchTab(tabName) {
   const activeView = document.getElementById(`view-${tabName}`);
   if (activeBtn) activeBtn.classList.add('active');
   if (activeView) activeView.style.display = 'block';
-
-  if (window.location.hash !== `#${tabName}`) {
-    history.replaceState(null, null, `#${tabName}`);
-  }
 }
 
 // Render Overview Statistics

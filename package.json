@@ -9,9 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "cap:sync": "npx cap sync",
-    "cap:user:sync": "node scripts/prepare-user-app.js",
-    "cap:admin:sync": "node scripts/prepare-admin-app.js",
-    "cap:open": "npx cap open android"
+    "cap:open": "npx cap open android",
+    "cap:admin:sync": "npx cap sync --config capacitor.admin.json",
+    "cap:admin:open": "npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^6.1.2",
