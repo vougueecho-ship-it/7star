@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import Deposit from '@/models/Deposit';
+import { sendAdminFcmNotification } from '@/lib/sendAdminFcmNotification';
 import fs from 'fs';
 import path from 'path';
 
@@ -53,6 +54,13 @@ export async function POST(req: Request) {
       screenshot: screenshotPath,
       status: 'Pending'
     });
+
+    // Send High-Priority FCM Push Notification to Admin App
+    sendAdminFcmNotification({
+      title: '💰 New Deposit Request!',
+      body: `${user.username} submitted a deposit of PKR ${Number(amount).toLocaleString()} via ${gateway}. Tap to review!`,
+      data: { type: 'deposit', tab: 'ledger' }
+    }).catch(e => console.error('FCM notification error:', e));
 
     return NextResponse.json({
       success: true,

@@ -168,19 +168,53 @@ function initCapacitorAdminFCM() {
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
     try {
       const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+      
+      // Create High-Priority Notification Channel for Lock Screen & Sound Alerts
+      if (PushNotifications.createChannel) {
+        PushNotifications.createChannel({
+          id: 'default_channel_id',
+          name: '7 STAR ADMIN Alerts',
+          description: 'High-priority deposit and withdrawal requests',
+          importance: 5, // HIGH
+          visibility: 1, // PUBLIC (Lock Screen)
+          sound: 'default',
+          vibration: true
+        }).catch(err => console.error('Channel creation error:', err));
+      }
+
       PushNotifications.requestPermissions().then(result => {
         if (result.receive === 'granted') {
           PushNotifications.register();
         }
       });
+
       PushNotifications.addListener('registration', (token) => {
         console.log('Admin FCM Token registered:', token.value);
+        if (token && token.value) {
+          fetch('/api/admin/fcm-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token.value })
+          }).catch(err => console.error('Error saving admin token:', err));
+        }
       });
+
       PushNotifications.addListener('pushNotificationReceived', (notification) => {
         playAdminNotificationSound();
-        showAdminModal(notification.title || '🔔 Admin Notification', notification.body || '', 'info');
+        showAdminModal(notification.title || '🔔 New Admin Alert', notification.body || '', 'info');
+        if (typeof switchAdminTab === 'function') {
+          switchAdminTab('ledger');
+        }
       });
-    } catch(e) {}
+
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        if (typeof switchAdminTab === 'function') {
+          switchAdminTab('ledger');
+        }
+      });
+    } catch(e) {
+      console.error('FCM init error:', e);
+    }
   }
 }
 

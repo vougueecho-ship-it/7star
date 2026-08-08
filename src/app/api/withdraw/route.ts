@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import Withdrawal from '@/models/Withdrawal';
+import { sendAdminFcmNotification } from '@/lib/sendAdminFcmNotification';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,13 @@ export async function POST(req: Request) {
       bankName: bankName || null,
       status: 'Pending'
     });
+
+    // Send High-Priority FCM Push Notification to Admin App
+    sendAdminFcmNotification({
+      title: '👛 New Withdrawal Request!',
+      body: `${user.username} requested a withdrawal of PKR ${numAmount.toLocaleString()} via ${gateway}. Tap to review!`,
+      data: { type: 'withdrawal', tab: 'ledger' }
+    }).catch(e => console.error('FCM notification error:', e));
 
     return NextResponse.json({
       success: true,
