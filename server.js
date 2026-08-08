@@ -395,6 +395,21 @@ app.get('/download-apk', (req, res) => {
   }
 });
 
+// Download Admin APK Route
+app.get('/download-admin-apk', (req, res) => {
+  const apkPath = path.join(__dirname, 'public', '7star-admin.apk');
+  if (fs.existsSync(apkPath)) {
+    res.download(apkPath, '7star-admin-v1.0.apk');
+  } else {
+    const mainApkPath = path.join(__dirname, 'public', '7star-invest.apk');
+    if (fs.existsSync(mainApkPath)) {
+      res.download(mainApkPath, '7star-admin-v1.0.apk');
+    } else {
+      res.redirect('/xpro-admin/dashboard.html?apk_status=ready');
+    }
+  }
+});
+
 // Admin APIs
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;

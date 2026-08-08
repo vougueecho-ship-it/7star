@@ -1,0 +1,9 @@
+{
+  "appId": "com.star7.admin",
+  "appName": "7 STAR ADMIN",
+  "webDir": "public",
+  "server": {
+    "url": "https://7starinvest.vercel.app/xpro-admin/login.html",
+    "cleartext": true
+  }
+}

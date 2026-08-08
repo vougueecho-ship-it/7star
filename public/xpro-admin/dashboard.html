@@ -130,7 +130,15 @@
         </div>
       </div>
 
-      <button onclick="adminLogout()" class="admin-nav-btn" style="border-color: #fca5a5; color: #dc2626; background: #fee2e2;">🚪 Admin Logout</button>
+      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <button onclick="requestAdminNotificationPermission()" class="admin-nav-btn" style="background:#fff; border-color:#fde68a; color:var(--text-dark);" title="Enable Push Notifications">
+          🔔 Requests <span id="adm-nav-notif-badge" style="background:#ef4444; color:#ffffff; padding:2px 8px; border-radius:10px; font-size:0.75rem; font-weight:800; display:none;">0</span>
+        </button>
+        <a href="/download-admin-apk" class="admin-nav-btn" style="background:var(--gold-gradient); color:#ffffff; border-color:var(--primary-gold); text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+          📲 Download Admin App (APK)
+        </a>
+        <button onclick="adminLogout()" class="admin-nav-btn" style="border-color: #fca5a5; color: #dc2626; background: #fee2e2;">🚪 Logout</button>
+      </div>
     </div>
 
     <!-- Navigation Tabs (Horizontal Scrollable on Mobile) -->

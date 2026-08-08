@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "383838905417",
+    "project_id": "starinvest-9b3e4",
+    "storage_bucket": "starinvest-9b3e4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383838905417:android:d853ebf98621f765ff0b98",
+        "android_client_info": {
+          "package_name": "com.star7.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwvsPB6eSmtIbsD1gU2mFdm7fdn4l6HPo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

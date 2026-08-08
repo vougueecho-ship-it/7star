@@ -9,12 +9,15 @@
     "start": "next start",
     "lint": "next lint",
     "cap:sync": "npx cap sync",
-    "cap:open": "npx cap open android"
+    "cap:open": "npx cap open android",
+    "cap:admin:sync": "npx cap sync --config capacitor.admin.json",
+    "cap:admin:open": "npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^6.1.2",
     "@capacitor/cli": "^6.1.2",
     "@capacitor/core": "^6.1.2",
+    "@capacitor/push-notifications": "^6.0.5",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",

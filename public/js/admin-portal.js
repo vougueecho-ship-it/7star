@@ -123,7 +123,177 @@ function setAdminButtonLoading(btn, isLoading, loadingText = 'Processing...') {
 
 let adminPollInterval = null;
 
+// Audio Chime & Lock Screen Notification System
+let adminAudioCtx = null;
+
+function initAdminAudioContext() {
+  if (!adminAudioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) adminAudioCtx = new AudioCtx();
+  }
+  if (adminAudioCtx && adminAudioCtx.state === 'suspended') {
+    adminAudioCtx.resume();
+  }
+}
+
+// Unlock audio on first user touch/click/keypress anywhere
+['click', 'touchstart', 'keydown'].forEach(evt => {
+  document.addEventListener(evt, initAdminAudioContext, { once: true });
+});
+
+function playAdminNotificationSound() {
+  try {
+    initAdminAudioContext();
+    if (adminAudioCtx) {
+      const now = adminAudioCtx.currentTime;
+      const osc1 = adminAudioCtx.createOscillator();
+      const osc2 = adminAudioCtx.createOscillator();
+      const gain = adminAudioCtx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+
+      // Loud chime notes (D5 to A5)
+      osc1.frequency.setValueAtTime(587.33, now);
+      osc1.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+
+      osc2.frequency.setValueAtTime(880, now);
+      osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.25);
+
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(adminAudioCtx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.5);
+      osc2.stop(now + 0.5);
+    }
+  } catch (e) {
+    console.error("Audio notification error:", e);
+  }
+}
+
+function requestAdminNotificationPermission() {
+  if ('Notification' in window) {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        playAdminNotificationSound();
+        triggerSystemPushNotification('🔔 Notifications Enabled!', 'You will now receive real-time lock screen alerts for new deposit & payout requests.', 'admin-notif-test', { tab: 'deposits' });
+      }
+    });
+  }
+}
+
+function triggerSystemPushNotification(title, body, tag = 'admin-request-alert', data = {}) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const targetTab = data.tab || 'deposits';
+    const targetUrl = data.url || `/xpro-admin/dashboard.html#${targetTab}`;
+
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.showNotification(title, {
+          body,
+          icon: '/images/logo.png',
+          badge: '/images/logo.png',
+          vibrate: [200, 100, 200],
+          requireInteraction: true,
+          tag: tag,
+          data: { url: targetUrl, tab: targetTab }
+        });
+      });
+    } else {
+      try {
+        const notif = new Notification(title, {
+          body,
+          icon: '/images/logo.png',
+          tag: tag,
+          requireInteraction: true,
+          data: { url: targetUrl, tab: targetTab }
+        });
+        notif.onclick = function() {
+          window.focus();
+          if (targetTab) switchTab(targetTab);
+          notif.close();
+        };
+      } catch (e) {}
+    }
+  }
+}
+
+function initCapacitorAdminFCM() {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
+    try {
+      const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+      PushNotifications.requestPermissions().then(result => {
+        if (result.receive === 'granted') {
+          PushNotifications.register();
+        }
+      });
+      PushNotifications.addListener('registration', (token) => {
+        console.log('Admin FCM Token registered:', token.value);
+      });
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        playAdminNotificationSound();
+        const tab = (notification.data && notification.data.tab) || 'deposits';
+        showAdminModal(notification.title || '🔔 Admin Notification', notification.body || '', 'info', () => switchTab(tab));
+      });
+      PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+        const data = notification.notification.data || {};
+        const tab = data.tab || (data.url && data.url.includes('#') ? data.url.split('#')[1] : 'deposits');
+        switchTab(tab);
+      });
+    } catch(e) {}
+  }
+}
+
+// Service Worker Message Listener (for Deep-Linking when Admin taps notification)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.action === 'switchTab') {
+      if (event.data.tab) {
+        switchTab(event.data.tab);
+      }
+    }
+  });
+}
+
+// Handle Direct URL Hash Navigation (e.g. #deposits, #withdrawals)
+function handleUrlHashNavigation() {
+  const hash = window.location.hash.replace('#', '');
+  const validTabs = ['deposits', 'withdrawals', 'plans', 'user-plans', 'settings', 'users'];
+  if (hash && validTabs.includes(hash)) {
+    switchTab(hash);
+  }
+}
+window.addEventListener('hashchange', handleUrlHashNavigation);
+
 document.addEventListener('DOMContentLoaded', async () => {
+  // Native Admin Mobile App Integration (Auto Redirect inside installed Admin App)
+  const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || navigator.userAgent.includes('Capacitor');
+  if (isCapacitor) {
+    const currentPath = window.location.pathname;
+    const token = localStorage.getItem('star_admin_token');
+    if (token) {
+      if (currentPath === '/' || currentPath.endsWith('/index.html') || currentPath.endsWith('/login.html')) {
+        window.location.href = '/xpro-admin/dashboard.html';
+        return;
+      }
+    } else {
+      if (currentPath === '/' || currentPath.endsWith('/index.html')) {
+        window.location.href = '/xpro-admin/login.html';
+        return;
+      }
+    }
+  }
+
+  requestAdminNotificationPermission();
+  initCapacitorAdminFCM();
+  handleUrlHashNavigation();
+
   const isLoginPage = window.location.pathname.includes('/xpro-admin/login.html');
   
   if (!isLoginPage && !AdminToken) {
@@ -214,6 +384,9 @@ async function fetchAdminData(silent = false) {
       activeUserPlans: data.activeUserPlans || [],
       settings: data.settings || {}
     };
+
+    checkNewAdminNotifications(AdminState.deposits, AdminState.withdrawals);
+
     renderOverviewStats();
     renderDepositsTable();
     renderWithdrawalsTable();
@@ -235,6 +408,57 @@ async function fetchAdminData(silent = false) {
   }
 }
 
+// Notification Check Engine
+let isFirstAdminFetch = true;
+let knownPendingDepositIds = new Set();
+let knownPendingWithdrawalIds = new Set();
+
+function checkNewAdminNotifications(deposits, withdrawals) {
+  const currentPendingDeps = (deposits || []).filter(d => d.status === 'Pending');
+  const currentPendingWits = (withdrawals || []).filter(w => w.status === 'Pending');
+
+  // Update navbar badge count
+  const badgeElem = document.getElementById('adm-nav-notif-badge');
+  const totalPending = currentPendingDeps.length + currentPendingWits.length;
+  if (badgeElem) {
+    badgeElem.textContent = totalPending;
+    badgeElem.style.display = totalPending > 0 ? 'inline-block' : 'none';
+  }
+
+  if (isFirstAdminFetch) {
+    currentPendingDeps.forEach(d => knownPendingDepositIds.add(String(d._id || d.id)));
+    currentPendingWits.forEach(w => knownPendingWithdrawalIds.add(String(w._id || w.id)));
+    isFirstAdminFetch = false;
+    return;
+  }
+
+  // Check for new deposit requests
+  currentPendingDeps.forEach(d => {
+    const idStr = String(d._id || d.id);
+    if (!knownPendingDepositIds.has(idStr)) {
+      knownPendingDepositIds.add(idStr);
+
+      const msg = `New Deposit Request: PKR ${Number(d.amount).toLocaleString()} from ${d.username} (${d.gateway})`;
+      playAdminNotificationSound();
+      triggerSystemPushNotification('🔔 New Deposit Request!', msg, 'admin-dep-' + idStr, { tab: 'deposits', url: '/xpro-admin/dashboard.html#deposits' });
+      showAdminModal('🔔 New Deposit Request!', msg, 'info', () => switchTab('deposits'));
+    }
+  });
+
+  // Check for new withdrawal requests
+  currentPendingWits.forEach(w => {
+    const idStr = String(w._id || w.id);
+    if (!knownPendingWithdrawalIds.has(idStr)) {
+      knownPendingWithdrawalIds.add(idStr);
+
+      const msg = `New Payout Request: PKR ${Number(w.amount).toLocaleString()} from ${w.username} (${w.gateway})`;
+      playAdminNotificationSound();
+      triggerSystemPushNotification('💸 New Withdrawal Request!', msg, 'admin-wit-' + idStr, { tab: 'withdrawals', url: '/xpro-admin/dashboard.html#withdrawals' });
+      showAdminModal('💸 New Withdrawal Request!', msg, 'info', () => switchTab('withdrawals'));
+    }
+  });
+}
+
 // Tab Switcher
 function switchTab(tabName) {
   const tabs = ['deposits', 'withdrawals', 'plans', 'user-plans', 'settings', 'users'];
@@ -249,6 +473,10 @@ function switchTab(tabName) {
   const activeView = document.getElementById(`view-${tabName}`);
   if (activeBtn) activeBtn.classList.add('active');
   if (activeView) activeView.style.display = 'block';
+
+  if (window.location.hash !== `#${tabName}`) {
+    history.replaceState(null, null, `#${tabName}`);
+  }
 }
 
 // Render Overview Statistics
