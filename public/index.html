@@ -3,10 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <script>
-    if (window.Capacitor || navigator.userAgent.includes('Capacitor') || window.location.search.includes('platform=android')) {
-      const token = localStorage.getItem('star_token');
-      window.location.href = token ? '/dashboard.html' : '/login.html';
-    }
+    (function() {
+      const isCapacitor = window.Capacitor || navigator.userAgent.includes('Capacitor') || window.location.search.includes('platform=android');
+      if (isCapacitor) {
+        const isAdminApp = window.location.pathname.includes('/xpro-admin/') || 
+                           (window.Capacitor && window.Capacitor.config && window.Capacitor.config.appId === 'com.star7.admin') || 
+                           localStorage.getItem('star_admin_token');
+        if (isAdminApp) {
+          const adminToken = localStorage.getItem('star_admin_token');
+          window.location.href = adminToken ? '/xpro-admin/dashboard.html' : '/xpro-admin/login.html';
+        } else {
+          const userToken = localStorage.getItem('star_token');
+          window.location.href = userToken ? '/dashboard.html' : '/login.html';
+        }
+      }
+    })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>7 STAR INVEST — Official Halal & Trusted Earning Platform</title>
