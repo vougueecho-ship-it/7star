@@ -359,6 +359,29 @@ app.post('/api/claim-daily-profit', (req, res) => {
   db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(profitAmount, profitAmount, userId);
   db.prepare('UPDATE user_plans SET last_claim = CURRENT_TIMESTAMP WHERE id = ?').run(userPlanId);
 
+  // Credit Level 1 & Level 2 Referral Daily Bonuses (10% Direct & 5% Indirect)
+  const claimingUser = db.prepare('SELECT referred_by FROM users WHERE id = ?').get(userId);
+  if (claimingUser && claimingUser.referred_by) {
+    const cleanRefCode = claimingUser.referred_by.trim();
+    const referrerL1 = db.prepare('SELECT id, referred_by FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanRefCode);
+    if (referrerL1) {
+      const level1DailyBonus = Math.round(profitAmount * 0.10);
+      if (level1DailyBonus > 0) {
+        db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level1DailyBonus, level1DailyBonus, referrerL1.id);
+      }
+      if (referrerL1.referred_by) {
+        const cleanL2RefCode = referrerL1.referred_by.trim();
+        const referrerL2 = db.prepare('SELECT id FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanL2RefCode);
+        if (referrerL2) {
+          const level2DailyBonus = Math.round(profitAmount * 0.05);
+          if (level2DailyBonus > 0) {
+            db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level2DailyBonus, level2DailyBonus, referrerL2.id);
+          }
+        }
+      }
+    }
+  }
+
   res.json({ success: true, message: `Successfully claimed PKR ${profitAmount} daily mining profit!`, profit: profitAmount });
 });
 
@@ -401,6 +424,29 @@ app.post('/api/admin/deposit-status', verifyAdminToken, (req, res) => {
   if (deposit.status === 'Pending' && status === 'Approved') {
     db.prepare('UPDATE deposits SET status = "Approved" WHERE id = ?').run(depositId);
     db.prepare('UPDATE users SET balance = balance + ?, total_deposit = total_deposit + ? WHERE id = ?').run(deposit.amount, deposit.amount, deposit.user_id);
+
+    // Credit Level 1 & Level 2 Referral Deposit Bonuses (10% Direct & 5% Indirect)
+    const depositingUser = db.prepare('SELECT referred_by FROM users WHERE id = ?').get(deposit.user_id);
+    if (depositingUser && depositingUser.referred_by) {
+      const cleanRefCode = depositingUser.referred_by.trim();
+      const referrerL1 = db.prepare('SELECT id, referred_by FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanRefCode);
+      if (referrerL1) {
+        const level1Bonus = Math.round(deposit.amount * 0.10);
+        if (level1Bonus > 0) {
+          db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level1Bonus, level1Bonus, referrerL1.id);
+        }
+        if (referrerL1.referred_by) {
+          const cleanL2RefCode = referrerL1.referred_by.trim();
+          const referrerL2 = db.prepare('SELECT id FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanL2RefCode);
+          if (referrerL2) {
+            const level2Bonus = Math.round(deposit.amount * 0.05);
+            if (level2Bonus > 0) {
+              db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level2Bonus, level2Bonus, referrerL2.id);
+            }
+          }
+        }
+      }
+    }
   } else if (status === 'Rejected') {
     db.prepare('UPDATE deposits SET status = "Rejected" WHERE id = ?').run(depositId);
   }

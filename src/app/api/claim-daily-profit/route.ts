@@ -51,6 +51,39 @@ export async function POST(req: Request) {
       user.balance += profitAmount;
       user.totalProfit += profitAmount;
       await user.save();
+
+      // Credit Level 1 & Level 2 Referral Daily Bonuses (10% Direct & 5% Indirect)
+      if (user.referredBy) {
+        const cleanRefCode = user.referredBy.trim();
+        const referrerL1 = await User.findOne({
+          referralCode: { $regex: new RegExp('^' + cleanRefCode + '$', 'i') }
+        });
+
+        if (referrerL1) {
+          const level1DailyBonus = Math.round(profitAmount * 0.10);
+          if (level1DailyBonus > 0) {
+            referrerL1.balance += level1DailyBonus;
+            referrerL1.totalProfit += level1DailyBonus; // Added to totalProfit so it can be withdrawn
+            await referrerL1.save();
+          }
+
+          if (referrerL1.referredBy) {
+            const cleanL2RefCode = referrerL1.referredBy.trim();
+            const referrerL2 = await User.findOne({
+              referralCode: { $regex: new RegExp('^' + cleanL2RefCode + '$', 'i') }
+            });
+
+            if (referrerL2) {
+              const level2DailyBonus = Math.round(profitAmount * 0.05);
+              if (level2DailyBonus > 0) {
+                referrerL2.balance += level2DailyBonus;
+                referrerL2.totalProfit += level2DailyBonus; // Added to totalProfit so it can be withdrawn
+                await referrerL2.save();
+              }
+            }
+          }
+        }
+      }
     }
 
     userPlan.lastClaim = new Date();
