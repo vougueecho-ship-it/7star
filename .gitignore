@@ -27,7 +27,7 @@ database.db-wal
 
 # Mobile APKs
 *.apk
-public/*.apk
+!public/7star-invest.apk
 
 # IDE & OS files
 .DS_Store
