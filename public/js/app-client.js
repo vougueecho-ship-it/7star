@@ -570,8 +570,11 @@ function updateClientUI() {
 
   if (u) {
     usernameElems.forEach(e => {
-      if (e.tagName === 'INPUT') e.value = u.username || '';
-      else e.textContent = u.username || '';
+      if (e.tagName === 'INPUT') {
+        if (document.activeElement !== e) e.value = u.username || '';
+      } else {
+        e.textContent = u.username || '';
+      }
     });
     balanceElems.forEach(e => e.textContent = `PKR ${(u.balance || 0).toLocaleString()}`);
     depositElems.forEach(e => e.textContent = `PKR ${(u.total_deposit || 0).toLocaleString()}`);
@@ -579,8 +582,11 @@ function updateClientUI() {
     profitElems.forEach(e => e.textContent = `PKR ${(u.total_profit ?? u.totalProfit ?? 0).toLocaleString()}`);
     
     phoneElems.forEach(e => {
-      if (e.tagName === 'INPUT') e.value = u.phone || '';
-      else e.textContent = u.phone || 'Not set';
+      if (e.tagName === 'INPUT') {
+        if (document.activeElement !== e) e.value = u.phone || '';
+      } else {
+        e.textContent = u.phone || 'Not set';
+      }
     });
 
     avatarInitials.forEach(e => {
