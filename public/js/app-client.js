@@ -628,7 +628,7 @@ async function updateUserProfile(e) {
         localStorage.setItem('star_user', JSON.stringify(AppState.user));
       }
       showToast('Mobile number saved successfully!', 'success');
-      populateUserData();
+      updateClientUI();
     } else {
       showCustomModal('Update Failed', data.message || 'Failed to update phone number', 'error');
     }
