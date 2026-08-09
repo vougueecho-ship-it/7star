@@ -3,6 +3,8 @@ import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import UserPlan from '@/models/UserPlan';
 
+import mongoose from 'mongoose';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -15,7 +17,14 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    const userPlan = await UserPlan.findOne({ _id: userPlanId, userId, status: 'Active' });
+    const isValidUserPlan = mongoose.Types.ObjectId.isValid(userPlanId);
+    const isValidUser = mongoose.Types.ObjectId.isValid(userId);
+
+    if (!isValidUserPlan) {
+      return NextResponse.json({ success: false, message: 'Invalid active plan ID' }, { status: 400 });
+    }
+
+    const userPlan = await UserPlan.findOne({ _id: userPlanId, status: 'Active' });
     if (!userPlan) {
       return NextResponse.json({ success: false, message: 'Active investment plan not found' }, { status: 404 });
     }

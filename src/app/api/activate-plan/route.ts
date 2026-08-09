@@ -4,6 +4,8 @@ import User from '@/models/User';
 import Plan from '@/models/Plan';
 import UserPlan from '@/models/UserPlan';
 
+import mongoose from 'mongoose';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -16,8 +18,15 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    const user = await User.findById(userId);
-    const plan = await Plan.findById(planId);
+    const isValidUser = mongoose.Types.ObjectId.isValid(userId);
+    const user = isValidUser
+      ? await User.findById(userId)
+      : await User.findOne({ username: userId });
+
+    const isValidPlan = mongoose.Types.ObjectId.isValid(planId);
+    const plan = isValidPlan
+      ? await Plan.findById(planId)
+      : await Plan.findOne({ name: planId });
 
     if (!user || !plan) {
       return NextResponse.json({ success: false, message: 'Invalid plan or user' }, { status: 400 });

@@ -4,6 +4,8 @@ import User from '@/models/User';
 import Withdrawal from '@/models/Withdrawal';
 import { sendAdminFcmNotification } from '@/lib/sendAdminFcmNotification';
 
+import mongoose from 'mongoose';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -16,9 +18,13 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    const user = await User.findById(userId);
+    const isValidId = mongoose.Types.ObjectId.isValid(userId);
+    const user = isValidId
+      ? await User.findById(userId)
+      : await User.findOne({ username: userId });
+
     if (!user) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'User account not found. Please log in again.' }, { status: 404 });
     }
 
     const numAmount = Number(amount);
