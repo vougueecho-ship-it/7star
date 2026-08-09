@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export const dynamic = 'force-dynamic';
@@ -79,9 +80,12 @@ export async function POST(req: Request) {
         }
       }
 
+      const defaultPasswordHash = await bcrypt.hash('google_auth_user_' + Date.now() + '_' + Math.random(), 10);
+
       user = await User.create({
         username,
         email: targetEmail,
+        passwordHash: defaultPasswordHash,
         googleId: targetGoogleId,
         avatar: targetPicture,
         balance: 0,
