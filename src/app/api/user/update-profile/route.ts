@@ -3,6 +3,8 @@ import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
 
+import mongoose from 'mongoose';
+
 export const dynamic = 'force-dynamic';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret7starjwtkey987654321';
@@ -28,7 +30,11 @@ export async function POST(req: Request) {
     await connectToDatabase();
 
     const targetId = decoded.id || decoded.userId;
-    const user = await User.findById(targetId);
+    const isValidId = mongoose.Types.ObjectId.isValid(targetId);
+    const user = isValidId
+      ? await User.findById(targetId)
+      : await User.findOne({ username: decoded.username });
+
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }

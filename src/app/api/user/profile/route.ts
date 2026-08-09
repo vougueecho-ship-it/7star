@@ -6,6 +6,8 @@ import Deposit from '@/models/Deposit';
 import Withdrawal from '@/models/Withdrawal';
 import jwt from 'jsonwebtoken';
 
+import mongoose from 'mongoose';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret7starjwtkey987654321';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +25,11 @@ export async function GET(req: Request) {
     await connectToDatabase();
 
     const targetId = decoded.id || decoded.userId;
-    const user = await User.findById(targetId).select('-passwordHash').lean();
+    const isValidId = mongoose.Types.ObjectId.isValid(targetId);
+    const user = isValidId
+      ? await User.findById(targetId).select('-passwordHash').lean()
+      : await User.findOne({ username: decoded.username }).select('-passwordHash').lean();
+
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }

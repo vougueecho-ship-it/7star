@@ -625,7 +625,17 @@ async function updateUserProfile(e) {
       body: JSON.stringify({ phone })
     });
 
-    const data = await res.json();
+    const resText = await res.text();
+    let data = {};
+    try {
+      data = JSON.parse(resText);
+    } catch (e) {
+      console.error('Non-JSON update-profile response:', resText);
+      if (submitBtn) setButtonLoading(submitBtn, false);
+      showCustomModal('Server Error', 'Server returned an unexpected response. Please refresh or login again.', 'error');
+      return;
+    }
+
     if (submitBtn) setButtonLoading(submitBtn, false);
 
     if (data.success) {
