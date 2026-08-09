@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       $or: [{ username }, { phone: username }, { email: username }]
     });
 
-    if (!user) {
+    if (!user || !user.passwordHash) {
       return NextResponse.json({ success: false, message: 'Invalid username, email, or password' }, { status: 401 });
     }
 

@@ -49,6 +49,12 @@ db.exec(`
   try {
     db.exec(`ALTER TABLE users ADD COLUMN has_credited_referral_bonus INTEGER DEFAULT 0;`);
   } catch(e) {}
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN google_id TEXT;`);
+  } catch(e) {}
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN avatar TEXT;`);
+  } catch(e) {}
 
   CREATE TABLE IF NOT EXISTS plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -197,6 +203,69 @@ app.post('/api/login', async (req, res) => {
     res.json({ success: true, message: 'Login successful!', token, user });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error during login' });
+  }
+});
+
+// Google Authentication Route
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { googleId, email, name, picture, credential, refCode } = req.body;
+    let targetEmail = email;
+    let targetGoogleId = googleId;
+    let targetName = name;
+    let targetPicture = picture;
+
+    if (credential && (!targetEmail || !targetGoogleId)) {
+      try {
+        const parts = credential.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+          targetEmail = payload.email || targetEmail;
+          targetGoogleId = payload.sub || targetGoogleId;
+          targetName = payload.name || targetName;
+          targetPicture = payload.picture || targetPicture;
+        }
+      } catch (e) {}
+    }
+
+    if (!targetEmail && !targetGoogleId) {
+      return res.status(400).json({ success: false, message: 'Unable to extract Google account email' });
+    }
+
+    let user = null;
+    if (targetGoogleId) {
+      user = db.prepare('SELECT * FROM users WHERE google_id = ?').get(targetGoogleId);
+    }
+    if (!user && targetEmail) {
+      user = db.prepare('SELECT * FROM users WHERE email = ?').get(targetEmail);
+    }
+
+    if (!user) {
+      let baseUsername = (targetName || targetEmail.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (baseUsername.length < 3) baseUsername = 'user';
+      let username = baseUsername;
+      let counter = 1;
+      while (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
+        username = `${baseUsername}${Math.floor(100 + Math.random() * 900)}${counter}`;
+        counter++;
+      }
+
+      const referralCode = 'STAR' + Math.floor(100000 + Math.random() * 900000);
+      const stmt = db.prepare(`
+        INSERT INTO users (username, email, phone, password_hash, google_id, avatar, referral_code, referred_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const result = stmt.run(username, targetEmail, `+92${Date.now().toString().slice(-9)}`, 'google_auth_user', targetGoogleId, targetPicture, referralCode, refCode || null);
+      user = db.prepare('SELECT id, username, email, phone, avatar, balance, total_deposit, total_withdraw, total_profit, referral_code FROM users WHERE id = ?').get(result.lastInsertRowid);
+    } else {
+      delete user.password_hash;
+    }
+
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ success: true, message: 'Google login successful!', token, user });
+  } catch (err) {
+    console.error("Google auth server error:", err);
+    res.status(500).json({ success: false, message: 'Server error during Google auth' });
   }
 });
 

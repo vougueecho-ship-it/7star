@@ -811,6 +811,71 @@ async function handleLogin(e) {
   }
 }
 
+// Google Sign-In Callback Handler
+async function handleGoogleCredentialResponse(googleResponse) {
+  if (!googleResponse || !googleResponse.credential) {
+    showToast('Google Sign-In failed or cancelled', 'error');
+    return;
+  }
+
+  showToast('Signing in with Google...', 'info');
+
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref') || localStorage.getItem('star_ref_code') || '';
+
+    const res = await fetch(`${API}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: googleResponse.credential, refCode })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('star_token', data.token);
+      localStorage.setItem('star_user', JSON.stringify(data.user));
+      AppState.token = data.token;
+      AppState.user = data.user;
+
+      showToast('Google Login successful! Opening dashboard...', 'success');
+      setTimeout(() => {
+        window.location.href = '/dashboard.html';
+      }, 800);
+    } else {
+      showCustomModal('Google Sign-In Failed', data.message || 'Authentication failed', 'error');
+    }
+  } catch (err) {
+    console.error('Google Sign-In Error:', err);
+    showToast('Google Sign-In error. Please try again.', 'error');
+  }
+}
+
+// Trigger Google Sign-In Prompt
+function triggerGoogleSignIn() {
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    try {
+      window.google.accounts.id.initialize({
+        client_id: '1007065363081-r4bv8hn10586g1v6n2as7j9eh10rtgnc.apps.googleusercontent.com',
+        callback: handleGoogleCredentialResponse,
+        auto_select: false
+      });
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // If One-Tap prompt is skipped, open Google Sign-In dialog
+          window.google.accounts.id.renderButton(
+            document.getElementById('hidden-google-btn') || document.body,
+            { theme: 'outline', size: 'large' }
+          );
+        }
+      });
+    } catch(e) {
+      console.error('Google Auth Init Exception:', e);
+    }
+  } else {
+    showToast('Google Sign-In SDK is loading. Please try again in a moment.', 'info');
+  }
+}
+
 // Logout
 function logout() {
   localStorage.removeItem('star_token');

@@ -3,8 +3,10 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface IUser extends Document {
   username: string;
   email?: string;
-  phone: string;
-  passwordHash: string;
+  phone?: string;
+  passwordHash?: string;
+  googleId?: string;
+  avatar?: string;
   balance: number;
   totalDeposit: number;
   totalWithdraw: number;
@@ -18,8 +20,10 @@ export interface IUser extends Document {
 const UserSchema: Schema = new Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, unique: true, sparse: true },
-  phone: { type: String, required: true, unique: true },
-  passwordHash: { type: String, required: true },
+  phone: { type: String, unique: true, sparse: true },
+  passwordHash: { type: String, required: false },
+  googleId: { type: String, unique: true, sparse: true },
+  avatar: { type: String, default: null },
   balance: { type: Number, default: 0 },
   totalDeposit: { type: Number, default: 0 },
   totalWithdraw: { type: Number, default: 0 },

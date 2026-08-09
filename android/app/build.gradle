@@ -4,7 +4,7 @@ android {
     namespace "com.star7.invest"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.star7.invest"
+        applicationId "com.star7.admin"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
