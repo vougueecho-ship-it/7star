@@ -34,8 +34,11 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
-    phone TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    password_hash TEXT,
+    google_id TEXT,
+    avatar TEXT,
     balance REAL DEFAULT 0,
     total_deposit REAL DEFAULT 0,
     total_withdraw REAL DEFAULT 0,
@@ -45,17 +48,14 @@ db.exec(`
     has_credited_referral_bonus INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+`);
 
-  try {
-    db.exec(`ALTER TABLE users ADD COLUMN has_credited_referral_bonus INTEGER DEFAULT 0;`);
-  } catch(e) {}
-  try {
-    db.exec(`ALTER TABLE users ADD COLUMN google_id TEXT;`);
-  } catch(e) {}
-  try {
-    db.exec(`ALTER TABLE users ADD COLUMN avatar TEXT;`);
-  } catch(e) {}
+try { db.exec("ALTER TABLE users ADD COLUMN has_credited_referral_bonus INTEGER DEFAULT 0;"); } catch(e) {}
+try { db.exec("ALTER TABLE users ADD COLUMN google_id TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE users ADD COLUMN avatar TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE users ADD COLUMN email TEXT;"); } catch(e) {}
 
+db.exec(`
   CREATE TABLE IF NOT EXISTS plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -219,13 +219,16 @@ app.post('/api/auth/google', async (req, res) => {
       try {
         const parts = credential.split('.');
         if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+          const base64Url = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+          const payload = JSON.parse(Buffer.from(base64Url, 'base64').toString('utf-8'));
           targetEmail = payload.email || targetEmail;
           targetGoogleId = payload.sub || targetGoogleId;
           targetName = payload.name || targetName;
           targetPicture = payload.picture || targetPicture;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Base64url JWT parse error in server.js:', e);
+      }
     }
 
     if (!targetEmail && !targetGoogleId) {

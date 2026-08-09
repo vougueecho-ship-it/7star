@@ -27,7 +27,8 @@ export async function POST(req: Request) {
       try {
         const parts = credential.split('.');
         if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+          const base64Url = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+          const payload = JSON.parse(Buffer.from(base64Url, 'base64').toString('utf-8'));
           targetEmail = payload.email || targetEmail;
           targetGoogleId = payload.sub || targetGoogleId;
           targetName = payload.name || targetName;

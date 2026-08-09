@@ -830,7 +830,16 @@ async function handleGoogleCredentialResponse(googleResponse) {
       body: JSON.stringify({ credential: googleResponse.credential, refCode })
     });
 
-    const data = await res.json();
+    const resText = await res.text();
+    let data = {};
+    try {
+      data = JSON.parse(resText);
+    } catch(e) {
+      console.error('Non-JSON server response:', resText);
+      showCustomModal('Server Error', 'Server error during Google Sign-In. Please try again.', 'error');
+      return;
+    }
+
     if (data.success) {
       localStorage.setItem('star_token', data.token);
       localStorage.setItem('star_user', JSON.stringify(data.user));
@@ -857,7 +866,8 @@ function triggerGoogleSignIn() {
       window.google.accounts.id.initialize({
         client_id: '1007065363081-r4bv8hn10586g1v6n2as7j9eh10rtgnc.apps.googleusercontent.com',
         callback: handleGoogleCredentialResponse,
-        auto_select: false
+        auto_select: false,
+        use_fedcm_for_prompt: true
       });
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
