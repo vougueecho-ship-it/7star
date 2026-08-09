@@ -258,7 +258,7 @@ app.post('/api/auth/google', async (req, res) => {
         INSERT INTO users (username, email, phone, password_hash, google_id, avatar, referral_code, referred_by)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(username, targetEmail, `+92${Date.now().toString().slice(-9)}`, 'google_auth_user', targetGoogleId, targetPicture, referralCode, refCode || null);
+      const result = stmt.run(username, targetEmail, '', 'google_auth_user', targetGoogleId, targetPicture, referralCode, refCode || null);
       user = db.prepare('SELECT id, username, email, phone, avatar, balance, total_deposit, total_withdraw, total_profit, referral_code FROM users WHERE id = ?').get(result.lastInsertRowid);
     } else {
       delete user.password_hash;

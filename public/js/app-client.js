@@ -569,7 +569,10 @@ function updateClientUI() {
   const phoneElems = document.querySelectorAll('.user-dyn-phone, #user-profile-phone');
 
   if (u) {
-    usernameElems.forEach(e => e.textContent = u.username);
+    usernameElems.forEach(e => {
+      if (e.tagName === 'INPUT') e.value = u.username || '';
+      else e.textContent = u.username || '';
+    });
     balanceElems.forEach(e => e.textContent = `PKR ${(u.balance || 0).toLocaleString()}`);
     depositElems.forEach(e => e.textContent = `PKR ${(u.total_deposit || 0).toLocaleString()}`);
     withdrawElems.forEach(e => e.textContent = `PKR ${(u.total_withdraw || 0).toLocaleString()}`);
@@ -598,8 +601,8 @@ async function updateUserProfile(e) {
   if (!phoneInput) return;
 
   const phone = phoneInput.value.trim();
-  if (!phone) {
-    showToast('Please enter a mobile number', 'error');
+  if (!phone || phone.length < 10) {
+    showToast('Please enter a valid mobile number (min 10-11 digits, e.g. 03001234567)', 'error');
     return;
   }
 
