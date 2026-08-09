@@ -436,8 +436,8 @@ function renderPlans(plans) {
     const validityDays = p.validity_days || p.validityDays || 12;
     const dailyProfit = p.daily_profit || p.dailyProfit || 0;
     const totalProfit = p.total_profit || p.totalProfit || (dailyProfit * validityDays);
-    const level1Bonus = p.level1_bonus || p.level1Bonus || Math.round(p.price * 0.10);
-    const level2Bonus = p.level2_bonus || p.level2Bonus || Math.round(p.price * 0.05);
+    const level1Bonus = Math.round(dailyProfit * 0.06);
+    const level2Bonus = Math.round(dailyProfit * 0.03);
 
     return `
     <div class="vip-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:28px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 30px rgba(15,23,42,0.05);">
@@ -486,16 +486,16 @@ function renderPlans(plans) {
         <div style="background:#ffffff; border-radius:12px; padding:0.6rem 0.85rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
           <span>Level 1</span>
           <div>
-            <span style="color:var(--emerald-green); font-weight:800; margin-right:0.4rem;">10%</span>
-            <strong style="color:var(--primary-gold);">PKR ${level1Bonus}</strong>
+            <span style="color:var(--emerald-green); font-weight:800; margin-right:0.4rem;">6%</span>
+            <strong style="color:var(--primary-gold);">PKR ${level1Bonus.toLocaleString()}</strong>
           </div>
         </div>
 
         <div style="background:#ffffff; border-radius:12px; padding:0.6rem 0.85rem; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
           <span>Level 2</span>
           <div>
-            <span style="color:var(--cyan-neon); font-weight:800; margin-right:0.4rem;">5%</span>
-            <strong style="color:var(--primary-gold);">PKR ${level2Bonus}</strong>
+            <span style="color:var(--cyan-neon); font-weight:800; margin-right:0.4rem;">3%</span>
+            <strong style="color:var(--primary-gold);">PKR ${level2Bonus.toLocaleString()}</strong>
           </div>
         </div>
       </div>

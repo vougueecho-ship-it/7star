@@ -76,8 +76,8 @@ export default function Home() {
               <ul className="plan-stats">
                 <li><span>Daily Return</span> <strong>PKR {p.daily_profit || p.dailyProfit}</strong></li>
                 <li><span>Total Return</span> <strong>PKR {p.total_profit || p.totalProfit}</strong></li>
-                <li><span>Level 1 Commission</span> <strong>PKR {p.level1_bonus || p.level1Bonus}</strong></li>
-                <li><span>Level 2 Commission</span> <strong>PKR {p.level2_bonus || p.level2Bonus}</strong></li>
+                <li><span>Level 1 Commission (6%)</span> <strong>PKR {Math.round((p.daily_profit || p.dailyProfit || 0) * 0.06).toLocaleString()}/day</strong></li>
+                <li><span>Level 2 Commission (3%)</span> <strong>PKR {Math.round((p.daily_profit || p.dailyProfit || 0) * 0.03).toLocaleString()}/day</strong></li>
               </ul>
               <Link href="/register" className="btn btn-gold btn-full">
                 👑 Activate {p.name}

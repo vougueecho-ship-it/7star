@@ -754,8 +754,8 @@ function renderPlansTable() {
       <td><strong style="color:#d97706;">PKR ${(p.price || 0).toLocaleString()}</strong></td>
       <td><strong style="color:#059669;">PKR ${(p.dailyProfit || p.daily_profit || 0).toLocaleString()}</strong></td>
       <td>PKR ${(p.totalProfit || p.total_profit || 0).toLocaleString()}</td>
-      <td>${p.level1Bonus || p.level1_bonus || 0}%</td>
-      <td>${p.level2Bonus || p.level2_bonus || 0}%</td>
+      <td>PKR ${Math.round((p.dailyProfit || p.daily_profit || 0) * 0.06).toLocaleString()} (6%)</td>
+      <td>PKR ${Math.round((p.dailyProfit || p.daily_profit || 0) * 0.03).toLocaleString()} (3%)</td>
       <td>${p.validityDays || p.validity_days || 0} Days</td>
       <td>
         <div style="display:flex; gap:0.3rem;">
