@@ -82,7 +82,7 @@
         </div>
       </div>
 
-      <form onsubmit="event.preventDefault(); showToast('Profile changes saved!', 'success');">
+      <form onsubmit="updateUserProfile(event)">
 
         <div style="margin-bottom:1.25rem;">
           <label
@@ -100,7 +100,7 @@
             NUMBER</label>
           <div class="auth-input-group">
             <span class="auth-input-icon">📞</span>
-            <input type="text" class="auth-input-field" placeholder="+923000000000" style="border-radius:16px;">
+            <input type="text" id="user-profile-phone" class="auth-input-field user-dyn-phone" placeholder="+923000000000" style="border-radius:16px;">
           </div>
         </div>
 

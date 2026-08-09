@@ -296,6 +296,37 @@ app.get('/api/user/profile', (req, res) => {
   }
 });
 
+// Update User Profile (Phone)
+app.post('/api/user/update-profile', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const targetId = decoded.id || decoded.userId;
+
+    const { phone } = req.body;
+    if (!phone || phone.trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid mobile number' });
+    }
+
+    const cleanPhone = phone.trim();
+    const existing = db.prepare('SELECT id FROM users WHERE phone = ? AND id != ?').get(cleanPhone, targetId);
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'This mobile number is already registered to another account' });
+    }
+
+    db.prepare('UPDATE users SET phone = ? WHERE id = ?').run(cleanPhone, targetId);
+    const updatedUser = db.prepare('SELECT id, username, phone, balance, total_deposit, total_withdraw, total_profit, referral_code, created_at FROM users WHERE id = ?').get(targetId);
+
+    res.json({ success: true, message: 'Mobile number updated successfully!', user: updatedUser });
+  } catch (err) {
+    console.error("Update profile error:", err);
+    res.status(500).json({ success: false, message: 'Server error updating profile' });
+  }
+});
+
 // Submit Deposit
 app.post('/api/deposit', (req, res) => {
   const { userId, amount, gateway, tid, screenshotData } = req.body;

@@ -82,6 +82,13 @@ export async function POST(req: Request) {
 
       const defaultPasswordHash = await bcrypt.hash('google_auth_user_' + Date.now() + '_' + Math.random(), 10);
 
+      // Drop non-sparse legacy phone_1 index if present in MongoDB Atlas
+      try {
+        await User.collection.dropIndex('phone_1');
+      } catch (e) {
+        // Ignore if index doesn't exist
+      }
+
       user = await User.create({
         username,
         email: targetEmail,

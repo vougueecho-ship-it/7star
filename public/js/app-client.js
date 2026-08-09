@@ -566,6 +566,7 @@ function updateClientUI() {
   const profitElems = document.querySelectorAll('.user-dyn-profit');
   const refLinkElem = document.getElementById('user-dyn-reflink');
   const avatarInitials = document.querySelectorAll('.user-avatar-initials');
+  const phoneElems = document.querySelectorAll('.user-dyn-phone, #user-profile-phone');
 
   if (u) {
     usernameElems.forEach(e => e.textContent = u.username);
@@ -574,6 +575,11 @@ function updateClientUI() {
     withdrawElems.forEach(e => e.textContent = `PKR ${(u.total_withdraw || 0).toLocaleString()}`);
     profitElems.forEach(e => e.textContent = `PKR ${(u.total_profit ?? u.totalProfit ?? 0).toLocaleString()}`);
     
+    phoneElems.forEach(e => {
+      if (e.tagName === 'INPUT') e.value = u.phone || '';
+      else e.textContent = u.phone || 'Not set';
+    });
+
     avatarInitials.forEach(e => {
       e.textContent = (u.username || '7S').slice(0, 2).toUpperCase();
     });
@@ -583,6 +589,54 @@ function updateClientUI() {
     }
   }
   renderMiningCards();
+}
+
+// Update User Profile (Phone Number) Handler
+async function updateUserProfile(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const phoneInput = document.getElementById('user-profile-phone') || document.querySelector('.user-dyn-phone');
+  if (!phoneInput) return;
+
+  const phone = phoneInput.value.trim();
+  if (!phone) {
+    showToast('Please enter a mobile number', 'error');
+    return;
+  }
+
+  const submitBtn = e && e.target ? e.target.querySelector('button[type="submit"]') : null;
+  if (submitBtn) setButtonLoading(submitBtn, true, 'Saving...');
+
+  try {
+    const res = await fetch(`${API}/user/update-profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AppState.token}`
+      },
+      body: JSON.stringify({ phone })
+    });
+
+    const data = await res.json();
+    if (submitBtn) setButtonLoading(submitBtn, false);
+
+    if (data.success) {
+      if (data.user) {
+        AppState.user = data.user;
+        localStorage.setItem('star_user', JSON.stringify(data.user));
+      } else if (AppState.user) {
+        AppState.user.phone = phone;
+        localStorage.setItem('star_user', JSON.stringify(AppState.user));
+      }
+      showToast('Mobile number saved successfully!', 'success');
+      populateUserData();
+    } else {
+      showCustomModal('Update Failed', data.message || 'Failed to update phone number', 'error');
+    }
+  } catch (err) {
+    if (submitBtn) setButtonLoading(submitBtn, false);
+    console.error('Update profile error:', err);
+    showToast('Error saving profile changes. Please try again.', 'error');
+  }
 }
 
 let miningTimerInterval = null;
