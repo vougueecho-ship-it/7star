@@ -900,9 +900,19 @@ async function handleGoogleCredentialResponse(googleResponse) {
 
   showToast('Signing in with Google...', 'info');
 
+function getCleanRefCode() {
+  const urlParams = new URLSearchParams(window.location.search);
+  let ref = urlParams.get('ref') || localStorage.getItem('star_ref_code') || '';
+  if (!ref) return '';
+  const s = String(ref).trim();
+  if (s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null' || s.toLowerCase() === 'none' || s.toLowerCase() === 'false' || s === '0') {
+    return '';
+  }
+  return s.toUpperCase();
+}
+
   try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const refCode = urlParams.get('ref') || localStorage.getItem('star_ref_code') || '';
+    const refCode = getCleanRefCode();
 
     const res = await fetch(`${API}/auth/google`, {
       method: 'POST',

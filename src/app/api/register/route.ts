@@ -41,7 +41,14 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(password, 10);
     const referralCode = 'STAR' + Math.floor(10000 + Math.random() * 90000);
 
-    const cleanReferredBy = ref ? String(ref).trim().toUpperCase() : null;
+    const sanitizeRef = (r: any) => {
+      if (!r) return null;
+      const s = String(r).trim();
+      if (!s || s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null' || s.toLowerCase() === 'none' || s.toLowerCase() === 'false' || s === '0') return null;
+      return s.toUpperCase();
+    };
+
+    const cleanReferredBy = sanitizeRef(ref);
 
     const newUser = await User.create({
       username,

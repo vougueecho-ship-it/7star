@@ -71,12 +71,19 @@ export async function POST(req: Request) {
       // Generate unique referral code
       const referralCode = 'STAR' + Math.floor(100000 + Math.random() * 900000);
 
-      // Verify referrer if provided
+      const sanitizeRef = (r: any) => {
+        if (!r) return null;
+        const s = String(r).trim();
+        if (!s || s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null' || s.toLowerCase() === 'none' || s.toLowerCase() === 'false' || s === '0') return null;
+        return s.toUpperCase();
+      };
+
       let validReferrerCode = null;
-      if (refCode) {
-        const referrer = await User.findOne({ referralCode: refCode });
+      const cleanRef = sanitizeRef(refCode);
+      if (cleanRef) {
+        const referrer = await User.findOne({ referralCode: cleanRef });
         if (referrer) {
-          validReferrerCode = refCode;
+          validReferrerCode = cleanRef;
         }
       }
 

@@ -121,7 +121,9 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
-    if (ref) document.getElementById('reg-ref').value = ref;
+    if (ref && ref.toLowerCase() !== 'undefined' && ref.toLowerCase() !== 'null' && ref.toLowerCase() !== 'none') {
+      document.getElementById('reg-ref').value = ref.toUpperCase();
+    }
   </script>
 </body>
 </html>

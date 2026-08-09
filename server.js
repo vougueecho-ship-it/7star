@@ -138,6 +138,21 @@ function getSettingsMap() {
   return map;
 }
 
+// Helper: Sanitize Referral Code
+function sanitizeRef(ref) {
+  if (!ref) return null;
+  const str = String(ref).trim();
+  if (!str || str.toLowerCase() === 'undefined' || str.toLowerCase() === 'null' || str.toLowerCase() === 'none' || str.toLowerCase() === 'false' || str === '0') {
+    return null;
+  }
+  return str.toUpperCase();
+}
+
+// Automatic cleanup of legacy invalid 'undefined' or 'null' referred_by values
+try {
+  db.exec("UPDATE users SET referred_by = NULL WHERE LOWER(referred_by) IN ('undefined', 'null', 'none', 'false', '');");
+} catch(e) {}
+
 // REST API Endpoints
 
 // Public Config
@@ -162,12 +177,13 @@ app.post('/api/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const referralCode = 'STAR' + Math.floor(10000 + Math.random() * 90000);
+    const cleanRef = sanitizeRef(ref);
 
     const stmt = db.prepare(`
       INSERT INTO users (username, phone, password_hash, referral_code, referred_by)
       VALUES (?, ?, ?, ?, ?)
     `);
-    const result = stmt.run(username, phone, passwordHash, referralCode, ref || null);
+    const result = stmt.run(username, phone, passwordHash, referralCode, cleanRef);
 
     const newUser = db.prepare('SELECT id, username, phone, balance, total_deposit, total_withdraw, total_profit, referral_code FROM users WHERE id = ?').get(result.lastInsertRowid);
     const token = jwt.sign({ id: newUser.id, username: newUser.username }, JWT_SECRET, { expiresIn: '30d' });
@@ -254,11 +270,13 @@ app.post('/api/auth/google', async (req, res) => {
       }
 
       const referralCode = 'STAR' + Math.floor(100000 + Math.random() * 900000);
+      const cleanRef = sanitizeRef(refCode);
+
       const stmt = db.prepare(`
         INSERT INTO users (username, email, phone, password_hash, google_id, avatar, referral_code, referred_by)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(username, targetEmail, '', 'google_auth_user', targetGoogleId, targetPicture, referralCode, refCode || null);
+      const result = stmt.run(username, targetEmail, '', 'google_auth_user', targetGoogleId, targetPicture, referralCode, cleanRef);
       user = db.prepare('SELECT id, username, email, phone, avatar, balance, total_deposit, total_withdraw, total_profit, referral_code FROM users WHERE id = ?').get(result.lastInsertRowid);
     } else {
       delete user.password_hash;
@@ -525,29 +543,35 @@ app.get('/api/admin/data', verifyAdminToken, (req, res) => {
 
 app.post('/api/admin/deposit-status', verifyAdminToken, (req, res) => {
   const { depositId, status } = req.body;
-  const deposit = db.prepare('SELECT * FROM deposits WHERE id = ?').get(depositId);
+  const deposit = db.prepare('SELECT id, deposit_ref, user_id, amount, phone, status FROM deposits WHERE id = ?').get(depositId);
 
   if (!deposit) return res.status(404).json({ success: false, message: 'Deposit not found' });
 
+  const depAmount = Number(deposit.amount);
+  if (isNaN(depAmount) || depAmount <= 0) {
+    return res.status(400).json({ success: false, message: 'Invalid deposit amount' });
+  }
+
   if (deposit.status === 'Pending' && status === 'Approved') {
     db.prepare('UPDATE deposits SET status = "Approved" WHERE id = ?').run(depositId);
-    db.prepare('UPDATE users SET balance = balance + ?, total_deposit = total_deposit + ? WHERE id = ?').run(deposit.amount, deposit.amount, deposit.user_id);
+    db.prepare('UPDATE users SET balance = balance + ?, total_deposit = total_deposit + ? WHERE id = ?').run(depAmount, depAmount, deposit.user_id);
 
     // Credit 1-Time Level 1 (6%) & Level 2 (3%) Referral Deposit Bonuses per player
     const depositingUser = db.prepare('SELECT referred_by, has_credited_referral_bonus FROM users WHERE id = ?').get(deposit.user_id);
-    if (depositingUser && !depositingUser.has_credited_referral_bonus && depositingUser.referred_by) {
-      const cleanRefCode = depositingUser.referred_by.trim();
+    const cleanRefCode = sanitizeRef(depositingUser ? depositingUser.referred_by : null);
+
+    if (depositingUser && !depositingUser.has_credited_referral_bonus && cleanRefCode) {
       const referrerL1 = db.prepare('SELECT id, referred_by FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanRefCode);
       if (referrerL1) {
-        const level1Bonus = Math.round(deposit.amount * 0.06);
+        const level1Bonus = Math.round(depAmount * 0.06);
         if (level1Bonus > 0) {
           db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level1Bonus, level1Bonus, referrerL1.id);
         }
-        if (referrerL1.referred_by) {
-          const cleanL2RefCode = referrerL1.referred_by.trim();
+        const cleanL2RefCode = sanitizeRef(referrerL1.referred_by);
+        if (cleanL2RefCode) {
           const referrerL2 = db.prepare('SELECT id FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanL2RefCode);
           if (referrerL2) {
-            const level2Bonus = Math.round(deposit.amount * 0.03);
+            const level2Bonus = Math.round(depAmount * 0.03);
             if (level2Bonus > 0) {
               db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level2Bonus, level2Bonus, referrerL2.id);
             }
