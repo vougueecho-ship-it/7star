@@ -22,7 +22,8 @@ export async function GET(req: Request) {
 
     await connectToDatabase();
 
-    const user = await User.findById(decoded.id).select('-passwordHash').lean();
+    const targetId = decoded.id || decoded.userId;
+    const user = await User.findById(targetId).select('-passwordHash').lean();
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }

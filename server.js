@@ -280,7 +280,8 @@ app.get('/api/user/profile', (req, res) => {
   try {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare('SELECT id, username, phone, balance, total_deposit, total_withdraw, total_profit, referral_code, created_at FROM users WHERE id = ?').get(decoded.id);
+    const targetId = decoded.id || decoded.userId;
+    const user = db.prepare('SELECT id, username, phone, balance, total_deposit, total_withdraw, total_profit, referral_code, created_at FROM users WHERE id = ?').get(targetId);
 
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 

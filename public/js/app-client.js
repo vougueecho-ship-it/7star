@@ -312,6 +312,13 @@ async function fetchUserProfile(silent = false) {
       renderUserRecords(data);
 
       updateClientUI();
+    } else if (res.status === 401 || res.status === 404) {
+      // Clear invalid session token if user was deleted or token payload is invalid
+      localStorage.removeItem('star_token');
+      localStorage.removeItem('star_user');
+      localStorage.removeItem('star_profile_cache');
+      AppState.token = null;
+      AppState.user = null;
     }
   } catch (err) {
     if (!silent) console.error("Profile sync error:", err);
