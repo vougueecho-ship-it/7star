@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       depositRef,
       userId: user._id,
       username: user.username,
-      phone: user.phone,
+      phone: user.phone || '',
       amount: Number(amount),
       gateway,
       tid,

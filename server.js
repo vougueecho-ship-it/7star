@@ -599,7 +599,7 @@ app.post('/api/admin/withdrawal-status', verifyAdminToken, (req, res) => {
     if (status === 'Approved') {
       db.prepare('UPDATE users SET total_withdraw = total_withdraw + ? WHERE id = ?').run(withdrawal.amount, withdrawal.user_id);
     } else if (status === 'Rejected') {
-      db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(withdrawal.amount, withdrawal.user_id);
+      db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(withdrawal.amount, withdrawal.amount, withdrawal.user_id);
     }
   }
 

@@ -17,6 +17,8 @@ export async function POST(req: Request) {
     const cleanEmail = String(email).trim().toLowerCase();
     const cleanOtp = String(otp).trim();
 
+    await connectToDatabase();
+
     // Verify OTP
     const validOtp = await Otp.findOne({ email: cleanEmail, otp: cleanOtp });
     if (!validOtp) {

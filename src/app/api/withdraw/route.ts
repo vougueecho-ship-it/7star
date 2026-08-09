@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       withdrawalRef,
       userId: user._id,
       username: user.username,
-      phone: user.phone,
+      phone: user.phone || '',
       amount: numAmount,
       gateway,
       accountTitle,

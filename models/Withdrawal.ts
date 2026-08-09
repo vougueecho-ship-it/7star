@@ -19,7 +19,7 @@ const WithdrawalSchema: Schema = new Schema({
   withdrawalRef: { type: String, required: true, unique: true },
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   username: { type: String, required: true },
-  phone: { type: String, required: true },
+  phone: { type: String, default: '' },
   amount: { type: Number, required: true },
   gateway: { type: String, required: true },
   accountTitle: { type: String, required: true },

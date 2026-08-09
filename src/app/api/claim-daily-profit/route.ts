@@ -64,8 +64,9 @@ export async function POST(req: Request) {
       // Credit Level 1 & Level 2 Referral Daily Profit Share Bonuses (6% Direct & 3% Indirect)
       if (user.referredBy) {
         const cleanRefCode = user.referredBy.trim();
+        const safeL1Regex = new RegExp('^' + cleanRefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
         const referrerL1 = await User.findOne({
-          referralCode: { $regex: new RegExp('^' + cleanRefCode + '$', 'i') }
+          referralCode: { $regex: safeL1Regex }
         });
 
         if (referrerL1) {
@@ -78,8 +79,9 @@ export async function POST(req: Request) {
 
           if (referrerL1.referredBy) {
             const cleanL2RefCode = referrerL1.referredBy.trim();
+            const safeL2Regex = new RegExp('^' + cleanL2RefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
             const referrerL2 = await User.findOne({
-              referralCode: { $regex: new RegExp('^' + cleanL2RefCode + '$', 'i') }
+              referralCode: { $regex: safeL2Regex }
             });
 
             if (referrerL2) {

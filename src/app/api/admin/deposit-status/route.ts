@@ -49,8 +49,9 @@ export async function POST(req: Request) {
 
         // Credit 1-Time Level 1 (6%) & Level 2 (3%) Referral Deposit Bonuses per player
         if (!user.hasCreditedReferralBonus && cleanRefCode) {
+          const safeL1Regex = new RegExp('^' + cleanRefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
           const referrerL1 = await User.findOne({
-            referralCode: { $regex: new RegExp('^' + cleanRefCode + '$', 'i') }
+            referralCode: { $regex: safeL1Regex }
           });
 
           if (referrerL1) {
@@ -63,8 +64,9 @@ export async function POST(req: Request) {
 
             const cleanL2RefCode = sanitizeReferralCode(referrerL1.referredBy);
             if (cleanL2RefCode) {
+              const safeL2Regex = new RegExp('^' + cleanL2RefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
               const referrerL2 = await User.findOne({
-                referralCode: { $regex: new RegExp('^' + cleanL2RefCode + '$', 'i') }
+                referralCode: { $regex: safeL2Regex }
               });
 
               if (referrerL2) {

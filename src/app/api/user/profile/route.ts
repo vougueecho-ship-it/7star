@@ -50,8 +50,9 @@ export async function GET(req: Request) {
     ]);
 
     // 2. Fetch Level 1 Members
-    const level1ListRaw: any[] = refCode
-      ? await User.find({ referredBy: { $regex: new RegExp('^' + refCode + '$', 'i') } })
+    const safeRefCodeRegex = refCode ? new RegExp('^' + refCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') : null;
+    const level1ListRaw: any[] = safeRefCodeRegex
+      ? await User.find({ referredBy: { $regex: safeRefCodeRegex } })
           .select('username email phone referralCode createdAt balance')
           .sort({ createdAt: -1 })
           .lean()
@@ -60,7 +61,7 @@ export async function GET(req: Request) {
     // 3. Fetch Level 2 Members
     const l1RefCodes = level1ListRaw.map((u: any) => u.referralCode).filter(Boolean);
     const level2ListRaw: any[] = (refCode && l1RefCodes.length > 0)
-      ? await User.find({ referredBy: { $in: l1RefCodes.map((c: string) => new RegExp('^' + c + '$', 'i')) } })
+      ? await User.find({ referredBy: { $in: l1RefCodes.map((c: string) => new RegExp('^' + c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')) } })
           .select('username email phone referralCode referredBy createdAt balance')
           .sort({ createdAt: -1 })
           .lean()

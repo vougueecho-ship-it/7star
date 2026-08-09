@@ -34,10 +34,13 @@ const UserSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-if (mongoose.models && mongoose.models.User) {
-  delete (mongoose.models as any).User;
-}
+UserSchema.pre('save', function (next) {
+  if (this.email === '') this.email = undefined;
+  if (this.phone === '') this.phone = undefined;
+  if (this.googleId === '') this.googleId = undefined;
+  next();
+});
 
-const User: Model<IUser> = mongoose.model<IUser>('User', UserSchema);
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User;
