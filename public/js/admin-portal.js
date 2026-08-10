@@ -1092,13 +1092,14 @@ async function editUserWalletBalance(userId, currentBal) {
 
 // Open Edit User Account Modal
 function openUserEditModal(userId) {
-  const user = AdminState.users.find(u => u.id === userId);
+  const user = AdminState.users.find(u => u.id === userId || u._id === userId);
   if (!user) return;
 
   document.getElementById('edit-user-id').value = userId;
   document.getElementById('edit-user-username').value = user.username || '';
   document.getElementById('edit-user-phone').value = user.phone || '';
   document.getElementById('edit-user-balance').value = user.balance || 0;
+  document.getElementById('edit-user-referredby').value = user.referredBy || user.referred_by || '';
   document.getElementById('edit-user-password').value = '';
 
   const overlay = document.getElementById('user-edit-modal-overlay');
@@ -1118,6 +1119,7 @@ async function saveEditedUserDetails(e) {
   const username = document.getElementById('edit-user-username').value;
   const phone = document.getElementById('edit-user-phone').value;
   const balance = document.getElementById('edit-user-balance').value;
+  const referredBy = document.getElementById('edit-user-referredby').value;
   const newPassword = document.getElementById('edit-user-password').value;
 
   try {
@@ -1127,7 +1129,7 @@ async function saveEditedUserDetails(e) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${AdminToken}`
       },
-      body: JSON.stringify({ userId, username, phone, balance, newPassword })
+      body: JSON.stringify({ userId, username, phone, balance, newPassword, referredBy })
     });
     const data = await res.json();
     if (data.success) {
