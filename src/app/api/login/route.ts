@@ -12,23 +12,54 @@ export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
 
-    if (!username || !password) {
-      return NextResponse.json({ success: false, message: 'Please enter username and password' }, { status: 400 });
+    const cleanInput = String(username || '').trim();
+    const cleanPassword = String(password || '').trim();
+
+    if (!cleanInput || !cleanPassword) {
+      return NextResponse.json({ success: false, message: 'Please enter username, email or phone and password' }, { status: 400 });
     }
 
     await connectToDatabase();
 
-    const user = await User.findOne({
-      $or: [{ username }, { phone: username }, { email: username }]
-    });
+    const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
+    const cleanInputLower = cleanInput.toLowerCase();
 
-    if (!user || !user.passwordHash) {
-      return NextResponse.json({ success: false, message: 'Invalid username, email, or password' }, { status: 401 });
+    // Phone digits normalization for robust Pakistani phone number matching (+92300... vs 0300...)
+    const digitsOnly = cleanInput.replace(/[^0-9]/g, '');
+    const phoneConditions: any[] = [{ phone: cleanInput }];
+    if (digitsOnly.length >= 7) {
+      const last10Digits = digitsOnly.slice(-10);
+      phoneConditions.push({ phone: new RegExp(escapeRegex(last10Digits) + '$') });
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const user = await User.findOne({
+      $or: [
+        { username: { $regex: inputRegex } },
+        { email: cleanInputLower },
+        { email: { $regex: inputRegex } },
+        ...phoneConditions
+      ]
+    });
+
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Invalid username, email, phone, or password' }, { status: 401 });
+    }
+
+    if (!user.passwordHash) {
+      return NextResponse.json({ success: false, message: 'Invalid username, email, phone, or password' }, { status: 401 });
+    }
+
+    const isValid = await bcrypt.compare(cleanPassword, user.passwordHash);
     if (!isValid) {
-      return NextResponse.json({ success: false, message: 'Invalid username or password' }, { status: 401 });
+      // Helpful error message if user registered via Google
+      if (user.googleId && user.passwordHash.startsWith('google_auth_user')) {
+        return NextResponse.json({
+          success: false,
+          message: 'This account was created with Google. Please click "Continue with Google" to log in, or reset password.'
+        }, { status: 401 });
+      }
+      return NextResponse.json({ success: false, message: 'Invalid username, email, phone, or password' }, { status: 401 });
     }
 
     const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
@@ -36,7 +67,8 @@ export async function POST(req: Request) {
     const userObject = {
       id: user._id,
       username: user.username,
-      phone: user.phone,
+      email: user.email || '',
+      phone: user.phone || '',
       balance: user.balance,
       total_deposit: user.totalDeposit,
       total_withdraw: user.totalWithdraw,

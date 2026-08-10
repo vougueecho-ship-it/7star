@@ -30,6 +30,8 @@ const WithdrawalSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+WithdrawalSchema.index({ userId: 1, createdAt: -1 });
+
 const Withdrawal: Model<IWithdrawal> = mongoose.models.Withdrawal || mongoose.model<IWithdrawal>('Withdrawal', WithdrawalSchema);
 
 export default Withdrawal;

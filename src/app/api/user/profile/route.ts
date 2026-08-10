@@ -49,10 +49,10 @@ export async function GET(req: Request) {
       Withdrawal.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).lean()
     ]);
 
-    // 2. Fetch Level 1 Members
-    const safeRefCodeRegex = refCode ? new RegExp('^' + refCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') : null;
-    const level1ListRaw: any[] = safeRefCodeRegex
-      ? await User.find({ referredBy: { $regex: safeRefCodeRegex } })
+    // 2. Fetch Level 1 Members using indexed exact/case variations instead of expensive collection-wide regex
+    const refCodeUpper = refCode ? refCode.toUpperCase() : '';
+    const level1ListRaw: any[] = refCode
+      ? await User.find({ referredBy: { $in: [refCodeUpper, refCode.toLowerCase(), refCode] } })
           .select('username email phone referralCode createdAt balance')
           .sort({ createdAt: -1 })
           .lean()
@@ -60,8 +60,13 @@ export async function GET(req: Request) {
 
     // 3. Fetch Level 2 Members
     const l1RefCodes = level1ListRaw.map((u: any) => u.referralCode).filter(Boolean);
-    const level2ListRaw: any[] = (refCode && l1RefCodes.length > 0)
-      ? await User.find({ referredBy: { $in: l1RefCodes.map((c: string) => new RegExp('^' + c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')) } })
+    const l1RefCodesVariations: string[] = [];
+    l1RefCodes.forEach((c: string) => {
+      l1RefCodesVariations.push(c, c.toUpperCase(), c.toLowerCase());
+    });
+
+    const level2ListRaw: any[] = (refCode && l1RefCodesVariations.length > 0)
+      ? await User.find({ referredBy: { $in: l1RefCodesVariations } })
           .select('username email phone referralCode referredBy createdAt balance')
           .sort({ createdAt: -1 })
           .lean()
@@ -99,8 +104,8 @@ export async function GET(req: Request) {
     const level1List = level1ListRaw.map((m: any) => {
       const uId = m._id.toString();
       const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
-      const totalComm = Math.round(pStats.totalInvested * 0.06);
-      const dailyComm = Math.round(pStats.activeDailyProfit * 0.06);
+      const totalComm = Math.round(pStats.totalInvested * 0.10);
+      const dailyComm = Math.round(pStats.activeDailyProfit * 0.10);
       level1TotalCommission += totalComm;
       level1DailyCommission += dailyComm;
 
@@ -126,8 +131,8 @@ export async function GET(req: Request) {
     const level2List = level2ListRaw.map((m: any) => {
       const uId = m._id.toString();
       const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
-      const totalComm = Math.round(pStats.totalInvested * 0.03);
-      const dailyComm = Math.round(pStats.activeDailyProfit * 0.03);
+      const totalComm = Math.round(pStats.totalInvested * 0.02);
+      const dailyComm = Math.round(pStats.activeDailyProfit * 0.02);
       level2TotalCommission += totalComm;
       level2DailyCommission += dailyComm;
 

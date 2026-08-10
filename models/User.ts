@@ -34,6 +34,8 @@ const UserSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+UserSchema.index({ referredBy: 1 });
+
 UserSchema.pre('save', function (next) {
   if (this.email === '') this.email = undefined;
   if (this.phone === '') this.phone = undefined;

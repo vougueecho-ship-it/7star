@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
         const cleanRefCode = sanitizeReferralCode(user.referredBy);
 
-        // Credit 1-Time Level 1 (6%) & Level 2 (3%) Referral Deposit Bonuses per player
+        // Credit 1-Time Level 1 (10%) & Level 2 (2%) Referral Deposit Bonuses per player
         if (!user.hasCreditedReferralBonus && cleanRefCode) {
           const safeL1Regex = new RegExp('^' + cleanRefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
           const referrerL1 = await User.findOne({
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
           });
 
           if (referrerL1) {
-            const level1Bonus = Math.round(depAmount * 0.06);
+            const level1Bonus = Math.round(depAmount * 0.10);
             if (level1Bonus > 0) {
               referrerL1.balance += level1Bonus;
               referrerL1.totalProfit += level1Bonus; // Added to totalProfit so it can be withdrawn
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
               });
 
               if (referrerL2) {
-                const level2Bonus = Math.round(depAmount * 0.03);
+                const level2Bonus = Math.round(depAmount * 0.02);
                 if (level2Bonus > 0) {
                   referrerL2.balance += level2Bonus;
                   referrerL2.totalProfit += level2Bonus; // Added to totalProfit so it can be withdrawn

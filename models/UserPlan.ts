@@ -28,6 +28,9 @@ const UserPlanSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+UserPlanSchema.index({ userId: 1, status: 1 });
+UserPlanSchema.index({ userId: 1 });
+
 const UserPlan: Model<IUserPlan> = mongoose.models.UserPlan || mongoose.model<IUserPlan>('UserPlan', UserPlanSchema);
 
 export default UserPlan;

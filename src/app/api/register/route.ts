@@ -13,12 +13,15 @@ export async function POST(req: Request) {
   try {
     const { username, email, phone, password, otp, ref } = await req.json();
 
-    if (!username || !email || !phone || !password || !otp) {
+    const cleanUsername = String(username || '').trim();
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanPhone = String(phone || '').trim();
+    const cleanPassword = String(password || '').trim();
+    const cleanOtp = String(otp || '').trim();
+
+    if (!cleanUsername || !cleanEmail || !cleanPhone || !cleanPassword || !cleanOtp) {
       return NextResponse.json({ success: false, message: 'Please fill all required fields including Email OTP' }, { status: 400 });
     }
-
-    const cleanEmail = String(email).trim().toLowerCase();
-    const cleanOtp = String(otp).trim();
 
     await connectToDatabase();
 
@@ -31,16 +34,21 @@ export async function POST(req: Request) {
     // Delete OTP after verification
     await Otp.deleteOne({ _id: validOtp._id });
 
-    // Check if username, email, or phone is already registered
+    // Check if username, email, or phone is already registered (case-insensitive)
+    const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const existing = await User.findOne({
-      $or: [{ username }, { email }, { phone }]
+      $or: [
+        { username: { $regex: new RegExp('^' + escapeRegex(cleanUsername) + '$', 'i') } },
+        { email: cleanEmail },
+        { phone: cleanPhone }
+      ]
     });
 
     if (existing) {
       return NextResponse.json({ success: false, message: 'Username, Email, or Phone number already registered' }, { status: 400 });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(cleanPassword, 10);
     const referralCode = 'STAR' + Math.floor(10000 + Math.random() * 90000);
 
     const sanitizeRef = (r: any) => {
@@ -53,9 +61,9 @@ export async function POST(req: Request) {
     const cleanReferredBy = sanitizeRef(ref);
 
     const newUser = await User.create({
-      username,
-      email,
-      phone,
+      username: cleanUsername,
+      email: cleanEmail,
+      phone: cleanPhone,
       passwordHash,
       referralCode,
       referredBy: cleanReferredBy

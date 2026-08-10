@@ -199,18 +199,38 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ success: false, message: 'Please enter username and password' });
+    const cleanInput = String(username || '').trim();
+    const cleanPassword = String(password || '').trim();
+
+    if (!cleanInput || !cleanPassword) {
+      return res.status(400).json({ success: false, message: 'Please enter username, email or phone and password' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE username = ? OR phone = ?').get(username, username);
+    const cleanInputLower = cleanInput.toLowerCase();
+    const digitsOnly = cleanInput.replace(/[^0-9]/g, '');
+
+    const user = db.prepare(`
+      SELECT * FROM users
+      WHERE LOWER(username) = ? OR LOWER(email) = ? OR phone = ? OR (length(?) >= 7 AND phone LIKE ?)
+    `).get(cleanInputLower, cleanInputLower, cleanInput, digitsOnly, '%' + digitsOnly.slice(-10));
+
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+      return res.status(401).json({ success: false, message: 'Invalid username, email, phone, or password' });
     }
 
-    const isValid = await bcrypt.compare(password, user.password_hash);
+    if (!user.password_hash) {
+      return res.status(401).json({ success: false, message: 'Invalid username, email, phone, or password' });
+    }
+
+    const isValid = await bcrypt.compare(cleanPassword, user.password_hash);
     if (!isValid) {
-      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+      if (user.google_id && user.password_hash.startsWith('google_auth_user')) {
+        return res.status(401).json({
+          success: false,
+          message: 'This account was created with Google. Please click "Continue with Google" to log in, or reset password.'
+        });
+      }
+      return res.status(401).json({ success: false, message: 'Invalid username, email, phone, or password' });
     }
 
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
@@ -470,13 +490,13 @@ app.post('/api/claim-daily-profit', (req, res) => {
   db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(profitAmount, profitAmount, userId);
   db.prepare('UPDATE user_plans SET last_claim = CURRENT_TIMESTAMP WHERE id = ?').run(userPlanId);
 
-  // Credit Level 1 & Level 2 Referral Daily Profit Share Bonuses (6% Direct & 3% Indirect)
+  // Credit Level 1 & Level 2 Referral Daily Profit Share Bonuses (10% Direct & 2% Indirect)
   const claimingUser = db.prepare('SELECT referred_by FROM users WHERE id = ?').get(userId);
   if (claimingUser && claimingUser.referred_by) {
     const cleanRefCode = claimingUser.referred_by.trim();
     const referrerL1 = db.prepare('SELECT id, referred_by FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanRefCode);
     if (referrerL1) {
-      const level1DailyBonus = Math.round(profitAmount * 0.06);
+      const level1DailyBonus = Math.round(profitAmount * 0.10);
       if (level1DailyBonus > 0) {
         db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level1DailyBonus, level1DailyBonus, referrerL1.id);
       }
@@ -484,7 +504,7 @@ app.post('/api/claim-daily-profit', (req, res) => {
         const cleanL2RefCode = referrerL1.referred_by.trim();
         const referrerL2 = db.prepare('SELECT id FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanL2RefCode);
         if (referrerL2) {
-          const level2DailyBonus = Math.round(profitAmount * 0.03);
+          const level2DailyBonus = Math.round(profitAmount * 0.02);
           if (level2DailyBonus > 0) {
             db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level2DailyBonus, level2DailyBonus, referrerL2.id);
           }
@@ -556,14 +576,14 @@ app.post('/api/admin/deposit-status', verifyAdminToken, (req, res) => {
     db.prepare('UPDATE deposits SET status = "Approved" WHERE id = ?').run(depositId);
     db.prepare('UPDATE users SET balance = balance + ?, total_deposit = total_deposit + ? WHERE id = ?').run(depAmount, depAmount, deposit.user_id);
 
-    // Credit 1-Time Level 1 (6%) & Level 2 (3%) Referral Deposit Bonuses per player
+    // Credit 1-Time Level 1 (10%) & Level 2 (2%) Referral Deposit Bonuses per player
     const depositingUser = db.prepare('SELECT referred_by, has_credited_referral_bonus FROM users WHERE id = ?').get(deposit.user_id);
     const cleanRefCode = sanitizeRef(depositingUser ? depositingUser.referred_by : null);
 
     if (depositingUser && !depositingUser.has_credited_referral_bonus && cleanRefCode) {
       const referrerL1 = db.prepare('SELECT id, referred_by FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanRefCode);
       if (referrerL1) {
-        const level1Bonus = Math.round(depAmount * 0.06);
+        const level1Bonus = Math.round(depAmount * 0.10);
         if (level1Bonus > 0) {
           db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level1Bonus, level1Bonus, referrerL1.id);
         }
@@ -571,7 +591,7 @@ app.post('/api/admin/deposit-status', verifyAdminToken, (req, res) => {
         if (cleanL2RefCode) {
           const referrerL2 = db.prepare('SELECT id FROM users WHERE LOWER(referral_code) = LOWER(?)').get(cleanL2RefCode);
           if (referrerL2) {
-            const level2Bonus = Math.round(depAmount * 0.03);
+            const level2Bonus = Math.round(depAmount * 0.02);
             if (level2Bonus > 0) {
               db.prepare('UPDATE users SET balance = balance + ?, total_profit = total_profit + ? WHERE id = ?').run(level2Bonus, level2Bonus, referrerL2.id);
             }

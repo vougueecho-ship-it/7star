@@ -143,35 +143,45 @@ function hydrateFromCache() {
 let userPollInterval = null;
 let configPollInterval = null;
 
+let lastSyncTime = 0;
+
 function startRealtimeAutoSync() {
   if (userPollInterval) clearInterval(userPollInterval);
   if (configPollInterval) clearInterval(configPollInterval);
 
-  // Poll User Profile every 4 seconds for real-time balance & transaction updates
+  // Poll User Profile every 12 seconds for balance & transaction updates (optimized for high speed & server health)
   userPollInterval = setInterval(() => {
     if (AppState.token && !document.hidden) {
+      lastSyncTime = Date.now();
       fetchUserProfile(true);
     }
-  }, 4000);
+  }, 12000);
 
-  // Poll Public Config every 12 seconds for gateway & notice changes
+  // Poll Public Config every 30 seconds for gateway & notice changes
   configPollInterval = setInterval(() => {
     if (!document.hidden) {
       loadConfig(true);
     }
-  }, 12000);
+  }, 30000);
 }
 
-// Immediate fetch on tab focus / visibility change
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
+// Throttled fetch on tab focus / visibility change
+function throttledFocusSync() {
+  const now = Date.now();
+  if (now - lastSyncTime > 8000) {
+    lastSyncTime = now;
     loadConfig(true);
     if (AppState.token) fetchUserProfile(true);
   }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    throttledFocusSync();
+  }
 });
 window.addEventListener('focus', () => {
-  loadConfig(true);
-  if (AppState.token) fetchUserProfile(true);
+  throttledFocusSync();
 });
 
 // Toast & Modal Helper Injection
@@ -443,8 +453,8 @@ function renderPlans(plans) {
     const validityDays = p.validity_days || p.validityDays || 12;
     const dailyProfit = p.daily_profit || p.dailyProfit || 0;
     const totalProfit = p.total_profit || p.totalProfit || (dailyProfit * validityDays);
-    const level1Bonus = Math.round(dailyProfit * 0.06);
-    const level2Bonus = Math.round(dailyProfit * 0.03);
+    const level1Bonus = Math.round(dailyProfit * 0.10);
+    const level2Bonus = Math.round(dailyProfit * 0.02);
 
     return `
     <div class="vip-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:28px; padding:1.25rem; margin-bottom:1.5rem; box-shadow:0 10px 30px rgba(15,23,42,0.05);">
@@ -493,7 +503,7 @@ function renderPlans(plans) {
         <div style="background:#ffffff; border-radius:12px; padding:0.6rem 0.85rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
           <span>Level 1</span>
           <div>
-            <span style="color:var(--emerald-green); font-weight:800; margin-right:0.4rem;">6%</span>
+            <span style="color:var(--emerald-green); font-weight:800; margin-right:0.4rem;">10%</span>
             <strong style="color:var(--primary-gold);">PKR ${level1Bonus.toLocaleString()}</strong>
           </div>
         </div>
@@ -501,7 +511,7 @@ function renderPlans(plans) {
         <div style="background:#ffffff; border-radius:12px; padding:0.6rem 0.85rem; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">
           <span>Level 2</span>
           <div>
-            <span style="color:var(--cyan-neon); font-weight:800; margin-right:0.4rem;">3%</span>
+            <span style="color:var(--cyan-neon); font-weight:800; margin-right:0.4rem;">2%</span>
             <strong style="color:var(--primary-gold);">PKR ${level2Bonus.toLocaleString()}</strong>
           </div>
         </div>
@@ -859,8 +869,13 @@ async function handleRegister(e) {
 async function handleLogin(e) {
   e.preventDefault();
   const submitBtn = e.target.querySelector('button[type="submit"]');
-  const username = document.getElementById('login-username').value;
-  const password = document.getElementById('login-password').value;
+  const username = (document.getElementById('login-username').value || '').trim();
+  const password = (document.getElementById('login-password').value || '').trim();
+
+  if (!username || !password) {
+    showToast('Please enter username/email/phone and password', 'error');
+    return;
+  }
 
   setButtonLoading(submitBtn, true, 'Signing In...');
 
@@ -1272,8 +1287,8 @@ function renderTeamSection(data) {
         const initial = (member.username || 'U').slice(0, 2).toUpperCase();
         const totalInvested = member.totalInvested || 0;
         const activeInvested = member.activeInvested || 0;
-        const totalComm = member.totalCommission || Math.round(totalInvested * 0.05);
-        const dailyComm = member.dailyCommission || Math.round(activeInvested * 0.05);
+        const totalComm = member.totalCommission || Math.round(totalInvested * 0.02);
+        const dailyComm = member.dailyCommission || Math.round(activeInvested * 0.02);
         const email = member.email || '';
         const referredBy = member.referredBy || 'L1 Leader';
 

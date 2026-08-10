@@ -31,10 +31,10 @@ export async function GET() {
 
     const plans = rawPlans.map(p => ({
       ...p,
-      level1Bonus: Math.round((p.dailyProfit || 0) * 0.06),
-      level2Bonus: Math.round((p.dailyProfit || 0) * 0.03),
-      level1_bonus: Math.round((p.dailyProfit || 0) * 0.06),
-      level2_bonus: Math.round((p.dailyProfit || 0) * 0.03)
+      level1Bonus: Math.round((p.dailyProfit || 0) * 0.10),
+      level2Bonus: Math.round((p.dailyProfit || 0) * 0.02),
+      level1_bonus: Math.round((p.dailyProfit || 0) * 0.10),
+      level2_bonus: Math.round((p.dailyProfit || 0) * 0.02)
     }));
 
     // Check settings, if empty seed defaults

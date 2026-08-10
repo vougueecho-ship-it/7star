@@ -26,6 +26,8 @@ const DepositSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+DepositSchema.index({ userId: 1, createdAt: -1 });
+
 const Deposit: Model<IDeposit> = mongoose.models.Deposit || mongoose.model<IDeposit>('Deposit', DepositSchema);
 
 export default Deposit;
