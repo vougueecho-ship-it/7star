@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import { sanitizeReferralCode, generateUniqueReferralCode, buildStandardUserPayload } from '@/lib/referral';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -69,21 +70,16 @@ export async function POST(req: Request) {
       }
 
       // Generate unique referral code
-      const referralCode = 'STAR' + Math.floor(100000 + Math.random() * 900000);
-
-      const sanitizeRef = (r: any) => {
-        if (!r) return null;
-        const s = String(r).trim();
-        if (!s || s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null' || s.toLowerCase() === 'none' || s.toLowerCase() === 'false' || s === '0') return null;
-        return s.toUpperCase();
-      };
+      const referralCode = await generateUniqueReferralCode();
 
       let validReferrerCode = null;
-      const cleanRef = sanitizeRef(refCode);
+      const cleanRef = sanitizeReferralCode(refCode);
       if (cleanRef) {
-        const referrer = await User.findOne({ referralCode: cleanRef });
+        const referrer = await User.findOne({
+          referralCode: { $regex: new RegExp('^' + cleanRef.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') }
+        });
         if (referrer) {
-          validReferrerCode = cleanRef;
+          validReferrerCode = referrer.referralCode;
         }
       }
 
@@ -110,7 +106,7 @@ export async function POST(req: Request) {
         referredBy: validReferrerCode
       });
     } else {
-      // Update Google ID and Avatar if not linked yet
+      // Update Google ID, Avatar or Referral Code if missing
       let updated = false;
       if (!user.googleId && targetGoogleId) {
         user.googleId = targetGoogleId;
@@ -118,6 +114,10 @@ export async function POST(req: Request) {
       }
       if (targetPicture && user.avatar !== targetPicture) {
         user.avatar = targetPicture;
+        updated = true;
+      }
+      if (!user.referralCode) {
+        user.referralCode = await generateUniqueReferralCode();
         updated = true;
       }
       if (updated) {
@@ -136,19 +136,7 @@ export async function POST(req: Request) {
       success: true,
       message: 'Google login successful!',
       token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        phone: user.phone || '',
-        avatar: user.avatar || '',
-        balance: user.balance || 0,
-        totalDeposit: user.totalDeposit || 0,
-        totalWithdraw: user.totalWithdraw || 0,
-        totalProfit: user.totalProfit || 0,
-        referralCode: user.referralCode,
-        referredBy: user.referredBy || null
-      }
+      user: buildStandardUserPayload(user)
     };
 
     const res = NextResponse.json(responseData);

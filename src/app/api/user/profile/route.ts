@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import { generateUniqueReferralCode, buildStandardUserPayload } from '@/lib/referral';
 import User from '@/models/User';
 import UserPlan from '@/models/UserPlan';
 import Deposit from '@/models/Deposit';
@@ -26,12 +27,17 @@ export async function GET(req: Request) {
 
     const targetId = decoded.id || decoded.userId;
     const isValidId = mongoose.Types.ObjectId.isValid(targetId);
-    const user = isValidId
-      ? await User.findById(targetId).select('-passwordHash').lean()
-      : await User.findOne({ username: decoded.username }).select('-passwordHash').lean();
+    let user = isValidId
+      ? await User.findById(targetId).select('-passwordHash')
+      : await User.findOne({ username: decoded.username }).select('-passwordHash');
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+    }
+
+    if (!user.referralCode) {
+      user.referralCode = await generateUniqueReferralCode();
+      await user.save();
     }
 
     const refCode = (user.referralCode || '').trim();
@@ -158,18 +164,7 @@ export async function GET(req: Request) {
     const teamTotalCommission = level1TotalCommission + level2TotalCommission;
     const teamDailyCommission = level1DailyCommission + level2DailyCommission;
 
-    const userObject = {
-      id: user._id,
-      username: user.username,
-      email: user.email || '',
-      phone: user.phone,
-      balance: user.balance,
-      total_deposit: user.totalDeposit,
-      total_withdraw: user.totalWithdraw,
-      total_profit: user.totalProfit,
-      referral_code: user.referralCode,
-      created_at: user.createdAt
-    };
+    const userObject = buildStandardUserPayload(user);
 
     return NextResponse.json({
       success: true,

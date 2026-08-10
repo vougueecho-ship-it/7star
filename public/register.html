@@ -120,9 +120,13 @@
   <script src="/js/app-client.js"></script>
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    if (ref && ref.toLowerCase() !== 'undefined' && ref.toLowerCase() !== 'null' && ref.toLowerCase() !== 'none') {
-      document.getElementById('reg-ref').value = ref.toUpperCase();
+    const ref = urlParams.get('ref') || localStorage.getItem('star_ref_code');
+    if (ref && ref.toLowerCase() !== 'undefined' && ref.toLowerCase() !== 'null' && ref.toLowerCase() !== 'none' && ref.toLowerCase() !== 'false' && ref !== '0') {
+      const cleanRef = ref.trim().toUpperCase();
+      document.getElementById('reg-ref').value = cleanRef;
+      localStorage.setItem('star_ref_code', cleanRef);
+    } else {
+      document.getElementById('reg-ref').value = '';
     }
   </script>
 </body>

@@ -8,6 +8,20 @@ let AppState = {
   config: null
 };
 
+// Auto-capture and persist valid URL referral code to localStorage
+(function captureReferralCodeFromUrl() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRef = urlParams.get('ref');
+    if (urlRef) {
+      const s = String(urlRef).trim();
+      if (s && s.toLowerCase() !== 'undefined' && s.toLowerCase() !== 'null' && s.toLowerCase() !== 'none' && s.toLowerCase() !== 'false' && s !== '0') {
+        localStorage.setItem('star_ref_code', s.toUpperCase());
+      }
+    }
+  } catch(e) {}
+})();
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Native Mobile App Integration: Bypass landing page inside installed Capacitor app
   const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || navigator.userAgent.includes('Capacitor');
@@ -604,7 +618,12 @@ function updateClientUI() {
     });
 
     if (refLinkElem) {
-      refLinkElem.value = `${window.location.origin}/register.html?ref=${u.referral_code}`;
+      const code = (u ? (u.referral_code || u.referralCode || '') : '').trim();
+      if (code && code.toLowerCase() !== 'undefined' && code.toLowerCase() !== 'null') {
+        refLinkElem.value = `${window.location.origin}/register.html?ref=${code}`;
+      } else {
+        refLinkElem.value = 'Generating referral link...';
+      }
     }
   }
   renderMiningCards();
@@ -834,7 +853,8 @@ async function handleRegister(e) {
   const phone = document.getElementById('reg-phone').value;
   const password = document.getElementById('reg-password').value;
   const otp = document.getElementById('reg-otp').value;
-  const ref = document.getElementById('reg-ref').value;
+  const regRefInput = (document.getElementById('reg-ref').value || '').trim();
+  const ref = regRefInput || getCleanRefCode();
 
   setButtonLoading(submitBtn, true, 'Creating Account...');
 
@@ -916,14 +936,19 @@ async function handleGoogleCredentialResponse(googleResponse) {
   showToast('Signing in with Google...', 'info');
 
 function getCleanRefCode() {
-  const urlParams = new URLSearchParams(window.location.search);
-  let ref = urlParams.get('ref') || localStorage.getItem('star_ref_code') || '';
-  if (!ref) return '';
-  const s = String(ref).trim();
-  if (s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null' || s.toLowerCase() === 'none' || s.toLowerCase() === 'false' || s === '0') {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const regRefElem = document.getElementById('reg-ref');
+    let ref = urlParams.get('ref') || localStorage.getItem('star_ref_code') || (regRefElem ? regRefElem.value : '') || '';
+    if (!ref) return '';
+    const s = String(ref).trim();
+    if (s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null' || s.toLowerCase() === 'none' || s.toLowerCase() === 'false' || s === '0') {
+      return '';
+    }
+    return s.toUpperCase();
+  } catch(e) {
     return '';
   }
-  return s.toUpperCase();
 }
 
   try {
@@ -1448,12 +1473,38 @@ function activatePlan(planId, planName, planPrice) {
 }
 
 // Copy Referral Link
-function copyReferralLink() {
+async function copyReferralLink() {
   const refElem = document.getElementById('user-dyn-reflink');
-  if (refElem) {
-    refElem.select();
-    document.execCommand('copy');
-    showToast('Referral link copied to clipboard!', 'success');
+  let linkVal = refElem ? refElem.value : '';
+  const u = AppState.user;
+  const code = (u ? (u.referral_code || u.referralCode || '') : '').trim();
+
+  if (!code || code.toLowerCase() === 'undefined' || code.toLowerCase() === 'null' || linkVal.includes('undefined') || linkVal.includes('Generating') || linkVal.includes('Loading')) {
+    showToast('Updating your referral code...', 'info');
+    await fetchUserProfile();
+    const updatedUser = AppState.user;
+    const newCode = (updatedUser ? (updatedUser.referral_code || updatedUser.referralCode || '') : '').trim();
+    if (newCode && newCode.toLowerCase() !== 'undefined' && newCode.toLowerCase() !== 'null') {
+      linkVal = `${window.location.origin}/register.html?ref=${newCode}`;
+      if (refElem) refElem.value = linkVal;
+    }
+  }
+
+  if (linkVal && !linkVal.includes('undefined') && !linkVal.includes('null') && !linkVal.includes('Generating') && !linkVal.includes('Loading')) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(linkVal);
+        showToast('Referral link copied to clipboard!', 'success');
+        return;
+      } catch(e) {}
+    }
+    if (refElem) {
+      refElem.select();
+      document.execCommand('copy');
+      showToast('Referral link copied to clipboard!', 'success');
+    }
+  } else {
+    showToast('Referral link is not ready yet. Please refresh the page.', 'error');
   }
 }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import { generateUniqueReferralCode, buildStandardUserPayload } from '@/lib/referral';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -62,19 +63,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Invalid username, email, phone, or password' }, { status: 401 });
     }
 
-    const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+    if (!user.referralCode) {
+      user.referralCode = await generateUniqueReferralCode();
+      await user.save();
+    }
 
-    const userObject = {
-      id: user._id,
-      username: user.username,
-      email: user.email || '',
-      phone: user.phone || '',
-      balance: user.balance,
-      total_deposit: user.totalDeposit,
-      total_withdraw: user.totalWithdraw,
-      total_profit: user.totalProfit,
-      referral_code: user.referralCode
-    };
+    const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+    const userObject = buildStandardUserPayload(user);
 
     return NextResponse.json({
       success: true,

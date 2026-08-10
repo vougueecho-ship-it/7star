@@ -186,6 +186,7 @@ app.post('/api/register', async (req, res) => {
     const result = stmt.run(username, phone, passwordHash, referralCode, cleanRef);
 
     const newUser = db.prepare('SELECT id, username, phone, balance, total_deposit, total_withdraw, total_profit, referral_code FROM users WHERE id = ?').get(result.lastInsertRowid);
+    newUser.referralCode = newUser.referral_code;
     const token = jwt.sign({ id: newUser.id, username: newUser.username }, JWT_SECRET, { expiresIn: '30d' });
 
     res.json({ success: true, message: 'Account registered successfully!', token, user: newUser });
@@ -302,6 +303,9 @@ app.post('/api/auth/google', async (req, res) => {
       delete user.password_hash;
     }
 
+    if (user) {
+      user.referralCode = user.referral_code;
+    }
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ success: true, message: 'Google login successful!', token, user });
   } catch (err) {

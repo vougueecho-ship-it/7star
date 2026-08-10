@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import { buildStandardUserPayload } from '@/lib/referral';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
 
@@ -52,17 +53,7 @@ export async function POST(req: Request) {
     user.phone = cleanPhone;
     await user.save();
 
-    const userObject = {
-      id: user._id,
-      username: user.username,
-      email: user.email || '',
-      phone: user.phone,
-      balance: user.balance,
-      total_deposit: user.totalDeposit,
-      total_withdraw: user.totalWithdraw,
-      total_profit: user.totalProfit,
-      referral_code: user.referralCode
-    };
+    const userObject = buildStandardUserPayload(user);
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import { sanitizeReferralCode, generateUniqueReferralCode, buildStandardUserPayload } from '@/lib/referral';
 import User from '@/models/User';
 import Otp from '@/models/Otp';
 import bcrypt from 'bcryptjs';
@@ -49,16 +50,8 @@ export async function POST(req: Request) {
     }
 
     const passwordHash = await bcrypt.hash(cleanPassword, 10);
-    const referralCode = 'STAR' + Math.floor(10000 + Math.random() * 90000);
-
-    const sanitizeRef = (r: any) => {
-      if (!r) return null;
-      const s = String(r).trim();
-      if (!s || s.toLowerCase() === 'undefined' || s.toLowerCase() === 'null' || s.toLowerCase() === 'none' || s.toLowerCase() === 'false' || s === '0') return null;
-      return s.toUpperCase();
-    };
-
-    const cleanReferredBy = sanitizeRef(ref);
+    const referralCode = await generateUniqueReferralCode();
+    const cleanReferredBy = sanitizeReferralCode(ref);
 
     const newUser = await User.create({
       username: cleanUsername,
@@ -70,18 +63,7 @@ export async function POST(req: Request) {
     });
 
     const token = jwt.sign({ id: newUser._id, username: newUser.username }, JWT_SECRET, { expiresIn: '30d' });
-
-    const userObject = {
-      id: newUser._id,
-      username: newUser.username,
-      email: newUser.email,
-      phone: newUser.phone,
-      balance: newUser.balance,
-      totalDeposit: newUser.totalDeposit,
-      totalWithdraw: newUser.totalWithdraw,
-      totalProfit: newUser.totalProfit,
-      referralCode: newUser.referralCode
-    };
+    const userObject = buildStandardUserPayload(newUser);
 
     return NextResponse.json({
       success: true,
