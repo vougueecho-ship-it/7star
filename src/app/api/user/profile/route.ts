@@ -55,14 +55,26 @@ export async function GET(req: Request) {
       Withdrawal.find({ userId: user._id }).sort({ createdAt: -1 }).limit(50).lean()
     ]);
 
-    // 2. Fetch Level 1 Members using indexed exact/case variations instead of expensive collection-wide regex
-    const refCodeUpper = refCode ? refCode.toUpperCase() : '';
-    const level1ListRaw: any[] = refCode
-      ? await User.find({ referredBy: { $in: [refCodeUpper, refCode.toLowerCase(), refCode] } })
+    // 2. Fetch Level 1 Members using case-insensitive regex search
+    const refCodeUpper = refCode ? refCode.trim().toUpperCase() : '';
+    const safeRegexL1 = refCodeUpper
+      ? new RegExp('^' + refCodeUpper.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')
+      : null;
+
+    const level1ListRaw: any[] = safeRegexL1
+      ? await User.find({ referredBy: { $regex: safeRegexL1 } })
           .select('username email phone referralCode createdAt balance')
           .sort({ createdAt: -1 })
           .lean()
       : [];
+
+    // Map L1 Leader Username by referralCode
+    const l1LeaderMap: Record<string, string> = {};
+    level1ListRaw.forEach((u: any) => {
+      if (u.referralCode) {
+        l1LeaderMap[u.referralCode.toUpperCase()] = u.username;
+      }
+    });
 
     // 3. Fetch Level 2 Members
     const l1RefCodes = level1ListRaw.map((u: any) => u.referralCode).filter(Boolean);
@@ -110,8 +122,8 @@ export async function GET(req: Request) {
     const level1List = level1ListRaw.map((m: any) => {
       const uId = m._id.toString();
       const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
-      const totalComm = Math.round(pStats.totalInvested * 0.10);
-      const dailyComm = Math.round(pStats.activeDailyProfit * 0.10);
+      const totalComm = Math.round((pStats.totalInvested * 0.10) * 100) / 100;
+      const dailyComm = Math.round((pStats.activeDailyProfit * 0.10) * 100) / 100;
       level1TotalCommission += totalComm;
       level1DailyCommission += dailyComm;
 
@@ -137,10 +149,13 @@ export async function GET(req: Request) {
     const level2List = level2ListRaw.map((m: any) => {
       const uId = m._id.toString();
       const pStats = plansByUserId[uId] || { totalInvested: 0, activeInvested: 0, activeDailyProfit: 0 };
-      const totalComm = Math.round(pStats.totalInvested * 0.02);
-      const dailyComm = Math.round(pStats.activeDailyProfit * 0.02);
+      const totalComm = Math.round((pStats.totalInvested * 0.02) * 100) / 100;
+      const dailyComm = Math.round((pStats.activeDailyProfit * 0.02) * 100) / 100;
       level2TotalCommission += totalComm;
       level2DailyCommission += dailyComm;
+
+      const refCodeKey = (m.referredBy || '').toUpperCase();
+      const l1LeaderName = l1LeaderMap[refCodeKey] || m.referredBy || 'L1 Leader';
 
       return {
         id: m._id,
@@ -150,6 +165,7 @@ export async function GET(req: Request) {
         phone: m.phone,
         referralCode: m.referralCode,
         referredBy: m.referredBy,
+        referredByName: l1LeaderName,
         createdAt: m.createdAt,
         totalInvested: pStats.totalInvested,
         activeInvested: pStats.activeInvested,
@@ -161,8 +177,8 @@ export async function GET(req: Request) {
 
     const level1Count = level1List.length;
     const level2Count = level2List.length;
-    const teamTotalCommission = level1TotalCommission + level2TotalCommission;
-    const teamDailyCommission = level1DailyCommission + level2DailyCommission;
+    const teamTotalCommission = Math.round((level1TotalCommission + level2TotalCommission) * 100) / 100;
+    const teamDailyCommission = Math.round((level1DailyCommission + level2DailyCommission) * 100) / 100;
 
     const userObject = buildStandardUserPayload(user);
 

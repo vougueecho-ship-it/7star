@@ -1315,7 +1315,8 @@ function renderTeamSection(data) {
         const totalComm = member.totalCommission || Math.round(totalInvested * 0.02);
         const dailyComm = member.dailyCommission || Math.round(activeInvested * 0.02);
         const email = member.email || '';
-        const referredBy = member.referredBy || 'L1 Leader';
+        const leaderName = member.referredByName || 'L1 Leader';
+        const refCodeStr = member.referredBy ? ` (${member.referredBy})` : '';
 
         return `
           <tr style="border-bottom: 1px solid #e0f2fe; transition: background 0.2s ease;">
@@ -1332,7 +1333,8 @@ function renderTeamSection(data) {
               </div>
             </td>
             <td style="padding: 0.85rem 0.75rem; text-align: left;">
-              <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.2rem 0.4rem; border-radius: 8px; font-size: 0.75rem; color: #0369a1; font-weight: 700;">${referredBy}</code>
+              <div style="font-size:0.8rem; font-weight:800; color:#0369a1;">👤 ${leaderName}</div>
+              <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.1rem 0.4rem; border-radius: 6px; font-size: 0.7rem; color: #64748b; font-weight: 700;">${member.referredBy || 'DIRECT'}</code>
             </td>
             <td style="padding: 0.85rem 0.75rem; text-align: left;">
               <code style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem; color: #334155; font-weight: 700;">${member.phone}</code>

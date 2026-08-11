@@ -51,7 +51,18 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(cleanPassword, 10);
     const referralCode = await generateUniqueReferralCode();
+    
+    let validReferrerCode: string | null = null;
     const cleanReferredBy = sanitizeReferralCode(ref);
+    if (cleanReferredBy) {
+      const escapeRef = cleanReferredBy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const referrer = await User.findOne({
+        referralCode: { $regex: new RegExp('^' + escapeRef + '$', 'i') }
+      });
+      if (referrer) {
+        validReferrerCode = referrer.referralCode;
+      }
+    }
 
     const newUser = await User.create({
       username: cleanUsername,
@@ -59,7 +70,7 @@ export async function POST(req: Request) {
       phone: cleanPhone,
       passwordHash,
       referralCode,
-      referredBy: cleanReferredBy
+      referredBy: validReferrerCode
     });
 
     const token = jwt.sign({ id: newUser._id, username: newUser.username }, JWT_SECRET, { expiresIn: '30d' });

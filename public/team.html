@@ -111,14 +111,19 @@
     </div>
 
     <!-- Team Navigation Tabs -->
+    <div style="margin-bottom: 0.5rem; text-align: center;">
+      <small style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700;">
+        💡 Click tabs below to switch between Level 1 (Direct) & Level 2 (Indirect Downline) members
+      </small>
+    </div>
     <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; background: #f1f5f9; padding: 0.35rem; border-radius: 16px;">
       <button id="tab-btn-l1" onclick="switchTeamTab('l1')"
         style="flex: 1; padding: 0.65rem 0.5rem; border: none; border-radius: 12px; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; background: var(--primary-gold); color: #ffffff; box-shadow: 0 2px 8px rgba(217,119,6,0.25);">
-        🥇 Level 1 (<span id="user-dyn-teamcount-l1">0</span>)
+        🥇 Level 1 Direct (<span id="user-dyn-teamcount-l1">0</span>)
       </button>
       <button id="tab-btn-l2" onclick="switchTeamTab('l2')"
         style="flex: 1; padding: 0.65rem 0.5rem; border: none; border-radius: 12px; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; background: transparent; color: #64748b;">
-        🥈 Level 2 (<span id="user-dyn-teamcount-l2">0</span>)
+        🥈 Level 2 Downline (<span id="user-dyn-teamcount-l2">0</span>)
       </button>
     </div>
 
@@ -127,7 +132,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div>
           <h3 style="color: var(--primary-gold); margin:0; font-weight:800; font-size:1.05rem;">👥 LEVEL 1 DIRECT TEAM</h3>
-          <span style="font-size:0.7rem; color:var(--text-muted);">6% direct referral commission</span>
+          <span style="font-size:0.7rem; color:var(--text-muted);">10% direct referral commission & daily yield</span>
         </div>
         <span style="background: var(--gold-gradient); color: #ffffff; padding: 0.25rem 0.65rem; border-radius: 10px; font-size: 0.7rem; font-weight: 800;">
           L1 COMM: <span id="user-team-l1-comm-badge">PKR 0</span>
@@ -161,7 +166,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <div>
           <h3 style="color: var(--cyan-neon); margin:0; font-weight:800; font-size:1.05rem;">👥 LEVEL 2 DOWNLINE TEAM</h3>
-          <span style="font-size:0.7rem; color:var(--text-muted);">3% downline referral commission</span>
+          <span style="font-size:0.7rem; color:var(--text-muted);">2% downline referral commission & daily yield</span>
         </div>
         <span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 0.25rem 0.65rem; border-radius: 10px; font-size: 0.7rem; font-weight: 800;">
           L2 COMM: <span id="user-team-l2-comm-badge">PKR 0</span>

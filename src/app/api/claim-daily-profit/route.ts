@@ -3,6 +3,8 @@ import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import UserPlan from '@/models/UserPlan';
 
+import { sanitizeReferralCode } from '@/lib/referral';
+
 import mongoose from 'mongoose';
 
 export const dynamic = 'force-dynamic';
@@ -62,33 +64,33 @@ export async function POST(req: Request) {
       await user.save();
 
       // Credit Level 1 & Level 2 Referral Daily Profit Share Bonuses (10% Direct & 2% Indirect)
-      if (user.referredBy) {
-        const cleanRefCode = user.referredBy.trim();
+      const cleanRefCode = sanitizeReferralCode(user.referredBy);
+      if (cleanRefCode) {
         const safeL1Regex = new RegExp('^' + cleanRefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
         const referrerL1 = await User.findOne({
           referralCode: { $regex: safeL1Regex }
         });
 
         if (referrerL1) {
-          const level1DailyBonus = Math.round(profitAmount * 0.10);
+          const level1DailyBonus = Math.round((profitAmount * 0.10) * 100) / 100;
           if (level1DailyBonus > 0) {
             referrerL1.balance += level1DailyBonus;
-            referrerL1.totalProfit += level1DailyBonus; // Added to totalProfit so it can be withdrawn
+            referrerL1.totalProfit += level1DailyBonus;
             await referrerL1.save();
           }
 
-          if (referrerL1.referredBy) {
-            const cleanL2RefCode = referrerL1.referredBy.trim();
+          const cleanL2RefCode = sanitizeReferralCode(referrerL1.referredBy);
+          if (cleanL2RefCode) {
             const safeL2Regex = new RegExp('^' + cleanL2RefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
             const referrerL2 = await User.findOne({
               referralCode: { $regex: safeL2Regex }
             });
 
             if (referrerL2) {
-              const level2DailyBonus = Math.round(profitAmount * 0.02);
+              const level2DailyBonus = Math.round((profitAmount * 0.02) * 100) / 100;
               if (level2DailyBonus > 0) {
                 referrerL2.balance += level2DailyBonus;
-                referrerL2.totalProfit += level2DailyBonus; // Added to totalProfit so it can be withdrawn
+                referrerL2.totalProfit += level2DailyBonus;
                 await referrerL2.save();
               }
             }

@@ -48,39 +48,41 @@ export async function POST(req: Request) {
         const cleanRefCode = sanitizeReferralCode(user.referredBy);
 
         // Credit 1-Time Level 1 (10%) & Level 2 (2%) Referral Deposit Bonuses per player
-        if (!user.hasCreditedReferralBonus && cleanRefCode) {
-          const safeL1Regex = new RegExp('^' + cleanRefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
-          const referrerL1 = await User.findOne({
-            referralCode: { $regex: safeL1Regex }
-          });
+        if (!user.hasCreditedReferralBonus) {
+          if (cleanRefCode) {
+            const safeL1Regex = new RegExp('^' + cleanRefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+            const referrerL1 = await User.findOne({
+              referralCode: { $regex: safeL1Regex }
+            });
 
-          if (referrerL1) {
-            const level1Bonus = Math.round(depAmount * 0.10);
-            if (level1Bonus > 0) {
-              referrerL1.balance += level1Bonus;
-              referrerL1.totalProfit += level1Bonus; // Added to totalProfit so it can be withdrawn
-              await referrerL1.save();
-            }
+            if (referrerL1) {
+              const level1Bonus = Math.round((depAmount * 0.10) * 100) / 100;
+              if (level1Bonus > 0) {
+                referrerL1.balance += level1Bonus;
+                referrerL1.totalProfit += level1Bonus; // Added to totalProfit so it can be withdrawn
+                await referrerL1.save();
+              }
 
-            const cleanL2RefCode = sanitizeReferralCode(referrerL1.referredBy);
-            if (cleanL2RefCode) {
-              const safeL2Regex = new RegExp('^' + cleanL2RefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
-              const referrerL2 = await User.findOne({
-                referralCode: { $regex: safeL2Regex }
-              });
+              const cleanL2RefCode = sanitizeReferralCode(referrerL1.referredBy);
+              if (cleanL2RefCode) {
+                const safeL2Regex = new RegExp('^' + cleanL2RefCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+                const referrerL2 = await User.findOne({
+                  referralCode: { $regex: safeL2Regex }
+                });
 
-              if (referrerL2) {
-                const level2Bonus = Math.round(depAmount * 0.02);
-                if (level2Bonus > 0) {
-                  referrerL2.balance += level2Bonus;
-                  referrerL2.totalProfit += level2Bonus; // Added to totalProfit so it can be withdrawn
-                  await referrerL2.save();
+                if (referrerL2) {
+                  const level2Bonus = Math.round((depAmount * 0.02) * 100) / 100;
+                  if (level2Bonus > 0) {
+                    referrerL2.balance += level2Bonus;
+                    referrerL2.totalProfit += level2Bonus; // Added to totalProfit so it can be withdrawn
+                    await referrerL2.save();
+                  }
                 }
               }
             }
           }
 
-          // Mark user as having received 1-time referral bonus so subsequent deposits do not trigger bonuses
+          // Mark user as having processed 1-time referral bonus so subsequent deposits do not trigger bonuses
           user.hasCreditedReferralBonus = true;
           await user.save();
         }
