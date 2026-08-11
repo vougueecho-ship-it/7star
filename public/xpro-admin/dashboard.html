@@ -350,13 +350,16 @@
 
     <!-- TAB 5: ACTIVE MINING RIGS -->
     <div id="view-user-plans" class="admin-card" style="display: none;">
-      <h3 style="color: var(--primary-gold); font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">Active User Mining Packages</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+        <h3 style="color: var(--primary-gold); font-size: 1.1rem; font-weight: 800; margin:0;">Active User Mining Packages</h3>
+        <input type="text" id="adm-user-plans-search" oninput="onUserPlanSearchInput(event)" placeholder="🔍 Search package, username, or phone..." class="auth-input-field" style="max-width: 320px; padding: 0.5rem 1rem; font-size: 0.85rem;">
+      </div>
       <div class="table-wrapper">
         <table class="table-dark">
           <thead>
             <tr>
               <th>Plan Name</th>
-              <th>User ID / Phone</th>
+              <th>User Name / Phone</th>
               <th>Investment</th>
               <th>Daily Output</th>
               <th>Claims Progress</th>

@@ -116,28 +116,41 @@ export async function GET(req: Request) {
       active: p.active
     }));
 
-    const formattedUserPlans = userPlans.map((up) => ({
-      id: up._id,
-      _id: up._id,
-      userId: up.userId,
-      user_id: up.userId,
-      planId: up.planId,
-      plan_id: up.planId,
-      planName: up.planName,
-      plan_name: up.planName,
-      investment: up.investment,
-      dailyProfit: up.dailyProfit,
-      daily_profit: up.dailyProfit,
-      totalProfit: up.totalProfit,
-      total_profit: up.totalProfit,
-      validityDays: up.validityDays,
-      validity_days: up.validityDays,
-      claimsCount: up.claimsCount,
-      claims_count: up.claimsCount,
-      lastClaim: up.lastClaim,
-      status: up.status,
-      created_at: up.createdAt
-    }));
+    const userMap = new Map<string, { username: string; phone: string }>();
+    users.forEach((u) => {
+      userMap.set(u._id.toString(), {
+        username: u.username || 'Unknown',
+        phone: u.phone || ''
+      });
+    });
+
+    const formattedUserPlans = userPlans.map((up) => {
+      const u = userMap.get(up.userId?.toString());
+      return {
+        id: up._id,
+        _id: up._id,
+        userId: up.userId,
+        user_id: up.userId,
+        username: u ? u.username : (up.username || 'Unknown'),
+        phone: u ? u.phone : (up.phone || ''),
+        planId: up.planId,
+        plan_id: up.planId,
+        planName: up.planName,
+        plan_name: up.planName,
+        investment: up.investment,
+        dailyProfit: up.dailyProfit,
+        daily_profit: up.dailyProfit,
+        totalProfit: up.totalProfit,
+        total_profit: up.totalProfit,
+        validityDays: up.validityDays,
+        validity_days: up.validityDays,
+        claimsCount: up.claimsCount,
+        claims_count: up.claimsCount,
+        lastClaim: up.lastClaim,
+        status: up.status,
+        created_at: up.createdAt
+      };
+    });
 
     return NextResponse.json({
       users: formattedUsers,

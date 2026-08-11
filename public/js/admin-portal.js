@@ -935,9 +935,27 @@ async function saveAdminSettings(e) {
   }
 }
 
-// Active User Mining Packages Table Renderer with Pagination
+// Active User Mining Packages Table Renderer with Pagination & Filter
+function onUserPlanSearchInput(e) {
+  PageState.userPlans.search = e.target.value;
+  PageState.userPlans.page = 1;
+  renderUserPlansTable();
+}
+
+function getFilteredUserPlans() {
+  const s = (PageState.userPlans.search || '').toLowerCase().trim();
+  if (!s) return AdminState.activeUserPlans;
+  return AdminState.activeUserPlans.filter(up => 
+    (up.username || '').toLowerCase().includes(s) ||
+    (up.phone || '').toLowerCase().includes(s) ||
+    (up.planName || up.plan_name || '').toLowerCase().includes(s) ||
+    (up.userId || up.user_id || '').toString().toLowerCase().includes(s)
+  );
+}
+
 function setUserPlansPage(newPage) {
-  const total = AdminState.activeUserPlans.length;
+  const filtered = getFilteredUserPlans();
+  const total = filtered.length;
   const maxPage = Math.max(1, Math.ceil(total / PageState.userPlans.pageSize));
   if (newPage >= 1 && newPage <= maxPage) {
     PageState.userPlans.page = newPage;
@@ -949,7 +967,7 @@ function renderUserPlansTable() {
   const tbody = document.getElementById('adm-table-user-plans');
   if (!tbody) return;
 
-  const plans = AdminState.activeUserPlans || [];
+  const plans = getFilteredUserPlans();
   const pageSize = PageState.userPlans.pageSize;
   const page = PageState.userPlans.page;
   const start = (page - 1) * pageSize;
@@ -966,16 +984,22 @@ function renderUserPlansTable() {
     const id = up._id || up.id;
     const planName = up.planName || up.plan_name || 'VIP Package';
     const userId = up.userId || up.user_id || 'User';
+    const username = up.username || '';
+    const phone = up.phone || '';
     const investment = Number(up.investment || 0);
     const dailyProfit = Number(up.dailyProfit || up.daily_profit || 0);
     const claimsCount = Number(up.claimsCount || up.claims_count || 0);
     const validityDays = Number(up.validityDays || up.validity_days || 12);
     const status = up.status || 'Active';
 
+    const userDisplay = username 
+      ? `<strong>${username}</strong>${phone ? `<br><small style="color:#64748b;">${phone}</small>` : ''}` 
+      : `<code>${userId}</code>`;
+
     return `
       <tr>
         <td><strong>${planName}</strong></td>
-        <td><code>${userId}</code></td>
+        <td>${userDisplay}</td>
         <td>PKR ${investment.toLocaleString()}</td>
         <td><strong style="color:var(--emerald-green);">PKR ${dailyProfit.toLocaleString()}</strong></td>
         <td>${claimsCount}/${validityDays} Days</td>

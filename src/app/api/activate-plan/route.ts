@@ -47,6 +47,8 @@ export async function POST(req: Request) {
 
     await UserPlan.create({
       userId: user._id,
+      username: user.username,
+      phone: user.phone,
       planId: plan._id,
       planName: plan.name,
       investment: plan.price,

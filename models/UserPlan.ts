@@ -2,6 +2,8 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IUserPlan extends Document {
   userId: mongoose.Types.ObjectId;
+  username?: string;
+  phone?: string;
   planId: mongoose.Types.ObjectId;
   planName: string;
   investment: number;
@@ -16,6 +18,8 @@ export interface IUserPlan extends Document {
 
 const UserPlanSchema: Schema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  username: { type: String, default: '' },
+  phone: { type: String, default: '' },
   planId: { type: Schema.Types.ObjectId, ref: 'Plan', required: true },
   planName: { type: String, required: true },
   investment: { type: Number, required: true },
