@@ -926,15 +926,7 @@ async function handleLogin(e) {
   }
 }
 
-// Google Sign-In Callback Handler
-async function handleGoogleCredentialResponse(googleResponse) {
-  if (!googleResponse || !googleResponse.credential) {
-    showToast('Google Sign-In failed or cancelled', 'error');
-    return;
-  }
-
-  showToast('Signing in with Google...', 'info');
-
+// Clean Referral Code Helper
 function getCleanRefCode() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
@@ -950,6 +942,81 @@ function getCleanRefCode() {
     return '';
   }
 }
+
+// Google Auth Client ID
+const GOOGLE_CLIENT_ID = '1007065363081-r4bv8hn10586g1v6n2as7j9eh10rtgnc.apps.googleusercontent.com';
+
+// Ensure Google SDK is loaded
+function loadGoogleSDK() {
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      return resolve(window.google);
+    }
+    
+    // Check if script tag exists or inject
+    let script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+    
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        clearInterval(interval);
+        resolve(window.google);
+      } else if (attempts >= 40) { // 4 seconds timeout
+        clearInterval(interval);
+        reject(new Error('Google Sign-In SDK is taking time to connect. Please try again or create an account with password.'));
+      }
+    }, 100);
+  });
+}
+
+// Auto-initialize Google Auth on page load
+function initGoogleAuth() {
+  loadGoogleSDK().then((google) => {
+    try {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        use_fedcm_for_prompt: true
+      });
+      console.log('✅ Google Auth SDK initialized');
+    } catch(e) {
+      console.warn('Google Auth init warning:', e);
+    }
+  }).catch(() => {
+    // Silent catch on background auto-init
+  });
+}
+
+// Auto-run initGoogleAuth on load
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGoogleAuth);
+  } else {
+    initGoogleAuth();
+  }
+}
+
+// Google Sign-In Callback Handler
+async function handleGoogleCredentialResponse(googleResponse) {
+  // Close fallback modal if open
+  const modal = document.getElementById('google-signin-modal');
+  if (modal) modal.remove();
+
+  if (!googleResponse || !googleResponse.credential) {
+    showToast('Google Sign-In failed or cancelled', 'error');
+    return;
+  }
+
+  showToast('Signing in with Google...', 'info');
 
   try {
     const refCode = getCleanRefCode();
@@ -989,30 +1056,99 @@ function getCleanRefCode() {
   }
 }
 
-// Trigger Google Sign-In Prompt
-function triggerGoogleSignIn() {
-  if (window.google && window.google.accounts && window.google.accounts.id) {
-    try {
-      window.google.accounts.id.initialize({
-        client_id: '1007065363081-r4bv8hn10586g1v6n2as7j9eh10rtgnc.apps.googleusercontent.com',
-        callback: handleGoogleCredentialResponse,
-        auto_select: false,
-        use_fedcm_for_prompt: true
-      });
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // If One-Tap prompt is skipped, open Google Sign-In dialog
-          window.google.accounts.id.renderButton(
-            document.getElementById('hidden-google-btn') || document.body,
-            { theme: 'outline', size: 'large' }
-          );
-        }
-      });
-    } catch(e) {
-      console.error('Google Auth Init Exception:', e);
-    }
+// Show Google Sign-In Native Button Modal Fallback
+function showGoogleSignInModal() {
+  let modal = document.getElementById('google-signin-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'google-signin-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+    modal.innerHTML = `
+      <div style="background:#ffffff;border-radius:24px;padding:2rem 1.5rem;max-width:340px;width:100%;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+        <div style="width:50px;height:50px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem auto;">
+          <svg width="24" height="24" viewBox="0 0 18 18">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+          </svg>
+        </div>
+        <h3 style="margin:0 0 0.5rem 0;font-size:1.15rem;font-weight:800;color:#1e293b;">Google Sign-In</h3>
+        <p style="color:#64748b;font-size:0.82rem;margin:0 0 1.5rem 0;line-height:1.4;">Tap below to continue with your Google account</p>
+        <div id="google-btn-target" style="display:flex;justify-content:center;margin-bottom:1.5rem;min-height:44px;"></div>
+        <button type="button" onclick="document.getElementById('google-signin-modal').remove()" style="background:#f1f5f9;color:#64748b;border:none;padding:0.65rem 1.5rem;border-radius:12px;font-weight:700;font-size:0.85rem;cursor:pointer;width:100%;">Cancel</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
   } else {
-    showToast('Google Sign-In SDK is loading. Please try again in a moment.', 'info');
+    modal.style.display = 'flex';
+  }
+
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    const target = document.getElementById('google-btn-target');
+    if (target) {
+      target.innerHTML = '';
+      window.google.accounts.id.renderButton(target, {
+        theme: 'filled_blue',
+        size: 'large',
+        shape: 'pill',
+        width: 260,
+        text: 'continue_with'
+      });
+    }
+  }
+}
+
+// Trigger Google Sign-In Prompt
+async function triggerGoogleSignIn() {
+  const btn = event?.currentTarget || document.querySelector('button[onclick*="triggerGoogleSignIn"]');
+  const origHtml = btn ? btn.innerHTML : '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.75';
+    btn.innerHTML = `
+      <span style="display:inline-block;width:14px;height:14px;border:2px solid #94a3b8;border-top-color:#0d9488;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;"></span>
+      <span>Connecting to Google...</span>
+    `;
+  }
+
+  try {
+    const google = await loadGoogleSDK();
+    
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredentialResponse,
+      auto_select: false,
+      use_fedcm_for_prompt: true
+    });
+
+    let promptDisplayed = false;
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        console.log('Google One-Tap skipped/not displayed:', notification.getNotDisplayedReason?.() || 'dismissed');
+        showGoogleSignInModal();
+      } else {
+        promptDisplayed = true;
+      }
+    });
+
+    // Fallback if One-Tap prompt is delayed or ignored in mobile browser
+    setTimeout(() => {
+      if (!promptDisplayed) {
+        showGoogleSignInModal();
+      }
+    }, 1200);
+
+  } catch (err) {
+    console.error('Google Sign-In Trigger Error:', err);
+    showToast(err.message || 'Unable to connect to Google. Please check your connection.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.innerHTML = origHtml;
+    }
   }
 }
 
