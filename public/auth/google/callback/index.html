@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Sign-In — 7 STAR INVEST</title>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { min-height: 100vh; display: grid; place-items: center; background: #0f172a; color: #fff; padding: 1.5rem; text-align: center; }
+    .card { max-width: 400px; width: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 28px; padding: 2.5rem 1.75rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+    .logo { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    h1 { font-size: 1.35rem; font-weight: 800; color: #f59e0b; margin-bottom: 0.5rem; }
+    #status { color: #38bdf8; font-size: 0.95rem; font-weight: 600; margin: 1rem 0; line-height: 1.5; }
+    #subtext { color: #94a3b8; font-size: 0.85rem; }
+    .spinner { width: 36px; height: 36px; border: 3px solid rgba(56,189,248,0.2); border-top-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1rem auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">⭐</div>
+    <h1>7 STAR INVEST</h1>
+    <div class="spinner" id="spinner"></div>
+    <p id="status">Completing Google Sign-In…</p>
+    <p id="subtext">Please wait a moment</p>
+  </div>
+
+  <script>
+    (async function() {
+      const statusElem = document.getElementById('status');
+      const subtextElem = document.getElementById('subtext');
+      const spinnerElem = document.getElementById('spinner');
+
+      try {
+        const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+        const hashParams = new URLSearchParams(hash);
+        const queryParams = new URLSearchParams(window.location.search);
+        const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+        const sid = hashParams.get('state') || queryParams.get('state') || '';
+        const err = hashParams.get('error') || queryParams.get('error');
+
+        if (err) throw new Error('Google sign-in was cancelled.');
+        if (!accessToken) throw new Error('Missing Google access token.');
+
+        statusElem.textContent = 'Fetching Google profile…';
+
+        const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const profile = await profileRes.json();
+        if (!profile.email) throw new Error('Google profile email was missing.');
+
+        statusElem.textContent = 'Authenticating with 7 STAR INVEST…';
+
+        const googleRes = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: String(profile.email).toLowerCase(),
+            name: profile.name || 'Google User',
+            googleId: profile.sub,
+            picture: profile.picture,
+            refCode: localStorage.getItem('star_ref_code') || ''
+          })
+        });
+
+        const googleData = await googleRes.json();
+        if (!googleRes.ok || !googleData.success) {
+          throw new Error(googleData.message || 'Google sign-in failed.');
+        }
+
+        if (googleData.token) {
+          localStorage.setItem('star_token', googleData.token);
+          localStorage.setItem('star_user', JSON.stringify(googleData.user));
+        }
+
+        if (sid) {
+          await fetch('/api/auth/google/ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mode: 'complete',
+              sid,
+              token: googleData.token,
+              user: googleData.user,
+              isNewUser: googleData.isNewUser
+            })
+          });
+
+          spinnerElem.style.display = 'none';
+          statusElem.style.color = '#34d399';
+          statusElem.textContent = '✅ Signed In Successfully!';
+          subtextElem.textContent = 'Return to 7 STAR INVEST app — login will finish automatically.';
+          setTimeout(() => {
+            window.location.replace('/dashboard.html');
+          }, 1500);
+          return;
+        }
+
+        spinnerElem.style.display = 'none';
+        statusElem.style.color = '#34d399';
+        statusElem.textContent = '✅ Signed In Successfully!';
+        subtextElem.textContent = 'Opening dashboard…';
+        setTimeout(() => {
+          window.location.replace('/dashboard.html');
+        }, 800);
+
+      } catch (err) {
+        spinnerElem.style.display = 'none';
+        statusElem.style.color = '#f87171';
+        statusElem.textContent = err.message || 'Google sign-in failed.';
+        subtextElem.innerHTML = '<a href="/login.html" style="color:#f59e0b;font-weight:700;text-decoration:none;">Back to Login</a>';
+      }
+    })();
+  </script>
+</body>
+</html>

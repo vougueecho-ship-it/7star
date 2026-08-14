@@ -973,133 +973,120 @@ function getCleanRefCode() {
   }
 }
 
-// Google Auth Client ID
+// Google Auth Client ID (Configured in Google Cloud Console)
 const GOOGLE_CLIENT_ID = '1007065363081-r4bv8hn10586g1v6n2as7j9eh10rtgnc.apps.googleusercontent.com';
+let googlePollTimer = null;
 
-// Ensure Google SDK is loaded
-function loadGoogleSDK() {
-  return new Promise((resolve) => {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      return resolve(window.google);
-    }
-    
-    let script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-    if (!script) {
-      script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-    
-    let attempts = 0;
-    const interval = setInterval(() => {
-      attempts++;
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        clearInterval(interval);
-        resolve(window.google);
-      } else if (attempts >= 40) {
-        clearInterval(interval);
-        resolve(window.google || null);
-      }
-    }, 100);
-  });
-}
+// Start Google Flow (Winning Heaven Pattern for Web & Native App)
+async function triggerGoogleSignIn() {
+  const btn = event?.currentTarget || document.querySelector('button[onclick*="triggerGoogleSignIn"]') || document.querySelector('.btn-google-auth');
+  const origHtml = btn ? btn.innerHTML : '';
 
-// Auto-initialize and render Google Sign-In button on load
-async function initGoogleAuth() {
-  const google = await loadGoogleSDK();
-  if (google && google.accounts && google.accounts.id) {
-    try {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredentialResponse,
-        auto_select: false
-      });
-
-      const container = document.getElementById('g-btn-container');
-      if (container) {
-        container.innerHTML = '';
-        google.accounts.id.renderButton(container, {
-          theme: 'outline',
-          size: 'large',
-          shape: 'pill',
-          width: 320,
-          text: 'continue_with',
-          logo_alignment: 'left'
-        });
-      }
-      console.log('✅ Google Auth SDK initialized & rendered');
-    } catch(e) {
-      console.warn('Google Auth init warning:', e);
-    }
-  }
-}
-
-// Auto-run initGoogleAuth on load
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGoogleAuth);
-  } else {
-    initGoogleAuth();
-  }
-}
-
-// Google Sign-In Callback Handler
-async function handleGoogleCredentialResponse(googleResponse) {
-  if (!googleResponse || !googleResponse.credential) {
-    showToast('Google Sign-In cancelled', 'info');
-    return;
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.75';
+    btn.innerHTML = `
+      <span style="display:inline-block;width:14px;height:14px;border:2px solid #94a3b8;border-top-color:#0d9488;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;"></span>
+      <span>Connecting to Google...</span>
+    `;
   }
 
-  showToast('Signing in with Google...', 'info');
+  showToast('Opening secure Google sign-in…', 'info');
 
   try {
-    const refCode = getCleanRefCode();
-
-    const res = await fetch(`${API}/auth/google`, {
+    // 1. Create a session ticket
+    const ticketRes = await fetch(`${API}/auth/google/ticket`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential: googleResponse.credential, refCode })
+      body: JSON.stringify({ mode: 'session' })
     });
+    const ticketData = await ticketRes.json();
 
-    const resText = await res.text();
-    let data = {};
-    try {
-      data = JSON.parse(resText);
-    } catch(e) {
-      console.error('Non-JSON server response:', resText);
-      showCustomModal('Server Error', 'Server error during Google Sign-In. Please try again.', 'error');
-      return;
+    if (!ticketData.success || !ticketData.sid) {
+      throw new Error(ticketData.message || 'Could not start Google session.');
     }
 
-    if (data.success) {
-      localStorage.setItem('star_token', data.token);
-      localStorage.setItem('star_user', JSON.stringify(data.user));
-      AppState.token = data.token;
-      AppState.user = data.user;
+    const sid = ticketData.sid;
+    const rawOrigin = window.location.origin;
+    const origin = (!rawOrigin || rawOrigin.includes('capacitor://') || (rawOrigin.includes('localhost') && !rawOrigin.includes(':3000')))
+      ? 'https://7starinvest.vercel.app'
+      : rawOrigin;
+    const redirectUri = `${origin}/auth/google/callback`;
+    const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+      GOOGLE_CLIENT_ID
+    )}&redirect_uri=${encodeURIComponent(
+      redirectUri
+    )}&response_type=token&scope=email%20profile&state=${encodeURIComponent(sid)}&prompt=select_account`;
 
-      showToast('Google Login successful! Opening dashboard...', 'success');
-      setTimeout(() => {
-        window.location.replace('/dashboard.html');
-      }, 500);
-    } else {
-      showCustomModal('Google Sign-In Failed', data.message || 'Authentication failed', 'error');
+    // 2. Open in Capacitor Browser or window.open
+    let opened = false;
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+      try {
+        await window.Capacitor.Plugins.Browser.open({ url: oauthUrl, presentationStyle: 'popover' });
+        opened = true;
+      } catch (e) {
+        console.warn('Capacitor Browser plugin error:', e);
+      }
     }
+
+    if (!opened) {
+      const win = window.open(oauthUrl, '_blank');
+      if (!win) {
+        window.location.href = oauthUrl;
+      }
+    }
+
+    // 3. Start polling for login completion
+    if (googlePollTimer) clearInterval(googlePollTimer);
+    googlePollTimer = setInterval(async () => {
+      try {
+        const checkRes = await fetch(`${API}/auth/google/ticket?sid=${encodeURIComponent(sid)}`);
+        const checkData = await checkRes.json();
+        if (checkData.success && checkData.status === 'ready' && checkData.user && checkData.token) {
+          clearInterval(googlePollTimer);
+          googlePollTimer = null;
+
+          if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+            try {
+              await window.Capacitor.Plugins.Browser.close();
+            } catch {}
+          }
+
+          localStorage.setItem('star_token', checkData.token);
+          localStorage.setItem('star_user', JSON.stringify(checkData.user));
+          AppState.token = checkData.token;
+          AppState.user = checkData.user;
+
+          showToast('Google Login successful! Opening dashboard...', 'success');
+          setTimeout(() => {
+            window.location.replace('/dashboard.html');
+          }, 500);
+        }
+      } catch (e) {
+        /* ignore polling hiccups */
+      }
+    }, 1500);
+
+    // Auto-cancel polling after 3 minutes
+    setTimeout(() => {
+      if (googlePollTimer) {
+        clearInterval(googlePollTimer);
+        googlePollTimer = null;
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.innerHTML = origHtml;
+        }
+      }
+    }, 180000);
+
   } catch (err) {
-    console.error('Google Sign-In Error:', err);
-    showToast('Google Sign-In error. Please try again.', 'error');
-  }
-}
-window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
-
-// Trigger Google Sign-In Prompt
-function triggerGoogleSignIn() {
-  if (window.google && window.google.accounts && window.google.accounts.id) {
-    try {
-      window.google.accounts.id.prompt();
-    } catch(e) {
-      console.warn('Google prompt exception:', e);
+    console.error('Google flow error:', err);
+    showToast(err.message || 'Failed to start Google sign-in.', 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.innerHTML = origHtml;
     }
   }
 }
