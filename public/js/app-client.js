@@ -8,6 +8,49 @@ let AppState = {
   config: null
 };
 
+// Instant Global Session Router (Runs synchronously upon script execution)
+(function enforceSessionRouting() {
+  try {
+    const token = localStorage.getItem('star_token');
+    const path = window.location.pathname.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasRef = urlParams.has('ref') && urlParams.get('ref') !== '' && urlParams.get('ref') !== 'null' && urlParams.get('ref') !== 'undefined';
+
+    // Auth & Landing pages
+    const isLogin = path.endsWith('/login.html');
+    const isRegister = path.endsWith('/register.html');
+    const isForgot = path.endsWith('/forgot-password.html');
+    const isLanding = path === '/' || path.endsWith('/index.html') || path === '';
+
+    // Protected App Pages
+    const protectedPages = [
+      '/dashboard.html',
+      '/deposit.html',
+      '/withdraw.html',
+      '/plans.html',
+      '/mining.html',
+      '/team.html',
+      '/records.html',
+      '/profile.html'
+    ];
+    const isProtected = protectedPages.some(p => path.endsWith(p));
+
+    if (token) {
+      // If token exists and user opens Login, Register (no ref), Forgot, or Landing page -> Direct to Dashboard!
+      if (isLogin || (isRegister && !hasRef) || isForgot || isLanding) {
+        window.location.replace('/dashboard.html');
+      }
+    } else {
+      // If no token and user opens protected page -> Direct to Login!
+      if (isProtected) {
+        window.location.replace('/login.html');
+      }
+    }
+  } catch (e) {
+    console.error('Session router error:', e);
+  }
+})();
+
 // Auto-capture and persist valid URL referral code to localStorage
 (function captureReferralCodeFromUrl() {
   try {
@@ -23,24 +66,6 @@ let AppState = {
 })();
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Native Mobile App Integration: Bypass landing page inside installed Capacitor app
-  const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || navigator.userAgent.includes('Capacitor');
-  if (isCapacitor) {
-    const currentPath = window.location.pathname;
-    const token = localStorage.getItem('star_token');
-    if (token) {
-      if (currentPath === '/' || currentPath.endsWith('/index.html') || currentPath.endsWith('/login.html')) {
-        window.location.href = '/dashboard.html';
-        return;
-      }
-    } else {
-      if (currentPath === '/' || currentPath.endsWith('/index.html')) {
-        window.location.href = '/login.html';
-        return;
-      }
-    }
-  }
-
   // Native Mobile Hardware Back Button Support
   document.addEventListener('backbutton', (e) => {
     e.preventDefault();
@@ -848,13 +873,18 @@ async function claimDailyProfit(userPlanId) {
 async function handleRegister(e) {
   e.preventDefault();
   const submitBtn = e.target.querySelector('button[type="submit"]');
-  const username = document.getElementById('reg-username').value;
-  const email = document.getElementById('reg-email').value;
-  const phone = document.getElementById('reg-phone').value;
-  const password = document.getElementById('reg-password').value;
-  const otp = document.getElementById('reg-otp').value;
+  const username = (document.getElementById('reg-username').value || '').trim();
+  const email = (document.getElementById('reg-email').value || '').trim();
+  const phone = (document.getElementById('reg-phone').value || '').trim();
+  const password = (document.getElementById('reg-password').value || '').trim();
+  const otp = (document.getElementById('reg-otp').value || '').trim();
   const regRefInput = (document.getElementById('reg-ref').value || '').trim();
   const ref = regRefInput || getCleanRefCode();
+
+  if (!username || !email || !phone || !password || !otp) {
+    showToast('Please fill all fields and OTP code', 'error');
+    return;
+  }
 
   setButtonLoading(submitBtn, true, 'Creating Account...');
 
@@ -871,10 +901,10 @@ async function handleRegister(e) {
       AppState.token = data.token;
       AppState.user = data.user;
       
-      showToast('Account registered successfully! Welcome to 7 STAR INVEST.', 'success');
+      showToast('Account registered successfully! Logging you in...', 'success');
       setTimeout(() => {
-        window.location.href = '/dashboard.html';
-      }, 1000);
+        window.location.replace('/dashboard.html');
+      }, 500);
     } else {
       setButtonLoading(submitBtn, false);
       showCustomModal('Registration Failed', data.message, 'error');
@@ -914,8 +944,8 @@ async function handleLogin(e) {
 
       showToast('Login successful! Opening dashboard...', 'success');
       setTimeout(() => {
-        window.location.href = '/dashboard.html';
-      }, 1000);
+        window.location.replace('/dashboard.html');
+      }, 500);
     } else {
       setButtonLoading(submitBtn, false);
       showCustomModal('Login Failed', data.message, 'error');
@@ -1045,8 +1075,8 @@ async function handleGoogleCredentialResponse(googleResponse) {
 
       showToast('Google Login successful! Opening dashboard...', 'success');
       setTimeout(() => {
-        window.location.href = '/dashboard.html';
-      }, 800);
+        window.location.replace('/dashboard.html');
+      }, 500);
     } else {
       showCustomModal('Google Sign-In Failed', data.message || 'Authentication failed', 'error');
     }
@@ -1054,6 +1084,93 @@ async function handleGoogleCredentialResponse(googleResponse) {
     console.error('Google Sign-In Error:', err);
     showToast('Google Sign-In error. Please try again.', 'error');
   }
+}
+
+// Detect if running inside Mobile App APK / WebView
+function isMobileAppOrWebView() {
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const isCapacitor = typeof window.Capacitor !== 'undefined' || ua.includes('capacitor');
+  const isAndroidWebView = ua.includes('android') && (ua.includes('wv') || ua.includes('version/'));
+  return isCapacitor || isAndroidWebView;
+}
+
+// Open site in Chrome Browser / External Browser
+function openInChromeBrowser() {
+  const isRegister = window.location.pathname.includes('register');
+  const path = isRegister ? '/register.html' : '/login.html';
+  const ref = getCleanRefCode();
+  const targetUrl = `https://7starinvest.vercel.app${path}${ref ? `?ref=${ref}` : ''}`;
+  
+  closeGoogleBrowserModal();
+
+  try {
+    // 1. Android Chrome intent
+    const cleanUrl = targetUrl.replace(/^https?:\/\//, '');
+    const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+    window.location.href = chromeIntent;
+  } catch (e) {
+    console.warn('Chrome intent failed:', e);
+  }
+
+  // 2. Fallback to external browser
+  setTimeout(() => {
+    try {
+      window.open(targetUrl, '_system') || window.open(targetUrl, '_blank');
+    } catch(e) {
+      window.location.href = targetUrl;
+    }
+  }, 400);
+}
+
+// Close the Google Browser Modal
+function closeGoogleBrowserModal() {
+  const modal = document.getElementById('google-browser-modal');
+  if (modal) modal.remove();
+}
+
+// Show Google in Chrome Modal (for App/WebView)
+function showGoogleBrowserModal() {
+  closeGoogleBrowserModal();
+  const modal = document.createElement('div');
+  modal.id = 'google-browser-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.25rem;';
+  
+  modal.innerHTML = `
+    <div style="background:#ffffff;border-radius:28px;padding:2rem 1.5rem;max-width:360px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.3);position:relative;animation:modalPop 0.25s ease-out;">
+      
+      <div style="width:60px;height:60px;border-radius:20px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem auto;box-shadow:0 6px 16px rgba(0,0,0,0.06);">
+        <svg width="28" height="28" viewBox="0 0 18 18">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+        </svg>
+      </div>
+
+      <h3 style="margin:0 0 0.4rem 0;font-size:1.18rem;font-weight:900;color:#0f172a;">Google Sign-In</h3>
+      
+      <p style="color:#64748b;font-size:0.86rem;line-height:1.5;margin:0 0 1.5rem 0;">
+        Google security policy mobile app ke andar direct sign-in restrict karti hai. Google se login karne ke liye <strong>Chrome Browser</strong> use karein:
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        <button type="button" onclick="openInChromeBrowser()" style="width:100%;background:linear-gradient(135deg, #0d9488, #059669);color:#ffffff;border:none;padding:0.9rem 1rem;border-radius:18px;font-weight:800;font-size:0.92rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.6rem;box-shadow:0 6px 18px rgba(13,148,136,0.35);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>Open in Chrome Browser</span>
+        </button>
+
+        <button type="button" onclick="closeGoogleBrowserModal()" style="width:100%;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:0.8rem 1rem;border-radius:18px;font-weight:800;font-size:0.86rem;cursor:pointer;">
+          🔑 Continue with Password Here
+        </button>
+      </div>
+
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 // Show Google Sign-In Native Button Modal Fallback
@@ -1101,6 +1218,12 @@ function showGoogleSignInModal() {
 
 // Trigger Google Sign-In Prompt
 async function triggerGoogleSignIn() {
+  // If inside mobile APK or WebView, immediately show Chrome option
+  if (isMobileAppOrWebView()) {
+    showGoogleBrowserModal();
+    return;
+  }
+
   const btn = event?.currentTarget || document.querySelector('button[onclick*="triggerGoogleSignIn"]');
   const origHtml = btn ? btn.innerHTML : '';
 
@@ -1142,7 +1265,8 @@ async function triggerGoogleSignIn() {
 
   } catch (err) {
     console.error('Google Sign-In Trigger Error:', err);
-    showToast(err.message || 'Unable to connect to Google. Please check your connection.', 'error');
+    // If SDK fails to load, fallback to Chrome option modal
+    showGoogleBrowserModal();
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -1161,7 +1285,7 @@ function logout() {
   AppState.token = null;
   AppState.user = null;
   showToast('Logged out successfully', 'info');
-  setTimeout(() => window.location.href = '/login.html', 500);
+  setTimeout(() => window.location.replace('/login.html'), 300);
 }
 
 // Toggle Balance View

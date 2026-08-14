@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    if (localStorage.getItem('star_token')) {
+      window.location.replace('/dashboard.html');
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — 7 STAR INVEST</title>
   <link rel="stylesheet" href="/css/app-theme.css">
