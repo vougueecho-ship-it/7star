@@ -1091,61 +1091,19 @@ async function handleGoogleCredentialResponse(googleResponse) {
     showToast('Google Sign-In error. Please try again.', 'error');
   }
 }
+window.handleGoogleCredentialResponse = handleGoogleCredentialResponse;
 
 // Trigger Google Sign-In Prompt
-async function triggerGoogleSignIn() {
-  const btn = event?.currentTarget || document.querySelector('button[onclick*="triggerGoogleSignIn"]');
-  const origHtml = btn ? btn.innerHTML : '';
-
-  if (btn) {
-    btn.disabled = true;
-    btn.style.opacity = '0.75';
-    btn.innerHTML = `
-      <span style="display:inline-block;width:14px;height:14px;border:2px solid #94a3b8;border-top-color:#0d9488;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;"></span>
-      <span>Connecting to Google...</span>
-    `;
-  }
-
-  try {
-    const google = await loadGoogleSDK();
-    if (!google || !google.accounts || !google.accounts.id) {
-      showToast('Google Sign-In is initializing. Please tap again.', 'info');
-      return;
-    }
-
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredentialResponse,
-      auto_select: false
-    });
-
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        const container = document.getElementById('g-btn-container') || btn?.parentElement;
-        if (container) {
-          container.innerHTML = '';
-          google.accounts.id.renderButton(container, {
-            theme: 'outline',
-            size: 'large',
-            shape: 'pill',
-            width: 320,
-            text: 'continue_with'
-          });
-        }
-      }
-    });
-
-  } catch (err) {
-    console.error('Google Sign-In Trigger Error:', err);
-    showToast('Google Sign-In error. Please try again.', 'error');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.innerHTML = origHtml;
+function triggerGoogleSignIn() {
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    try {
+      window.google.accounts.id.prompt();
+    } catch(e) {
+      console.warn('Google prompt exception:', e);
     }
   }
 }
+window.triggerGoogleSignIn = triggerGoogleSignIn;
 
 // Logout
 function logout() {
