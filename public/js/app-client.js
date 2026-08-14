@@ -978,12 +978,11 @@ const GOOGLE_CLIENT_ID = '1007065363081-r4bv8hn10586g1v6n2as7j9eh10rtgnc.apps.go
 
 // Ensure Google SDK is loaded
 function loadGoogleSDK() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (window.google && window.google.accounts && window.google.accounts.id) {
       return resolve(window.google);
     }
     
-    // Check if script tag exists or inject
     let script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
     if (!script) {
       script = document.createElement('script');
@@ -999,31 +998,42 @@ function loadGoogleSDK() {
       if (window.google && window.google.accounts && window.google.accounts.id) {
         clearInterval(interval);
         resolve(window.google);
-      } else if (attempts >= 40) { // 4 seconds timeout
+      } else if (attempts >= 40) {
         clearInterval(interval);
-        reject(new Error('Google Sign-In SDK is taking time to connect. Please try again or create an account with password.'));
+        resolve(window.google || null);
       }
     }, 100);
   });
 }
 
-// Auto-initialize Google Auth on page load
-function initGoogleAuth() {
-  loadGoogleSDK().then((google) => {
+// Auto-initialize and render Google Sign-In button on load
+async function initGoogleAuth() {
+  const google = await loadGoogleSDK();
+  if (google && google.accounts && google.accounts.id) {
     try {
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleCredentialResponse,
-        auto_select: false,
-        use_fedcm_for_prompt: true
+        auto_select: false
       });
-      console.log('✅ Google Auth SDK initialized');
+
+      const container = document.getElementById('g-btn-container');
+      if (container) {
+        container.innerHTML = '';
+        google.accounts.id.renderButton(container, {
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          width: 320,
+          text: 'continue_with',
+          logo_alignment: 'left'
+        });
+      }
+      console.log('✅ Google Auth SDK initialized & rendered');
     } catch(e) {
       console.warn('Google Auth init warning:', e);
     }
-  }).catch(() => {
-    // Silent catch on background auto-init
-  });
+  }
 }
 
 // Auto-run initGoogleAuth on load
@@ -1037,12 +1047,8 @@ if (typeof document !== 'undefined') {
 
 // Google Sign-In Callback Handler
 async function handleGoogleCredentialResponse(googleResponse) {
-  // Close fallback modal if open
-  const modal = document.getElementById('google-signin-modal');
-  if (modal) modal.remove();
-
   if (!googleResponse || !googleResponse.credential) {
-    showToast('Google Sign-In failed or cancelled', 'error');
+    showToast('Google Sign-In cancelled', 'info');
     return;
   }
 
@@ -1086,144 +1092,8 @@ async function handleGoogleCredentialResponse(googleResponse) {
   }
 }
 
-// Detect if running inside Mobile App APK / WebView
-function isMobileAppOrWebView() {
-  const ua = (navigator.userAgent || '').toLowerCase();
-  const isCapacitor = typeof window.Capacitor !== 'undefined' || ua.includes('capacitor');
-  const isAndroidWebView = ua.includes('android') && (ua.includes('wv') || ua.includes('version/'));
-  return isCapacitor || isAndroidWebView;
-}
-
-// Open site in Chrome Browser / External Browser
-function openInChromeBrowser() {
-  const isRegister = window.location.pathname.includes('register');
-  const path = isRegister ? '/register.html' : '/login.html';
-  const ref = getCleanRefCode();
-  const targetUrl = `https://7starinvest.vercel.app${path}${ref ? `?ref=${ref}` : ''}`;
-  
-  closeGoogleBrowserModal();
-
-  try {
-    // 1. Android Chrome intent
-    const cleanUrl = targetUrl.replace(/^https?:\/\//, '');
-    const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-    window.location.href = chromeIntent;
-  } catch (e) {
-    console.warn('Chrome intent failed:', e);
-  }
-
-  // 2. Fallback to external browser
-  setTimeout(() => {
-    try {
-      window.open(targetUrl, '_system') || window.open(targetUrl, '_blank');
-    } catch(e) {
-      window.location.href = targetUrl;
-    }
-  }, 400);
-}
-
-// Close the Google Browser Modal
-function closeGoogleBrowserModal() {
-  const modal = document.getElementById('google-browser-modal');
-  if (modal) modal.remove();
-}
-
-// Show Google in Chrome Modal (for App/WebView)
-function showGoogleBrowserModal() {
-  closeGoogleBrowserModal();
-  const modal = document.createElement('div');
-  modal.id = 'google-browser-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.25rem;';
-  
-  modal.innerHTML = `
-    <div style="background:#ffffff;border-radius:28px;padding:2rem 1.5rem;max-width:360px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.3);position:relative;animation:modalPop 0.25s ease-out;">
-      
-      <div style="width:60px;height:60px;border-radius:20px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem auto;box-shadow:0 6px 16px rgba(0,0,0,0.06);">
-        <svg width="28" height="28" viewBox="0 0 18 18">
-          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
-          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
-          <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
-          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-        </svg>
-      </div>
-
-      <h3 style="margin:0 0 0.4rem 0;font-size:1.18rem;font-weight:900;color:#0f172a;">Google Sign-In</h3>
-      
-      <p style="color:#64748b;font-size:0.86rem;line-height:1.5;margin:0 0 1.5rem 0;">
-        Google security policy mobile app ke andar direct sign-in restrict karti hai. Google se login karne ke liye <strong>Chrome Browser</strong> use karein:
-      </p>
-
-      <div style="display:flex;flex-direction:column;gap:0.75rem;">
-        <button type="button" onclick="openInChromeBrowser()" style="width:100%;background:linear-gradient(135deg, #0d9488, #059669);color:#ffffff;border:none;padding:0.9rem 1rem;border-radius:18px;font-weight:800;font-size:0.92rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.6rem;box-shadow:0 6px 18px rgba(13,148,136,0.35);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-          </svg>
-          <span>Open in Chrome Browser</span>
-        </button>
-
-        <button type="button" onclick="closeGoogleBrowserModal()" style="width:100%;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:0.8rem 1rem;border-radius:18px;font-weight:800;font-size:0.86rem;cursor:pointer;">
-          🔑 Continue with Password Here
-        </button>
-      </div>
-
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-// Show Google Sign-In Native Button Modal Fallback
-function showGoogleSignInModal() {
-  let modal = document.getElementById('google-signin-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'google-signin-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
-    modal.innerHTML = `
-      <div style="background:#ffffff;border-radius:24px;padding:2rem 1.5rem;max-width:340px;width:100%;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
-        <div style="width:50px;height:50px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem auto;">
-          <svg width="24" height="24" viewBox="0 0 18 18">
-            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
-            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
-            <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
-            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-          </svg>
-        </div>
-        <h3 style="margin:0 0 0.5rem 0;font-size:1.15rem;font-weight:800;color:#1e293b;">Google Sign-In</h3>
-        <p style="color:#64748b;font-size:0.82rem;margin:0 0 1.5rem 0;line-height:1.4;">Tap below to continue with your Google account</p>
-        <div id="google-btn-target" style="display:flex;justify-content:center;margin-bottom:1.5rem;min-height:44px;"></div>
-        <button type="button" onclick="document.getElementById('google-signin-modal').remove()" style="background:#f1f5f9;color:#64748b;border:none;padding:0.65rem 1.5rem;border-radius:12px;font-weight:700;font-size:0.85rem;cursor:pointer;width:100%;">Cancel</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  } else {
-    modal.style.display = 'flex';
-  }
-
-  if (window.google && window.google.accounts && window.google.accounts.id) {
-    const target = document.getElementById('google-btn-target');
-    if (target) {
-      target.innerHTML = '';
-      window.google.accounts.id.renderButton(target, {
-        theme: 'filled_blue',
-        size: 'large',
-        shape: 'pill',
-        width: 260,
-        text: 'continue_with'
-      });
-    }
-  }
-}
-
 // Trigger Google Sign-In Prompt
 async function triggerGoogleSignIn() {
-  // If inside mobile APK or WebView, immediately show Chrome option
-  if (isMobileAppOrWebView()) {
-    showGoogleBrowserModal();
-    return;
-  }
-
   const btn = event?.currentTarget || document.querySelector('button[onclick*="triggerGoogleSignIn"]');
   const origHtml = btn ? btn.innerHTML : '';
 
@@ -1238,35 +1108,36 @@ async function triggerGoogleSignIn() {
 
   try {
     const google = await loadGoogleSDK();
-    
+    if (!google || !google.accounts || !google.accounts.id) {
+      showToast('Google Sign-In is initializing. Please tap again.', 'info');
+      return;
+    }
+
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogleCredentialResponse,
-      auto_select: false,
-      use_fedcm_for_prompt: true
+      auto_select: false
     });
 
-    let promptDisplayed = false;
     google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        console.log('Google One-Tap skipped/not displayed:', notification.getNotDisplayedReason?.() || 'dismissed');
-        showGoogleSignInModal();
-      } else {
-        promptDisplayed = true;
+        const container = document.getElementById('g-btn-container') || btn?.parentElement;
+        if (container) {
+          container.innerHTML = '';
+          google.accounts.id.renderButton(container, {
+            theme: 'outline',
+            size: 'large',
+            shape: 'pill',
+            width: 320,
+            text: 'continue_with'
+          });
+        }
       }
     });
-
-    // Fallback if One-Tap prompt is delayed or ignored in mobile browser
-    setTimeout(() => {
-      if (!promptDisplayed) {
-        showGoogleSignInModal();
-      }
-    }, 1200);
 
   } catch (err) {
     console.error('Google Sign-In Trigger Error:', err);
-    // If SDK fails to load, fallback to Chrome option modal
-    showGoogleBrowserModal();
+    showToast('Google Sign-In error. Please try again.', 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
